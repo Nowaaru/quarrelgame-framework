@@ -50,10 +50,10 @@ export class QuarrelGame implements OnStart, OnInit
     {
         const components = Dependency<Components>();
 
-        return typeIs(item, "Instance" ) && !!components.getComponent(item, Participant);
+        return typeIs(item, "Instance") && !!components.getComponent(item, Participant);
     }
 
-    public GetParticipant(item: Instance): Participant | undefined
+    public GetParticipantFromCharacter(item: Instance): Participant | undefined
     {
         const components = Dependency<Components>();
         const player = Players.GetPlayerFromCharacter(item);

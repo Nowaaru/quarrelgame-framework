@@ -1,9 +1,14 @@
-import { Controller, OnStart, OnInit } from "@flamework/core";
+import { Controller, OnStart, OnInit, Modding } from "@flamework/core";
 import { Players, RunService, TweenService, UserInputService, Workspace } from "@rbxts/services";
 import { LockType, Mouse, MouseMovement, OnMouseMove } from "./mouse.controller";
 import { Option, Result } from "@rbxts/rust-classes";
-import { BaseCamera, CameraUtils, PlayerModule } from "shared/utility/lib";
+import { BaseCamera, CameraUtils, PlayerModule } from "shared/utility/player";
 import { Cursor, CursorMode } from "./cursor.controller";
+
+export interface BattleCamera {
+    onBattleCameraEnabled?(): void;
+    onBattleCameraDisabled?(): void;
+}
 
 class CameraError implements Error
 {
@@ -21,6 +26,8 @@ class CameraError implements Error
 @Controller({})
 export class CameraController implements OnStart, OnInit, OnMouseMove
 {
+    private readonly BaseFOV = 72;
+
     private Camera: Camera & { CameraSubject: Humanoid } = Workspace.CurrentCamera as Camera & { CameraSubject: Humanoid };
 
     private CameraModule = BaseCamera().new();
@@ -43,15 +50,79 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
         this.Camera.CameraSubject = this.LocalPlayer.Character?.WaitForChild("Humanoid") as Humanoid;
     }
 
+    private lockOnTarget?: { Position: Vector3 }
+
+    public SetLockOnTarget<T extends { Position: Vector3 }>(targetInstance?: T)
+    {
+        this.lockOnTarget = targetInstance;
+        if (!this.lockOnTarget)
+        {
+            RunService.BindToRenderStep("LockOn", Enum.RenderPriority.Last.Value + 1, (dt) =>
+            {
+                if (this.lockOnTarget)
+                {
+                    TweenService.Create(this.Camera, new TweenInfo(0.1, Enum.EasingStyle.Sine), {
+                        CFrame: CFrame.lookAt(this.Camera.CFrame.Position, this.lockOnTarget?.Position),
+                    }).Play();
+                }
+            });
+        }
+        else if (!targetInstance)
+
+            RunService.UnbindFromRenderStep("LockOn");
+    }
+
+    public GetLockOnTarget()
+    {
+        return this.lockOnTarget;
+    }
+
+    public GetBaseFOV()
+    {
+        return this.BaseFOV;
+    }
+
+    public ResetFOV()
+    {
+        this.Camera.FieldOfView = this.BaseFOV;
+    }
+
+    public InterpolateResetFOV(): Tween
+    {
+        return this.InterpolateFOV(this.BaseFOV);
+    }
+
+    public SetFOV(newFoV: number): void
+    {
+        this.Camera.FieldOfView = newFoV;
+    }
+
+    public InterpolateFOV(newFOV: number, tweenInfo = this.battleCameraTweenInfo): Tween
+    {
+        const interpolationTween = TweenService.Create(this.Camera, tweenInfo, {
+            FieldOfView: newFOV,
+        });
+
+        interpolationTween.Play();
+
+        return interpolationTween;
+    }
+
     private mouseLockOffset = new Vector3(2, 0, 0);
 
     private battleCameraTweenInfo = new TweenInfo(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
 
     public SetBattleCameraEnabled(enabled: boolean)
     {
-
-        print(`🚀 ~ file: camera.controller.ts:49 ~ enabled:`, enabled);
         this.battleCameraEnabled = enabled;
+        for (const listener of this.listeners)
+        {
+            if (enabled)
+
+                listener.onBattleCameraEnabled?.();
+
+            else listener.onBattleCameraDisabled?.();
+        }
 
         return new Promise<void>((resolve, reject) =>
         {
@@ -66,12 +137,13 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
 
             if (enabled)
             {
-                this.CameraModule.SetIsMouseLocked(true);
                 this.CameraUtils.setMouseBehaviorOverride(Enum.MouseBehavior.LockCenter);
 
                 RunService.BindToRenderStep("BattleCamera", Enum.RenderPriority.Last.Value + 1, (dt: number) =>
                 {
                     this.mouse.Lock();
+                    this.CameraModule.SetIsMouseLocked(true);
+                    this.CameraUtils.setMouseBehaviorOverride(Enum.MouseBehavior.LockCenter);
                 });
             }
             else
@@ -119,7 +191,7 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
 
                         return this.cursor.InterpolatePosition(undefined, [
                             cameraCenter.X,
-                            cameraCenter.Y,
+                            cameraCenter.Y - 32,
                         ]);
                     })
                         .then(() =>
@@ -162,9 +234,16 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
         return this.SetBattleCameraEnabled(this.battleCameraEnabled = !this.battleCameraEnabled);
     }
 
+    public IsBattleCameraEnabled()
+    {
+        return this.battleCameraEnabled;
+    }
+
     onInit()
     {
-        print("Camera Controller initiated.");
+        Modding.onListenerAdded<BattleCamera>((listener) => this.listeners.add(listener));
+        Modding.onListenerRemoved<BattleCamera>((listener) => this.listeners.delete(listener));
+
         this.bindToCamera(Workspace.CurrentCamera!);
         const BoundKeys = Players.LocalPlayer.WaitForChild("PlayerScripts").WaitForChild("PlayerModule")
             .WaitForChild("CameraModule")
@@ -172,11 +251,15 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
             .WaitForChild("BoundKeys") as StringValue;
 
         BoundKeys.Value = "";
+        print("Camera Controller initiated.");
     }
 
     onStart()
     {
+        this.ResetFOV();
     }
 
     private battleCameraEnabled = false;
+
+    private listeners: Set<BattleCamera> = new Set();
 }

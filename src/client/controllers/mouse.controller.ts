@@ -29,8 +29,14 @@ export interface MouseMovement {
 
 export interface OnMouseMove {
     onMouseMove?(movement: MouseMovement): void;
+}
+
+export interface OnMouseButton {
+    onMouseButton?(mouseButton: MouseButton, inputMode: InputMode): void;
+}
+
+export interface OnMouseWheel {
     onMouseWheel?(direction: ScrollMovement): void;
-    onMouseButtonStateChanged?(mouseButton: MouseButton, inputMode: InputMode): void;
 }
 
 export enum LockType {
@@ -41,23 +47,39 @@ export enum LockType {
 @Controller({
     loadOrder: 1,
     })
-export class Mouse implements OnStart
+export class Mouse implements OnStart, OnInit
 {
     constructor()
     {}
 
+    onInit(): void | Promise<void>
+    {
+        this.mouseRaycastParams.FilterType = Enum.RaycastFilterType.Exclude;
+
+        Players.LocalPlayer.CharacterAdded.Connect(() =>
+        {
+            this.mouseRaycastParams.AddToFilter([Players.LocalPlayer.Character!]);
+        });
+    }
+
     onStart()
     {
         this.rawMouse = Players.LocalPlayer.GetMouse()!;
-        Modding.onListenerAdded<OnMouseMove>((object) => this.listeners.add(object));
-        Modding.onListenerRemoved<OnMouseMove>((object) => this.listeners.delete(object));
+        Modding.onListenerAdded<OnMouseButton>((object) => this.buttonListeners.add(object));
+        Modding.onListenerRemoved<OnMouseButton>((object) => this.buttonListeners.delete(object));
+
+        Modding.onListenerAdded<OnMouseWheel>((object) => this.wheelListeners.add(object));
+        Modding.onListenerRemoved<OnMouseWheel>((object) => this.wheelListeners.delete(object));
+
+        Modding.onListenerAdded<OnMouseMove>((object) => this.moveListeners.add(object));
+        Modding.onListenerRemoved<OnMouseMove>((object) => this.moveListeners.delete(object));
 
         const mouseButtonHandler = (key: InputObject, mode: InputMode) =>
         {
             switch (key.UserInputType)
             {
                 case Enum.UserInputType.MouseButton1:
-                    for (const listener of this.listeners)
+                    for (const listener of this.buttonListeners)
                     {
                         if (mode === InputMode.Down)
 
@@ -65,11 +87,11 @@ export class Mouse implements OnStart
 
                         else this.pressedButtons.delete(MouseButton.Left);
 
-                        listener.onMouseButtonStateChanged?.(MouseButton.Left, mode);
+                        listener.onMouseButton?.(MouseButton.Left, mode);
                     }
                     break;
                 case Enum.UserInputType.MouseButton2:
-                    for (const listener of this.listeners)
+                    for (const listener of this.buttonListeners)
                     {
                         if (mode === InputMode.Down)
 
@@ -77,11 +99,11 @@ export class Mouse implements OnStart
 
                         else this.pressedButtons.delete(MouseButton.Right);
 
-                        listener.onMouseButtonStateChanged?.(MouseButton.Right, mode);
+                        listener.onMouseButton?.(MouseButton.Right, mode);
                     }
                     break;
                 case Enum.UserInputType.MouseButton3:
-                    for (const listener of this.listeners)
+                    for (const listener of this.buttonListeners)
                     {
                         if (mode === InputMode.Down)
 
@@ -89,7 +111,7 @@ export class Mouse implements OnStart
 
                         else this.pressedButtons.delete(MouseButton.Middle);
 
-                        listener.onMouseButtonStateChanged?.(MouseButton.Middle, mode);
+                        listener.onMouseButton?.(MouseButton.Middle, mode);
                     }
             }
         };
@@ -100,7 +122,7 @@ export class Mouse implements OnStart
         {
             if (key.UserInputType === Enum.UserInputType.MouseMovement)
             {
-                for (const listener of this.listeners)
+                for (const listener of this.moveListeners)
                 {
                     listener.onMouseMove?.({
                         delta: [key.Delta.X, key.Delta.Y] as const,
@@ -110,7 +132,7 @@ export class Mouse implements OnStart
             }
             else if (key.UserInputType === Enum.UserInputType.MouseWheel)
             {
-                for (const listener of this.listeners)
+                for (const listener of this.wheelListeners)
                 {
                     listener.onMouseWheel?.({
                         value: key.Delta.Z,
@@ -119,6 +141,13 @@ export class Mouse implements OnStart
                 }
             }
         });
+    }
+
+    private mouseRaycastParams = new RaycastParams();
+
+    public Under(raycastParams = this.mouseRaycastParams)
+    {
+        return this.clackInstance.raycast(this.mouseRaycastParams, (2 ** 31) - 1);
     }
 
     public Destroy()
@@ -175,5 +204,9 @@ export class Mouse implements OnStart
 
     private rawMouse!: PlayerMouse;
 
-    private listeners = new Set<OnMouseMove>();
+    private buttonListeners = new Set<OnMouseButton>();
+
+    private wheelListeners = new Set<OnMouseWheel>();
+
+    private moveListeners = new Set<OnMouseMove>();
 }

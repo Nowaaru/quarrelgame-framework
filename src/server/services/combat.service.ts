@@ -41,7 +41,7 @@ export class CombatService implements OnStart, OnInit
             assert(player.Character, "player has not spawned");
             assert(this.quarrelGame.IsParticipant(player), "player is not a participant");
 
-            const participantItem = this.quarrelGame.GetParticipant(player.Character)!;
+            const participantItem = this.quarrelGame.GetParticipantFromCharacter(player.Character)!;
             const physicsEntity = components.getComponent(participantItem.character!, PhysicsEntity);
 
             assert(physicsEntity, "physics entity not found");

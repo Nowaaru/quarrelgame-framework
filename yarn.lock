@@ -125,6 +125,11 @@
     "@rbxts/services" "^1.5.1"
     "@rbxts/trove" "^1.3.0"
 
+"@rbxts/compiler-types@^1.2.3-types.1":
+  version "1.2.3-types.1"
+  resolved "https://registry.yarnpkg.com/@rbxts/compiler-types/-/compiler-types-1.2.3-types.1.tgz#d7945531c917d62bafadd2b5aa6c2f2e88a2036a"
+  integrity sha512-SXXIBazyJ7N6d2xcy471/kqZZpCv7EDOWrRJ45jcv3g00VQaZwYl4Elr10woqRloIblQanwJ7yUqGXAsWv7iuQ==
+
 "@rbxts/compiler-types@^2.1.1-types.0":
   version "2.1.1-types.0"
   resolved "https://registry.yarnpkg.com/@rbxts/compiler-types/-/compiler-types-2.1.1-types.0.tgz#a1f02b57402dffec474dd6656ec1d8a897b9756b"
@@ -135,10 +140,36 @@
   resolved "https://registry.yarnpkg.com/@rbxts/maid/-/maid-1.1.0.tgz#ef4c4ea915d80f2e7baacb7e9ea037f3e2549bd6"
   integrity sha512-bVWXZ0p2M3OJzPzvN5fY0T4s37ezUMY7EX31Xspp7Ds4C/K9yE4MHMRXjtlNvsYVPmoc5tdhAbpZY02Veix5lg==
 
+"@rbxts/make@^1.0.6":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@rbxts/make/-/make-1.0.6.tgz#9fbed42cd263b6ce997cdb6a840f77fdeb9e6b36"
+  integrity sha512-ZL1FMxDqWv1TIzE064JFen75rgybV7ulQHTUVqXuvngDBa3lP3btFiIdUO2MMJAOZpHKinC9jFudcCenrprcPg==
+  dependencies:
+    "@rbxts/compiler-types" "^1.2.3-types.1"
+    "@rbxts/types" "^1.0.537"
+
 "@rbxts/object-utils@^1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@rbxts/object-utils/-/object-utils-1.0.4.tgz#c53d80f89e75c401365446be63fa1396bc2cffe7"
   integrity sha512-dLLhf022ipV+9i910sOE7kl9losKHoon0WgeerHqVMQA5EYsLUsVT2AxhJuhk8MiDn5oJ2GiFofE/LadY9TpJQ==
+
+"@rbxts/pretty-roact-hooks@^3.1.1":
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/@rbxts/pretty-roact-hooks/-/pretty-roact-hooks-3.1.1.tgz#b2729163bfd2c89e1efb91c544d7ddb798054fe0"
+  integrity sha512-eve1L7GWKZVo6ZLgcmk6c95SDvhTRIjWwR8notAz7g+CQ/jdtOoX+5fVHOQLMYE6HbQ79Bth+LO13WOM4T3WKg==
+  dependencies:
+    "@rbxts/services" "^1.5.1"
+    "@rbxts/set-timeout" "^1.1.2"
+
+"@rbxts/roact-hooked@^2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@rbxts/roact-hooked/-/roact-hooked-2.6.0.tgz#cbe3e244e1d52d879083c62b6662c4d082c6d30b"
+  integrity sha512-2lVbmKVregnXjshCDWuU05mv7XphxBPzeqSXDZmGh9cLqR+9DihEzsGGQrorU5VbsoL//4cOhYEAt3lTyo3dAw==
+
+"@rbxts/roact@^1.4.4-ts.0":
+  version "1.4.4-ts.0"
+  resolved "https://registry.yarnpkg.com/@rbxts/roact/-/roact-1.4.4-ts.0.tgz#7f297bec03dbea9473bd2d82b148d3ae6e4f6c00"
+  integrity sha512-gn9mBoGG/Clzgv2kyOvLNVd9dh5t6z+jukC3ITv2HnfPqvf/sMbz/VMaBoiB7t5umuiIe0LjW0ctZrkrS+uTOA==
 
 "@rbxts/rust-classes@^0.12.0":
   version "0.12.0"
@@ -149,6 +180,13 @@
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/@rbxts/services/-/services-1.5.1.tgz#4536a87932f28797507ed591f0061277c52ea77f"
   integrity sha512-SRtfIjga0K4YYSXRpK+eH3kcTq7ZXo9OHOt0jszaOOoEOIJloMGlyuRPqesPHyhveh2AMXAZr3TYbRMSD+u+kQ==
+
+"@rbxts/set-timeout@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@rbxts/set-timeout/-/set-timeout-1.1.2.tgz#2adc9d4b5dcb54ca4332eb7ec8d19793932dbd40"
+  integrity sha512-P/A0IiH9wuZdSJYr4Us0MDFm61nvIFR0acfKFHLkcOsgvIgELC90Up9ugiSsaMEHRIcIcO5UjE39LuS3xTzQHw==
+  dependencies:
+    "@rbxts/services" "^1.5.1"
 
 "@rbxts/signal@^1.0.3", "@rbxts/signal@^1.1.1":
   version "1.1.1"
@@ -170,7 +208,7 @@
   resolved "https://registry.yarnpkg.com/@rbxts/trove/-/trove-1.3.0.tgz#c0bb5478e17435bc16a19a4fe3fba7626650d17b"
   integrity sha512-Ibekh0xr2G0WTWlUhbIaybWZvKF0C4flaBJBhJOuyS/sp6qyyn9l3pWWbSI4zrIExuOIswwKQ7O1BJj2bIJYCA==
 
-"@rbxts/types@^1.0.642":
+"@rbxts/types@^1.0.537", "@rbxts/types@^1.0.642":
   version "1.0.707"
   resolved "https://registry.yarnpkg.com/@rbxts/types/-/types-1.0.707.tgz#8007f5eb0f0368ec25ff1c4d313bd80c30bbed33"
   integrity sha512-sagAruDm8kVQpZ610S4YQYgq/3LvHqGzgTEgpnuwzPOax+ZsAZ1G5R1s5wPiWogs54tNjAKQ4e+Zonn16nOS1g==

@@ -1,5 +1,5 @@
 import { Controller, OnStart, OnInit } from "@flamework/core";
-import { Mouse, MouseButton, MouseMovement, OnMouseMove } from "./mouse.controller";
+import { Mouse, MouseButton, MouseMovement, OnMouseButton, OnMouseMove } from "./mouse.controller";
 import { Players, TweenService, UserInputService } from "@rbxts/services";
 import { ConvertPercentageToNumber } from "shared/utility/lib";
 import { InputMode } from "shared/utility/input";
@@ -10,7 +10,7 @@ export enum CursorMode {
 }
 
 @Controller({})
-export class Cursor implements OnStart, OnInit, OnMouseMove
+export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
 {
     constructor(private mouse: Mouse)
     {}
@@ -19,7 +19,7 @@ export class Cursor implements OnStart, OnInit, OnMouseMove
 
     private interpInfo = new TweenInfo(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut);
 
-    private baseSize = 16;
+    private baseSize = 8;
 
     onMouseMove({position, delta}: MouseMovement): void
     {
@@ -30,14 +30,14 @@ export class Cursor implements OnStart, OnInit, OnMouseMove
         this.SetPosition(position);
     }
 
-    onMouseButtonStateChanged(mouseButton: MouseButton, inputMode: InputMode): void
+    onMouseButton(mouseButton: MouseButton, inputMode: InputMode): void
     {
         print("currently pressed buttons:", this.mouse.GetPressedButtons());
         if (this.mouse.GetPressedButtons().isEmpty())
 
             this.InterpolateSize(undefined, this.baseSize);
 
-        else this.InterpolateSize(undefined, 8);
+        else this.InterpolateSize(undefined, this.baseSize * 0.85);
     }
 
     onInit()
@@ -49,9 +49,12 @@ export class Cursor implements OnStart, OnInit, OnMouseMove
         const uiCorner = new Instance("UICorner", cursorFrame);
 
         this.CursorInstance.AnchorPoint = new Vector2(0.5, 0.5);
+        this.CursorInstance.Name = "Cursor";
         uiCorner.CornerRadius = new UDim(0,0);
 
-        cursorContainer.DisplayOrder = math.huge;
+        cursorContainer.Name = "Cursor Container";
+        cursorContainer.IgnoreGuiInset = false;
+        cursorContainer.DisplayOrder = (2**31) - 1;
         cursorContainer.ResetOnSpawn = false;
     }
 

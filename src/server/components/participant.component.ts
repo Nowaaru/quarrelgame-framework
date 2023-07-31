@@ -14,10 +14,12 @@ export class Participant extends BaseComponent<Attributes, Player> implements On
         this.instance.CharacterAdded.Connect((character) =>
         {
             this.character = character;
-            components.addComponent(character, Entity);
+            this.entity = components.addComponent(character, Entity);
             components.addComponent(character, PhysicsEntity);
         });
     }
 
     public character = this.instance.Character;
+
+    public entity?: Entity;
 }

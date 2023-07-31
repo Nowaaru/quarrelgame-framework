@@ -1,4 +1,5 @@
 import { Networking } from "@flamework/networking";
+import type { SprintState } from "server/services/movement.service";
 
 interface ServerEvents {}
 
@@ -6,6 +7,7 @@ interface ClientEvents {}
 
 interface ServerFunctions {
     RespawnCharacter(): boolean,
+    RequestSprint(sprintState: SprintState): boolean;
     KnockbackTest(): boolean,
 }
 

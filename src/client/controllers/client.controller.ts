@@ -3,19 +3,28 @@ import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
 import { InputMode, InputResult } from "shared/utility/input";
 import { Players } from "@rbxts/services";
 import { GlobalFunctions } from "shared/network";
-import { CameraController } from "./camera.controller";
+import { BattleCamera, CameraController } from "./camera.controller";
+import { Mouse, MouseButton, OnMouseButton, OnMouseMove } from "./mouse.controller";
+import { HudController } from "./hud.controller";
+
+import { SprintState } from "shared/utility/lib";
 
 const { client: ClientFunctions } = GlobalFunctions;
 
 @Controller({})
-export class Client implements OnStart, OnInit, OnKeyboardInput
+export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, BattleCamera
 {
-    constructor(private readonly cameraController: CameraController)
+    constructor(
+        private readonly camera: CameraController,
+        private readonly hud: HudController,
+        private readonly mouse: Mouse,
+    )
     {}
 
     onInit()
     {
-
+        Players.LocalPlayer.CameraMinZoomDistance = 8;
+        Players.LocalPlayer.CameraMaxZoomDistance = Players.LocalPlayer.CameraMinZoomDistance;
     }
 
     onStart()
@@ -25,7 +34,18 @@ export class Client implements OnStart, OnInit, OnKeyboardInput
 
     onKeyboardInput(buttonPressed: Enum.KeyCode, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult)
     {
-        if (inputMode === InputMode.Release) return false;
+        if (inputMode === InputMode.Release)
+        {
+            switch (buttonPressed)
+            {
+                case (Enum.KeyCode.LeftShift):
+                {
+                    ClientFunctions.RequestSprint(SprintState.Walking);
+                }
+            }
+
+            return true;
+        }
 
         switch (buttonPressed)
         {
@@ -47,18 +67,98 @@ export class Client implements OnStart, OnInit, OnKeyboardInput
                 break;
             }
 
+            case (Enum.KeyCode.H):
+            {
+                print("Toggling the Heads-Up display.");
+                if (this.hud.IsHudEnabled())
+
+                    this.hud.DisableHud();
+
+                else this.hud.EnableHud();
+                break;
+            }
+
+            case (Enum.KeyCode.LeftShift):
+            {
+                ClientFunctions.RequestSprint(SprintState.Sprinting);
+                break;
+            }
+
             case (Enum.KeyCode.LeftControl):
             {
-                this.cameraController.ToggleBattleCameraEnabled().catch((e) =>
+                this.camera.ToggleBattleCameraEnabled().catch((e) =>
                 {
                     warn(e);
-                    print(this.cameraController.PlayerModule);
+                    print(this.camera.PlayerModule);
                 });
+
+                break;
             }
         }
 
         return true;
     }
 
-    private Player = Players.LocalPlayer;
+    onBattleCameraDisabled()
+    {
+        print("Battle Camera is disabled. Turning off the Widescreen effect.");
+        this.hud.SetLockOnEffectEnabled(false);
+        this.hud.SetLockOnTarget(undefined);
+        this.camera.SetLockOnTarget(undefined);
+    }
+
+    onMouseButton(mouseButton: MouseButton, inputMode: InputMode): void
+    {
+        if (inputMode !== InputMode.Down)
+
+            return;
+
+        if (!this.player.Character)
+
+            return;
+
+        switch ( mouseButton )
+        {
+            case MouseButton.Middle:
+            {
+                const { Instance: instanceUnderMouse } = this.mouse.Under() ?? {};
+
+                if (this.camera.IsBattleCameraEnabled())
+                {
+                    if (instanceUnderMouse)
+                    {
+                        if (!this.hud.IsLockOnEffectEnabled())
+                        {
+                            if (!instanceUnderMouse.IsDescendantOf(this.player.Character))
+                            {
+                                const ancestorModel = instanceUnderMouse.FindFirstAncestorWhichIsA("Model");
+                                const ancestorPrimaryPart = ancestorModel?.PrimaryPart;
+                                const ancestorHumanoid = ancestorModel?.FindFirstChild("Humanoid");
+
+                                if (ancestorHumanoid && ancestorPrimaryPart)
+                                {
+                                    this.hud.SetLockOnEffectEnabled(true);
+                                    this.hud.SetLockOnTarget(ancestorModel);
+                                    this.camera.SetLockOnTarget(ancestorPrimaryPart);
+
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    this.hud.SetLockOnEffectEnabled(false);
+                    this.hud.SetLockOnTarget(undefined);
+                    this.camera.SetLockOnTarget(undefined);
+                    break;
+                }
+
+                this.hud.SetLockOnEffectEnabled(false);
+                this.camera.SetLockOnTarget(undefined);
+                break;
+            }
+        }
+    }
+
+    public readonly player = Players.LocalPlayer;
 }

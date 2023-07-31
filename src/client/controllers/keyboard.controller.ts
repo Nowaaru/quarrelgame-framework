@@ -12,7 +12,7 @@ export interface OnKeyboardInput {
 }
 @Controller({
     loadOrder: 1,
-})
+    })
 
 export class Keyboard implements OnStart, OnInit
 {
