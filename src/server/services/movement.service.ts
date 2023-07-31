@@ -20,6 +20,7 @@ export class MovementService implements OnStart, OnInit
         {
             assert(this.quarrelGame.IsParticipant(player), `player ${player} is not a participant`);
             assert(player.Character, "player is not defined");
+
             const participantPlayer = this.quarrelGame.GetParticipantFromCharacter(player.Character)!;
             participantPlayer.entity?.Sprint(sprintState);
 
