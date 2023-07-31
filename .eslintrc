@@ -1,0 +1,162 @@
+{
+    "overrides": [
+        {
+            "files": [
+                "src/**/*.ts",
+                "src/**/*.tsx"
+            ],
+            "parser": "@typescript-eslint/parser",
+            "parserOptions": {
+                "project": "./tsconfig.json"
+            }
+        }
+    ],
+    "ignorePatterns": [
+        "/out",
+        "/node_modules"
+    ],
+    "parserOptions": {
+        "useJSXTextNode": true,
+        "ecmaVersion": 2018,
+        "sourceType": "module",
+        "project": "./tsconfig.json",
+        "jsx": true
+    },
+    "plugins": [
+        "@typescript-eslint",
+        "roblox-ts"
+    ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:roblox-ts/recommended"
+        // "plugin:prettier/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "rules": {
+        "padding-line-between-statements": [
+            "error",
+            {
+                "blankLine": "always",
+                "prev": "*",
+                "next": "return"
+            }
+        ],
+        "prefer-exponentiation-operator": "warn",
+        // spacing
+        "no-whitespace-before-property": "warn",
+        "computed-property-spacing": [
+            "warn",
+            "always"
+        ],
+        "no-mixed-spaces-and-tabs": "error",
+        "roblox-ts/lua-truthiness": "off",
+        "roblox-ts/no-array-pairs": "off",
+        "implicit-arrow-linebreak": [
+            "warn",
+            "beside"
+        ],
+        "semi": [
+            "error",
+            "always"
+        ],
+        "max-statements-per-line": [
+            "warn",
+            {
+                "max": 1
+            }
+        ],
+        "max-len": [
+            "warn",
+            {
+                "code": 160,
+                "ignoreComments": true,
+                "ignoreStrings": true,
+                "ignoreTemplateLiterals": true,
+                "ignoreRegExpLiterals": true
+            }
+        ],
+        "no-confusing-arrow": "warn",
+        "newline-per-chained-call": [
+            "warn",
+            {
+                "ignoreChainWithDepth": 2
+            }
+        ],
+        "no-constant-condition": "warn",
+        "no-unused-expressions": "warn",
+        "no-case-declarations": "error",
+        "no-trailing-spaces": "warn",
+        "no-mixed-operators": "warn",
+        "no-duplicate-case": "error",
+        "no-sequences": "error",
+        "consistent-return": "warn",
+        "indent": [
+            "error",
+            4,
+            {
+                "ignoredNodes": [
+                    "ConditionalExpression"
+                ],
+                
+                "offsetTernaryExpressions": true,
+                
+                // specific indent rules
+                "VariableDeclarator": "first",
+                "MemberExpression": 1,
+                "SwitchCase": 1
+            }
+        ], 
+        "consistent-this": [
+            "warn",
+            "that"
+        ],
+        "keyword-spacing": [
+            "warn",
+            {
+                "before": true,
+                "after": true
+            }
+        ],
+        "no-else-return": "warn",
+        "spaced-comment": "warn",
+        "no-func-assign": "error",
+        // "no-unused-vars": "warn",
+        "no-lone-blocks": "warn",
+        "no-extra-semi": "warn",
+        
+        "no-dupe-args": "error",
+        "prefer-const": "error",
+        "no-dupe-keys": "error",
+        "no-lonely-if": "warn",
+        "space-before-blocks": "warn",
+        "brace-style": [
+            "error",
+            "allman"
+        ],
+        "key-spacing": [
+            "warn",
+            {
+                "beforeColon": false,
+                "afterColon": true
+            }
+        ],
+        "new-parens": [
+            "error",
+            "always"
+        ],
+        "max-params": [
+            "error",
+            8
+        ],
+        "sort-vars": "warn",
+        "no-empty": "error",
+        "no-tabs": "error",
+        "no-var": "error",
+        "curly": [
+            "error",
+            "multi-or-nest"
+        ],
+        "yoda": "warn"
+    }
+}

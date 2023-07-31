@@ -1,0 +1,70 @@
+{
+	"name": "UntitledQuarrelGame",
+	"globIgnorePaths": [
+		"**/package.json",
+		"**/tsconfig.json"
+	],
+	"tree": {
+		"$className": "DataModel",
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"QuarrelGame": {
+				"$className": "Folder",
+				"QuarrelGame/server": {
+					"$path": "out/server"
+				}
+			}
+		},
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"QuarrelGame": {
+				"$className": "Folder",
+				"rbxts_include": {
+					"$path": "include",
+					"node_modules": {
+						"$className": "Folder",
+						"@rbxts": {
+							"$path": "node_modules/@rbxts"
+						},
+						"@flamework": {
+							"$path": "node_modules/@flamework"
+						}
+					}
+				},
+				"QuarrelGame/shared": {
+					"$path": "out/shared"
+				}
+			}
+		},
+		"StarterPlayer": {
+			"$className": "StarterPlayer",
+			"StarterPlayerScripts": {
+				"$className": "StarterPlayerScripts",
+				"QuarrelGame": { 
+					"$className": "Folder",
+					"QuarrelGame/client": {
+						"$path": "out/client"
+					} 
+				}
+			}
+		},
+		"Workspace": {
+			"$className": "Workspace",
+			"$properties": {
+				"FilteringEnabled": true
+			}
+		},
+		"HttpService": {
+			"$className": "HttpService",
+			"$properties": {
+				"HttpEnabled": true
+			}
+		},
+		"SoundService": {
+			"$className": "SoundService",
+			"$properties": {
+				"RespectFilteringEnabled": true
+			}
+		}
+	}
+}

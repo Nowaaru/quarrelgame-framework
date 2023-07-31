@@ -1,0 +1,14 @@
+{
+    "pluginSearchDirs": ["./node_modules/"],
+    "plugins": ["./node_modules/prettier-plugin-multiline-arrays"],
+    "embeddedLanguageFormatting": "auto",
+    "parser": "typescript",
+    "trailingComma": "all",
+    "printWidth": 120,
+    "tabWidth": 4,
+    "semi": true,
+    "useTabs": false,
+    "bracketSpacing": false,
+    "bracketSameLine": false,
+    "singleAttributePerLine": true
+}
