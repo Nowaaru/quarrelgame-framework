@@ -68,7 +68,6 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
 
                 if (this.lockOnTarget)
                 {
-                    print("lockon target");
                     const lockOnTargetCFrame = CFrame.lookAt(
                         this.Camera.CFrame.Position,
                         this.lockOnTarget.Position
@@ -130,7 +129,7 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
 
     private mouseLockOffset = new Vector3(2, 1, 0);
 
-    private battleCameraTweenInfo = new TweenInfo(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+    private battleCameraTweenInfo = new TweenInfo(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 
     public SetBattleCameraEnabled(enabled: boolean)
     {
@@ -162,10 +161,9 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
                 RunService.BindToRenderStep("BattleCamera", Enum.RenderPriority.Last.Value + 1, (dt: number) =>
                 {
                     if (!this.lockOnTarget)
-                    {
-                        print("oh yeah");
+
                         UserSettings().GetService("UserGameSettings").RotationType = Enum.RotationType.MovementRelative;
-                    }
+
                     this.mouse.Lock();
                     this.CameraModule.SetIsMouseLocked(true);
                     this.CameraUtils.setMouseBehaviorOverride(Enum.MouseBehavior.LockCenter);

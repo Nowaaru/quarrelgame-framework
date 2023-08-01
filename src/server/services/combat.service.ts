@@ -55,6 +55,7 @@ export class CombatService implements OnStart, OnInit
                 100,
             );
 
+            const knockbackTrail = this.effectsService.GenerateKnockbackTrail(player.Character);
             physicsEntity.RotateFacing(direction.mul(-1));
             newImpulse.Apply();
 

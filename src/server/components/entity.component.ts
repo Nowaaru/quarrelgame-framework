@@ -4,13 +4,25 @@ import { Physics } from "./physics";
 import { HttpService, RunService } from "@rbxts/services";
 import { CombatService } from "server/services/combat.service";
 import { SprintState } from "server/services/movement.service";
+import { StateAttributes, StateComponent } from "shared/components/state.component";
 
 enum RotationMode {
     Unlocked,
     Locked,
 }
 
-export interface EntityAttributes {
+enum EntityState {
+    KnockdownHard,
+    KnockdownSoft,
+    Knockdown,
+
+    Dash,
+    Walk,
+
+    Idle,
+}
+
+export interface EntityAttributes extends StateAttributes {
     MaxHealth: number,
     Health: number,
 
@@ -22,7 +34,7 @@ export interface EntityAttributes {
     // Running out of either Stamina or BlockStamina
     // will put the player into a guard-break counter state.
 
-    Sprinting: SprintState,
+    State: EntityState,
 }
 
 @Component({
@@ -36,11 +48,11 @@ export interface EntityAttributes {
     MaxBlockStamina: 100,
     BlockStamina: 100,
 
-    Sprinting: SprintState.Walking,
+    State: EntityState.Idle,
     }
     })
 
-export class Entity extends BaseComponent<EntityAttributes, Model> implements OnStart
+export class Entity extends StateComponent<EntityAttributes, Model> implements OnStart
 {
     constructor()
     {
@@ -52,7 +64,7 @@ export class Entity extends BaseComponent<EntityAttributes, Model> implements On
     {
         this.attributes.Stamina = math.clamp(
             this.attributes.Stamina + (
-                (this.attributes.Sprinting === SprintState.Sprinting)
+                (this.attributes.State === EntityState.Dash)
                     ? dt * -4
                     : dt * 2
             ),
@@ -64,6 +76,23 @@ export class Entity extends BaseComponent<EntityAttributes, Model> implements On
     onStart()
     {
         this.instance.PrimaryPart = this.instance.FindFirstChild("HumanoidRootPart") as BasePart | undefined ?? this.instance.PrimaryPart;
+        this.humanoid.GetPropertyChangedSignal("MoveDirection").Connect(() =>
+        {
+            const newMoveDirection = this.humanoid.MoveDirection;
+            if (newMoveDirection !== Vector3.zero)
+
+            {
+                if (this.IsState(EntityState.Idle))
+
+                    this.SetState(EntityState.Walk);
+
+            }
+            else
+            if (this.IsState(EntityState.Walk) ?? this.IsState(EntityState.Dash))
+
+                this.SetState(EntityState.Idle);
+
+        });
     }
 
     public Sprint(sprintState: SprintState): undefined
@@ -73,7 +102,7 @@ export class Entity extends BaseComponent<EntityAttributes, Model> implements On
             if (this.attributes.Stamina > this.attributes.MaxStamina * 1/8)
             {
                 this.humanoid.WalkSpeed = this.sprintWalkSpeed;
-                this.attributes.Sprinting = SprintState.Sprinting;
+                this.attributes.State = EntityState.Dash;
 
                 return undefined;
             }
@@ -83,7 +112,7 @@ export class Entity extends BaseComponent<EntityAttributes, Model> implements On
         else if (sprintState === SprintState.Walking)
         {
             this.humanoid.WalkSpeed = this.baseWalkSpeed;
-            this.attributes.Sprinting = SprintState.Walking;
+            this.attributes.State = EntityState.Walk;
 
             return undefined;
         }
