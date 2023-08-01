@@ -11,6 +11,8 @@ enum RotationMode {
     Locked,
 }
 
+type String<T> = string;
+
 enum EntityState {
     KnockdownHard,
     KnockdownSoft,
@@ -20,6 +22,7 @@ enum EntityState {
     Walk,
 
     Idle,
+    Midair,
 }
 
 export interface EntityAttributes extends StateAttributes {
@@ -34,7 +37,7 @@ export interface EntityAttributes extends StateAttributes {
     // Running out of either Stamina or BlockStamina
     // will put the player into a guard-break counter state.
 
-    State: EntityState,
+    State: String<EntityState>,
 }
 
 @Component({
@@ -64,7 +67,7 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
     {
         this.attributes.Stamina = math.clamp(
             this.attributes.Stamina + (
-                (this.attributes.State === EntityState.Dash)
+                (this.IsMoving() && this.IsState(EntityState.Dash))
                     ? dt * -4
                     : dt * 2
             ),
@@ -76,22 +79,45 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
     onStart()
     {
         this.instance.PrimaryPart = this.instance.FindFirstChild("HumanoidRootPart") as BasePart | undefined ?? this.instance.PrimaryPart;
+
         this.humanoid.GetPropertyChangedSignal("MoveDirection").Connect(() =>
         {
-            const newMoveDirection = this.humanoid.MoveDirection;
-            if (newMoveDirection !== Vector3.zero)
-
+            if (this.IsGrounded())
             {
-                if (this.IsState(EntityState.Idle))
+                if (this.IsMoving())
+                {
+                    if (this.IsState(EntityState.Idle))
 
-                    this.SetState(EntityState.Walk);
+                        this.SetState(EntityState.Walk);
+
+                }
+                else this.SetState(EntityState.Idle);
 
             }
+        });
+
+        this.humanoid.GetPropertyChangedSignal("FloorMaterial").Connect(() =>
+        {
+            if (!this.IsGrounded())
+
+                this.SetState(EntityState.Midair);
+
             else
-            if (this.IsState(EntityState.Walk) ?? this.IsState(EntityState.Dash))
+            if (this.IsMoving())
 
-                this.SetState(EntityState.Idle);
+                this.SetState(EntityState.Walk);
 
+            else this.SetState(EntityState.Idle);
+        });
+
+        print("guh");
+        this.StateChanged.Connect((newState) =>
+        {
+            if (!this.IsState(EntityState.Dash))
+
+                this.humanoid.WalkSpeed = this.baseWalkSpeed;
+
+            else this.humanoid.WalkSpeed = this.sprintWalkSpeed;
         });
     }
 
@@ -99,10 +125,9 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
     {
         if (sprintState === SprintState.Sprinting)
         {
-            if (this.attributes.Stamina > this.attributes.MaxStamina * 1/8)
+            if (this.attributes.Stamina > this.attributes.MaxStamina * 1/8 && this.IsMoving())
             {
-                this.humanoid.WalkSpeed = this.sprintWalkSpeed;
-                this.attributes.State = EntityState.Dash;
+                this.SetState(EntityState.Dash);
 
                 return undefined;
             }
@@ -112,7 +137,6 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
         else if (sprintState === SprintState.Walking)
         {
             this.humanoid.WalkSpeed = this.baseWalkSpeed;
-            this.attributes.State = EntityState.Walk;
 
             return undefined;
         }
@@ -133,6 +157,16 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
     public UnlockRotation()
     {
         this.LockRotation(RotationMode.Unlocked);
+    }
+
+    public IsGrounded()
+    {
+        return this.humanoid.FloorMaterial !== Enum.Material.Air;
+    }
+
+    public IsMoving()
+    {
+        return this.humanoid.MoveDirection !== Vector3.zero;
     }
 
     private humanoid = this.instance.WaitForChild("Humanoid") as Humanoid;
