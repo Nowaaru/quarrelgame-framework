@@ -2,8 +2,9 @@
 import Roact from "@rbxts/roact";
 import { withHookDetection } from "@rbxts/roact-hooked";
 
-interface StoryOptions<T = {}> {
-    component: Roact.FunctionComponent<T>,
+interface StoryOptions<Props = {}> {
+    component: Roact.FunctionComponent<Props>,
+    props?: Props,
     target?: Instance,
     onDestroy?: () => void,
 }
