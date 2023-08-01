@@ -1,7 +1,7 @@
 import { Dependency, OnStart } from "@flamework/core";
 import { Component, BaseComponent, Components } from "@flamework/components";
 import { Entity } from "./entity.component";
-import { PhysicsEntity } from "./physicsentity.component";
+import { Physics } from "./physics";
 
 interface Attributes {}
 
@@ -15,7 +15,7 @@ export class Participant extends BaseComponent<Attributes, Player> implements On
         {
             this.character = character;
             this.entity = components.addComponent(character, Entity);
-            components.addComponent(character, PhysicsEntity);
+            components.addComponent(character, Physics.PhysicsEntity);
         });
     }
 

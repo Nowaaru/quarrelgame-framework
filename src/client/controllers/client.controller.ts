@@ -8,6 +8,7 @@ import { Mouse, MouseButton, OnMouseButton, OnMouseMove } from "./mouse.controll
 import { HudController } from "./hud.controller";
 
 import { SprintState } from "shared/utility/lib";
+import { OnGamepadInput } from "./gamepad.controller";
 
 const { client: ClientFunctions } = GlobalFunctions;
 
@@ -59,10 +60,18 @@ export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, 
 
             case (Enum.KeyCode.E):
             {
-                print("the E button do work tho");
                 ClientFunctions.KnockbackTest.invoke()
                     .then(() => warn("Knockback test initiated."))
                     .catch((e) => warn(`Knockback test failed: \n${e}`));
+
+                break;
+            }
+
+            case (Enum.KeyCode.T):
+            {
+                ClientFunctions.TrailTest.invoke()
+                    .then(() => "Trail test initiated.")
+                    .catch(() => "Trail test failed.");
 
                 break;
             }

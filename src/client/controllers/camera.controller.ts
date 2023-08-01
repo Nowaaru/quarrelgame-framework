@@ -54,19 +54,21 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
 
     public SetLockOnTarget<T extends Instance & { Position: Vector3 }>(targetInstance?: T)
     {
-        this.lockOnTarget = targetInstance;
         const gameSettings = UserSettings().GetService("UserGameSettings");
-        if (!this.lockOnTarget)
+        if (!this.lockOnTarget && targetInstance)
         {
+            this.lockOnTarget = targetInstance;
+
             const params = new RaycastParams();
             params.AddToFilter(this.LocalPlayer.Character ? this.LocalPlayer.Character : []);
 
-            RunService.BindToRenderStep("LockOn", Enum.RenderPriority.Last.Value + 1, (dt) =>
+            RunService.BindToRenderStep("LockOn", Enum.RenderPriority.Last.Value + 2, (dt) =>
             {
                 assert(this.LocalPlayer.Character, "character does not exist");
 
                 if (this.lockOnTarget)
                 {
+                    print("lockon target");
                     const lockOnTargetCFrame = CFrame.lookAt(
                         this.Camera.CFrame.Position,
                         this.lockOnTarget.Position
@@ -83,9 +85,10 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
             });
         }
         else if (!targetInstance)
-
+        {
+            this.lockOnTarget = undefined;
             RunService.UnbindFromRenderStep("LockOn");
-
+        }
 
     }
 
@@ -159,9 +162,10 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
                 RunService.BindToRenderStep("BattleCamera", Enum.RenderPriority.Last.Value + 1, (dt: number) =>
                 {
                     if (!this.lockOnTarget)
-
+                    {
+                        print("oh yeah");
                         UserSettings().GetService("UserGameSettings").RotationType = Enum.RotationType.MovementRelative;
-
+                    }
                     this.mouse.Lock();
                     this.CameraModule.SetIsMouseLocked(true);
                     this.CameraUtils.setMouseBehaviorOverride(Enum.MouseBehavior.LockCenter);
@@ -170,6 +174,7 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
             else
             {
                 RunService.UnbindFromRenderStep("BattleCamera");
+                this.SetLockOnTarget(undefined);
 
                 Promise.fromEvent(this.cursor.InterpolateTransparency(undefined, 1).Completed).then(() =>
                 {

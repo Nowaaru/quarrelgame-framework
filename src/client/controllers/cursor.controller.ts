@@ -50,6 +50,8 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
 
         this.CursorInstance.AnchorPoint = new Vector2(0.5, 0.5);
         this.CursorInstance.Name = "Cursor";
+        this.CursorInstance.BackgroundColor3 = new Color3(0.77,0.51,0.39);
+
         uiCorner.CornerRadius = new UDim(0,0);
 
         cursorContainer.Name = "Cursor Container";

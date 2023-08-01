@@ -22,7 +22,8 @@ export type GamepadButtons =
  */
 @Controller({
     loadOrder: 1,
-})
+    })
+
 export class Gamepad implements OnStart
 {
     private readonly clackGamepadInstance = new ClackGamepad();

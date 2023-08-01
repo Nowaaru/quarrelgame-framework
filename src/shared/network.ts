@@ -6,9 +6,11 @@ interface ServerEvents {}
 interface ClientEvents {}
 
 interface ServerFunctions {
-    RespawnCharacter(): boolean,
+    RespawnCharacter(): boolean;
     RequestSprint(sprintState: SprintState): boolean;
-    KnockbackTest(): boolean,
+
+    KnockbackTest(): boolean;
+    TrailTest(): boolean;
 }
 
 interface ClientFunctions {
