@@ -50,19 +50,34 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
         this.Camera.CameraSubject = this.LocalPlayer.Character?.WaitForChild("Humanoid") as Humanoid;
     }
 
-    private lockOnTarget?: { Position: Vector3 }
+    private lockOnTarget?: Instance & { Position: Vector3 };
 
-    public SetLockOnTarget<T extends { Position: Vector3 }>(targetInstance?: T)
+    public SetLockOnTarget<T extends Instance & { Position: Vector3 }>(targetInstance?: T)
     {
         this.lockOnTarget = targetInstance;
+        const gameSettings = UserSettings().GetService("UserGameSettings");
         if (!this.lockOnTarget)
         {
+            const params = new RaycastParams();
+            params.AddToFilter(this.LocalPlayer.Character ? this.LocalPlayer.Character : []);
+
             RunService.BindToRenderStep("LockOn", Enum.RenderPriority.Last.Value + 1, (dt) =>
             {
+                assert(this.LocalPlayer.Character, "character does not exist");
+
                 if (this.lockOnTarget)
                 {
+                    const lockOnTargetCFrame = CFrame.lookAt(
+                        this.Camera.CFrame.Position,
+                        this.lockOnTarget.Position
+                    );
+
+                    gameSettings.RotationType = Enum.RotationType.CameraRelative;
                     TweenService.Create(this.Camera, new TweenInfo(0.1, Enum.EasingStyle.Sine), {
-                        CFrame: CFrame.lookAt(this.Camera.CFrame.Position, this.lockOnTarget?.Position),
+                        CFrame: lockOnTargetCFrame,
+                        // cameraOccluderIsNotTarget
+                        //  ? lockOnTargetCFrame.add(this.LocalPlayer.Character.GetPivot().LookVector.mul(4))
+                        //  : lockOnTargetCFrame
                     }).Play();
                 }
             });
@@ -70,6 +85,8 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
         else if (!targetInstance)
 
             RunService.UnbindFromRenderStep("LockOn");
+
+
     }
 
     public GetLockOnTarget()
@@ -108,7 +125,7 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
         return interpolationTween;
     }
 
-    private mouseLockOffset = new Vector3(2, 0, 0);
+    private mouseLockOffset = new Vector3(2, 1, 0);
 
     private battleCameraTweenInfo = new TweenInfo(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
 
@@ -141,6 +158,10 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
 
                 RunService.BindToRenderStep("BattleCamera", Enum.RenderPriority.Last.Value + 1, (dt: number) =>
                 {
+                    if (!this.lockOnTarget)
+
+                        UserSettings().GetService("UserGameSettings").RotationType = Enum.RotationType.MovementRelative;
+
                     this.mouse.Lock();
                     this.CameraModule.SetIsMouseLocked(true);
                     this.CameraUtils.setMouseBehaviorOverride(Enum.MouseBehavior.LockCenter);
@@ -157,7 +178,6 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
 
                     return Promise.fromEvent(this.cursor.InterpolateTransparency(undefined, 0).Completed).then(() =>
                     {
-
                         this.mouse.Unlock();
                         this.CameraModule.SetIsMouseLocked(false);
                         this.CameraUtils.restoreMouseBehavior();
@@ -226,7 +246,6 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
         if (!this.battleCameraEnabled)
 
             return;
-
     }
 
     public ToggleBattleCameraEnabled()
