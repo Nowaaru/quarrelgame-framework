@@ -10,7 +10,6 @@ import type { SchedulerService }  from "server/services/scheduler.service";
 import Signal from "@rbxts/signal";
 import { StateAttributes } from "./state.component";
 import Gio from "shared/data/character/gio";
-import { EntityState } from "shared/utility/lib";
 
 export namespace Animator {
     interface PlayOptions {
@@ -164,18 +163,20 @@ export namespace Animator {
     @Component({})
     export class StateAnimator extends Animator<StateAnimatorProps> implements OnStart
     {
+        private currentLoadedAnimation?: Animation
+
         onStart(): void
         {
-
             this.onAttributeChanged("State", (newState) =>
             {
                 if (typeIs(newState, "number"))
                 {
+                    this.currentLoadedAnimation?.Stop({fadeTime: 0});
+
                     if (newState in Gio.Animations)
                     {
-                        const loadedAnimation = this.LoadAnimation(Gio.Animations[ newState as keyof typeof Gio.Animations ]!);
-                        loadedAnimation.Play();
-
+                        this.currentLoadedAnimation = this.LoadAnimation(Gio.Animations[ newState as keyof typeof Gio.Animations ]!);
+                        this.currentLoadedAnimation.Play();
                     }
 
                 }
