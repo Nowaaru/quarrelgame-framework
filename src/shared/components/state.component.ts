@@ -1,5 +1,7 @@
 import { OnStart } from "@flamework/core";
 import { Component, BaseComponent } from "@flamework/components";
+import type { EntityState } from "shared/utility/lib";
+
 import Signal from "@rbxts/signal";
 
 interface StateGuard {
@@ -11,22 +13,37 @@ export interface StateAttributes {
      */
     State: AttributeValue,
 }
-
 @Component({})
 export class StateComponent<A extends StateAttributes, I extends Instance> extends BaseComponent<A, I> implements OnStart
 {
-    private defaultState?: AttributeValue;
+    private defaultState?: EntityState;
 
-    private stateGuards: Map<AttributeValue, () => void> = new Map();
+    private stateGuards: Map<EntityState, () => void> = new Map();
 
-    public readonly StateChanged = new Signal<(newState: AttributeValue) => void>();
+    private stateEffects: Map<EntityState, (oldState: EntityState) => void> = new Map();
+
+    public readonly StateChanged = new Signal<(oldState: EntityState, newState: EntityState) => void>();
 
     onStart()
     {
         print(`State Component for Instance ${Instance}.`);
     }
 
-    public SetStateGuard(state: AttributeValue, guard: () => boolean | void)
+    public GetStateEffect(state: EntityState): ((oldState: EntityState) => void) | undefined
+    {
+        return this.stateEffects.get(state);
+    }
+
+    public SetStateEffect(state: EntityState, effect: (oldState: EntityState) => void)
+    {
+        if (this.stateEffects.has(state))
+
+            warn(`StateEffect for state ${state} already exists (${effect}). Overwriting.`);
+
+        this.stateEffects.set(state, effect);
+    }
+
+    public SetStateGuard(state: EntityState, guard: () => boolean | void)
     {
         if (this.stateGuards.has(state))
 
@@ -35,31 +52,46 @@ export class StateComponent<A extends StateAttributes, I extends Instance> exten
         this.stateGuards.set(state, guard);
     }
 
-    public RemoveStateGuard(state: AttributeValue)
+    public RemoveStateGuard(state: EntityState)
     {
         this.stateGuards.delete(state);
     }
 
-    public SetState(state: AttributeValue)
+    public SetState(state: EntityState): boolean
     {
         if (state !== this.attributes.State)
         {
+            if (this.stateGuards.has(state))
+            {
+                if (!this.stateGuards.get(state)?.())
+                {
+                    print("State guard failed.");
+
+                    return false;
+                }
+            }
+
+            this.StateChanged.Fire(this.GetState(), state);
+            this.stateEffects.get(state)?.(this.GetState());
             this.attributes.State = state;
-            this.StateChanged.Fire(this.GetState());
+
+            return true;
         }
+
+        return false;
     }
 
-    public GetState()
+    public GetState(): EntityState
     {
-        return this.attributes.State;
+        return this.attributes.State as EntityState;
     }
 
-    public IsState(state: AttributeValue): boolean
+    public IsState(...states: AttributeValue[]): boolean
     {
-        return this.attributes.State === state;
+        return states.includes(this.attributes.State);
     }
 
-    public SetDefaultState(state: AttributeValue)
+    public SetDefaultState(state: EntityState)
     {
         this.defaultState = state;
     }

@@ -3,13 +3,13 @@ import { QuarrelGame } from "./quarrelgame.service";
 
 import { Physics } from "server/components/physics";
 import { ServerFunctions } from "shared/network";
-import { Workspace } from "@rbxts/services";
 import { Components } from "@flamework/components";
 import { EffectsService } from "./effects.service";
 import { Entity, EntityState } from "server/components/entity.component";
 import { Input } from "shared/utility/input";
 import { getEnumValues } from "shared/utility/lib";
 import Gio from "shared/data/character/gio";
+import { Skill } from "shared/utility/character";
 
 export class KnockbackInstance
 {
@@ -88,14 +88,23 @@ export class CombatService implements OnStart, OnInit
 
                 if (Gio.Attacks[ inputTranslation ])
                 {
-                    const attackFrameData = Gio.Attacks[ inputTranslation ]!.FrameData;
+                    let attackFrameData;
 
-                    entityComponent.SetState(EntityState.Attacking);
+                    if (typeIs(Gio.Attacks[ inputTranslation ], "function"))
 
-                    return attackFrameData?.Execute(entityComponent).tap(() =>
+                        attackFrameData = (Gio.Attacks[ inputTranslation ] as (() => Skill.Skill) | undefined)?.().FrameData;
+
+                    else attackFrameData = (Gio.Attacks[ inputTranslation ] as Skill.Skill | undefined)?.FrameData;
+
+                    if (!entityComponent.IsNegative())
                     {
-                        entityComponent.ResetState();
-                    });
+                        return attackFrameData?.Execute(entityComponent).tap(() =>
+                        {
+                            entityComponent.ResetState();
+                        }) ?? Promise.resolve(false);
+                    }
+
+                    return Promise.resolve(false);
                 }
 
                 return Promise.resolve(false);

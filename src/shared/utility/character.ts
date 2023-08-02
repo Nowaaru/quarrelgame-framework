@@ -1,6 +1,7 @@
 import type { SchedulerService } from "server/services/scheduler.service";
 import type { Animator } from "shared/components/animator.component";
-import type { Entity, EntityState } from "server/components/entity.component";
+import type { Entity } from "server/components/entity.component";
+import { EntityState } from "shared/utility/lib";
 
 import { Input, Motion, MotionInput } from "./input";
 import { Dependency } from "@flamework/core";
@@ -101,7 +102,7 @@ export namespace Character {
         characterType: CharacterType;
 
         attacks: {
-            [k in Input]?: Skill.Skill;
+            [k in Input]?: Skill.Skill | (() => Skill.Skill);
         },
     }
 
@@ -158,9 +159,7 @@ export namespace Character {
 
         protected animations: Animations = {}
 
-        protected attacks: {
-            [k in Input]?: Skill.Skill;
-        } = {};
+        protected attacks: CharacterProps["attacks"] = {}
 
         protected characterType: CharacterType = CharacterType.WellRounded;
 
@@ -353,15 +352,16 @@ export namespace Skill {
                 if (this.StartupFrames > 0)
 
                 {
+                    entity.SetState(EntityState.Startup);
                     for (let i = 0; i < this.StartupFrames; i++)
 
                         await schedulerService.WaitForNextTick();
-
 
                 }
 
                 if (this.ActiveFrames > 0)
                 {
+                    entity.SetState(EntityState.Attack);
                     for (let i = 0; i < this.ActiveFrames; i++)
 
                         await schedulerService.WaitForNextTick();
@@ -372,6 +372,7 @@ export namespace Skill {
 
                 if (this.RecoveryFrames > 0)
                 {
+                    entity.SetState(EntityState.Recovery);
                     for (let i = 0; i < this.RecoveryFrames; i++)
 
                         await schedulerService.WaitForNextTick();

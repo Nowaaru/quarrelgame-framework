@@ -5,7 +5,7 @@ import { HttpService, RunService } from "@rbxts/services";
 import { CombatService } from "server/services/combat.service";
 import { SprintState } from "server/services/movement.service";
 import { StateAttributes, StateComponent } from "shared/components/state.component";
-import { SchedulerService } from "server/services/scheduler.service";
+import { OnFrame, SchedulerService } from "server/services/scheduler.service";
 import { Animator } from "shared/components/animator.component";
 import { EntityState } from "shared/utility/lib";
 
@@ -79,7 +79,7 @@ export interface EntityAttributes extends StateAttributes {
     }
     })
 
-export class Entity extends StateComponent<EntityAttributes, Model> implements OnStart, OnPhysics
+export class Entity extends StateComponent<EntityAttributes, Model> implements OnStart, OnFrame
 {
     public readonly animator: Animator.Animator;
 
@@ -107,9 +107,14 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
         );
     })
 
-    onPhysics(dt: number, time: number): void
+    onFrame(dt: number): void
     {
-        if (!this.IsState(EntityState.Attacking))
+        if (this.IsNegative())
+
+            return;
+
+
+        if (this.IsNeutral())
         {
             if (this.IsGrounded())
             {
@@ -120,10 +125,9 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
                         this.SetState(EntityState.Walk);
 
                 }
-                else this.SetState(EntityState.Idle);
+                else this.ResetState();
             }
             else this.SetState(EntityState.Midair);
-
         }
     }
 
@@ -132,16 +136,44 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
         this.SetDefaultState(EntityState.Idle);
         this.instance.PrimaryPart = this.instance.FindFirstChild("HumanoidRootPart") as BasePart | undefined ?? this.instance.PrimaryPart;
 
+        const zeroWalkSpeed = () => this.humanoid.WalkSpeed = 0;
+        const resetWalkSpeed = () => this.humanoid.WalkSpeed = this.baseWalkSpeed;
 
-        print("guh");
-        this.StateChanged.Connect((newState) =>
+        this.SetStateGuard(EntityState.Crouch, () =>
         {
-            if (!this.IsState(EntityState.Dash))
+            if (this.IsNegative())
 
-                this.humanoid.WalkSpeed = this.baseWalkSpeed;
+                return false;
 
-            else this.humanoid.WalkSpeed = this.sprintWalkSpeed;
+            return true;
         });
+
+        this.SetStateGuard(EntityState.Midair, () =>
+        {
+            if (this.IsNegative())
+
+                return false;
+
+            return true;
+        });
+
+        this.SetStateEffect(EntityState.Midair, () =>
+        {
+            this.humanoid.Jump = true;
+            zeroWalkSpeed();
+        });
+
+        this.SetStateEffect(EntityState.Startup, zeroWalkSpeed);
+
+        this.SetStateEffect(EntityState.Idle, resetWalkSpeed);
+
+        this.SetStateEffect(EntityState.Crouch, zeroWalkSpeed);
+
+        this.SetStateEffect(EntityState.Attack, zeroWalkSpeed);
+
+        this.SetStateEffect(EntityState.Recovery, zeroWalkSpeed);
+
+        this.SetStateEffect(EntityState.Walk, resetWalkSpeed);
     }
 
     public Sprint(sprintState: SprintState): undefined
@@ -190,6 +222,25 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
     public IsMoving()
     {
         return this.humanoid.MoveDirection !== Vector3.zero;
+    }
+
+    public IsNeutral()
+    {
+        return this.IsState(EntityState.Idle, EntityState.Walk, EntityState.Midair);
+    }
+
+    public IsNegative()
+    {
+        return this.IsState(
+            EntityState.Startup,
+            EntityState.Recovery,
+            EntityState.Attack,
+
+            EntityState.Knockdown,
+            EntityState.KnockdownHard,
+
+            EntityState.Dash
+        );
     }
 
     public readonly humanoid = this.instance.WaitForChild("Humanoid") as Humanoid;
