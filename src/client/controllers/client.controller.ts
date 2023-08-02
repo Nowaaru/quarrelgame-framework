@@ -1,16 +1,17 @@
 import { Controller, OnStart, OnInit, Dependency } from "@flamework/core";
 import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
 import { InputMode, InputResult } from "shared/utility/input";
-import { Players } from "@rbxts/services";
+import { ContextActionService, Players } from "@rbxts/services";
 import { GlobalFunctions } from "shared/network";
 import { BattleCamera, CameraController } from "./camera.controller";
 import { Mouse, MouseButton, OnMouseButton, OnMouseMove } from "./mouse.controller";
 import { HudController } from "./hud.controller";
 
-import { SprintState } from "shared/utility/lib";
+import { EntityState, SprintState } from "shared/utility/lib";
 import { OnGamepadInput } from "./gamepad.controller";
 import { Components } from "@flamework/components";
 import { Animator } from "../../shared/components/animator.component";
+import { StateComponent } from "shared/components/state.component";
 
 const { client: ClientFunctions } = GlobalFunctions;
 
@@ -26,6 +27,8 @@ export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, 
 
     onInit()
     {
+        ContextActionService.UnbindAction("jumpAction");
+
         Players.LocalPlayer.CameraMinZoomDistance = 8;
         Players.LocalPlayer.CameraMaxZoomDistance = Players.LocalPlayer.CameraMinZoomDistance;
     }
@@ -36,6 +39,7 @@ export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, 
         {
             char.WaitForChild("Humanoid").WaitForChild("Animator");
             Dependency<Components>().addComponent(char, Animator.Animator);
+            Dependency<Components>().addComponent(char, StateComponent);
         });
     }
 
@@ -48,6 +52,13 @@ export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, 
                 case (Enum.KeyCode.LeftShift):
                 {
                     ClientFunctions.RequestSprint(SprintState.Walking);
+                    break;
+                }
+
+                case (Enum.KeyCode.LeftControl):
+                {
+                    ClientFunctions.Crouch(EntityState.Idle);
+                    break;
                 }
             }
 
@@ -99,13 +110,29 @@ export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, 
                 break;
             }
 
-            case (Enum.KeyCode.LeftControl):
+            case (Enum.KeyCode.LeftAlt):
             {
                 this.camera.ToggleBattleCameraEnabled().catch((e) =>
                 {
                     warn(e);
                     print(this.camera.PlayerModule);
                 });
+
+                break;
+            }
+
+            case (Enum.KeyCode.LeftControl):
+            {
+                ClientFunctions.Crouch(EntityState.Crouch)
+                    .catch((e) => warn(`Crouch failed: ${e}`));
+
+                break;
+            }
+
+            case (Enum.KeyCode.Space):
+            {
+                ClientFunctions.Jump()
+                    .catch((e) => warn(`Jump failed: ${e}`));
 
                 break;
             }
