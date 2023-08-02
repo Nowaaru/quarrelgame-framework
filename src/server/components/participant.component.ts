@@ -3,12 +3,18 @@ import { Component, BaseComponent, Components } from "@flamework/components";
 import { Entity } from "./entity.component";
 import { Physics } from "./physics";
 
-interface Attributes {}
+interface Attributes {
+    TestAttribute: 5
+}
 
 /**
  * A Participant inside of the game.
  */
-@Component({})
+@Component({
+    defaults: {
+    TestAttribute: 5
+    }
+    })
 export class Participant extends BaseComponent<Attributes, Player> implements OnStart
 {
     onStart()
