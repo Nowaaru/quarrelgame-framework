@@ -19,8 +19,12 @@
 			"$className": "ReplicatedStorage",
 			"QuarrelGame": {
 				"$className": "Folder",
-				"rbxts_include": {
-					"$path": "include",
+				"$ignoreUnknownInstances": true,
+				"QuarrelGame/include": {
+					"$path": "include"
+				},
+				"QuarrelGame/modules": {
+					"$className": "Folder",
 					"node_modules": {
 						"$className": "Folder",
 						"@rbxts": {
@@ -30,6 +34,10 @@
 							"$path": "node_modules/@flamework"
 						}
 					}
+				},
+				"QuarrelGame/models": {
+					"$className": "Folder",
+					"$path": "out/data/models"
 				},
 				"QuarrelGame/shared": {
 					"$path": "out/shared"
