@@ -1,9 +1,12 @@
-import { Controller, OnStart, OnInit, Modding } from "@flamework/core";
+import { Controller, OnStart, OnInit, Modding, Dependency } from "@flamework/core";
 import { Players, RunService, TweenService, UserInputService, Workspace } from "@rbxts/services";
 import { LockType, Mouse, MouseMovement, OnMouseMove } from "./mouse.controller";
 import { Option, Result } from "@rbxts/rust-classes";
 import { BaseCamera, CameraUtils, PlayerModule } from "shared/utility/player";
 import { Cursor, CursorMode } from "./cursor.controller";
+import { Components } from "@flamework/components";
+import { StateAttributes, StateComponent } from "shared/components/state.component";
+import { EntityState } from "shared/utility/lib";
 
 export interface BattleCamera {
     onBattleCameraEnabled?(): void;
@@ -55,6 +58,7 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
     public SetLockOnTarget<T extends Instance & { Position: Vector3 }>(targetInstance?: T)
     {
         const gameSettings = UserSettings().GetService("UserGameSettings");
+
         if (!this.lockOnTarget && targetInstance)
         {
             this.lockOnTarget = targetInstance;
@@ -127,7 +131,23 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
         return interpolationTween;
     }
 
-    private mouseLockOffset = new Vector3(2, 1, 0);
+    private readonly mouseLockOffset = new Vector3(2, 1, 0);
+
+    private cameraOffset = new Vector3();
+
+    public InterpolateOffset(): Tween
+    {
+        const Humanoid = this.LocalPlayer.Character?.WaitForChild("Humanoid");
+        assert(Humanoid, "humanoid not found");
+
+        const interpolationTween = TweenService.Create(this.LocalPlayer.Character?.WaitForChild("Humanoid") as Humanoid, this.battleCameraTweenInfo, {
+            CameraOffset: this.mouseLockOffset.add(this.cameraOffset)
+        });
+
+        interpolationTween.Play();
+
+        return interpolationTween;
+    }
 
     private battleCameraTweenInfo = new TweenInfo(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 
@@ -188,11 +208,6 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
                 });
             }
 
-            const offsetTween = TweenService.Create(Humanoid, this.battleCameraTweenInfo, {
-                CameraOffset: enabled ? this.mouseLockOffset : new Vector3(),
-            });
-
-            offsetTween.Play();
             if (enabled)
             {
                 const viewportSize = this.cursor.CursorInstance.Parent.AbsoluteSize;
@@ -237,7 +252,7 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
                 }
             }
 
-            return Promise.fromEvent(offsetTween.Completed).then(() =>
+            return Promise.fromEvent(this.InterpolateOffset().Completed).then(() =>
             {
                 resolve();
             });
@@ -279,9 +294,43 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
     onStart()
     {
         this.ResetFOV();
+
+        this.LocalPlayer.CharacterAdded.Connect(async (character) =>
+        {
+            const components = Dependency<Components>();
+            const stateController = await components.waitForComponent(character, StateComponent);
+
+            if (stateController)
+            {
+                print("state controller found!");
+                this.entityStateController = stateController;
+                this.entityStateController.onAttributeChanged("State", (_newState, _oldState) =>
+                {
+                    const _cameraOffset = this.cameraOffset;
+                    const newState = EntityState[ EntityState[ _newState as number ] as keyof typeof EntityState ];
+                    const oldState = EntityState[ EntityState[ _oldState as number ] as keyof typeof EntityState ];
+                    const crouchStateTest = [EntityState.Crouch, EntityState.CrouchBlocking];
+
+                    if (crouchStateTest.includes(newState))
+
+                        this.cameraOffset = new Vector3(0, -2, 0);
+
+                    else if (crouchStateTest.includes(oldState))
+
+                        this.cameraOffset = Vector3.zero;
+
+                    if (this.cameraOffset !== _cameraOffset)
+
+                        this.InterpolateOffset();
+
+                });
+            }
+        });
     }
 
     private battleCameraEnabled = false;
+
+    private entityStateController?: StateComponent<StateAttributes, Instance>;
 
     private listeners: Set<BattleCamera> = new Set();
 }
