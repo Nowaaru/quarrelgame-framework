@@ -1,6 +1,7 @@
 import { Networking } from "@flamework/networking";
 import type { SprintState } from "server/services/movement.service";
 import { Input } from "./utility/input";
+import type { EntityState } from "./utility/lib";
 
 interface ServerEvents {
     GameTick(): number
@@ -12,11 +13,16 @@ interface GameFunctions {
     GetGameTickRate(): number
 }
 
-type BattleFunctions = {
-    [key in Input]: (this: BattleFunctions) => boolean;
+interface MovementFunctions {
+    Crouch(crouchState: EntityState.Crouch | EntityState.Idle): boolean
+    Jump(): boolean
 }
 
-interface ServerFunctions extends BattleFunctions, GameFunctions {
+type InputFunctions = {
+    [key in Input]: (this: InputFunctions) => boolean;
+}
+
+interface ServerFunctions extends InputFunctions, GameFunctions, MovementFunctions {
     RespawnCharacter(): boolean;
     RequestSprint(sprintState: SprintState): boolean;
 
