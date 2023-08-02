@@ -6,6 +6,9 @@ interface StateGuard {
 
 }
 export interface StateAttributes {
+    /**
+     * The current State.
+     */
     State: AttributeValue,
 }
 
@@ -63,7 +66,7 @@ export class StateComponent<A extends StateAttributes, I extends Instance> exten
 
     public ResetState()
     {
-        if (this.defaultState)
+        if (this.defaultState !== undefined)
 
             this.SetState(this.defaultState);
     }

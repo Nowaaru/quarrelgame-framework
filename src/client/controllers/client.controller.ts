@@ -1,4 +1,4 @@
-import { Controller, OnStart, OnInit } from "@flamework/core";
+import { Controller, OnStart, OnInit, Dependency } from "@flamework/core";
 import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
 import { InputMode, InputResult } from "shared/utility/input";
 import { Players } from "@rbxts/services";
@@ -9,6 +9,8 @@ import { HudController } from "./hud.controller";
 
 import { SprintState } from "shared/utility/lib";
 import { OnGamepadInput } from "./gamepad.controller";
+import { Components } from "@flamework/components";
+import { Animator } from "../../shared/components/animator.component";
 
 const { client: ClientFunctions } = GlobalFunctions;
 
@@ -30,7 +32,11 @@ export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, 
 
     onStart()
     {
-
+        this.player.CharacterAdded.Connect((char) =>
+        {
+            char.WaitForChild("Humanoid").WaitForChild("Animator");
+            Dependency<Components>().addComponent(char, Animator.Animator);
+        });
     }
 
     onKeyboardInput(buttonPressed: Enum.KeyCode, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult)

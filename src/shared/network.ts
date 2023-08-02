@@ -1,11 +1,22 @@
 import { Networking } from "@flamework/networking";
 import type { SprintState } from "server/services/movement.service";
+import { Input } from "./utility/input";
 
-interface ServerEvents {}
+interface ServerEvents {
+    GameTick(): number
+}
 
 interface ClientEvents {}
 
-interface ServerFunctions {
+interface GameFunctions {
+    GetGameTickRate(): number
+}
+
+type BattleFunctions = {
+    [key in Input]: (this: BattleFunctions) => boolean;
+}
+
+interface ServerFunctions extends BattleFunctions, GameFunctions {
     RespawnCharacter(): boolean;
     RequestSprint(sprintState: SprintState): boolean;
 

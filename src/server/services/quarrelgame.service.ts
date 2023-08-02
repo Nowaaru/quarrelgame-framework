@@ -1,5 +1,6 @@
 import { Components } from "@flamework/components";
 import { Service, OnStart, OnInit, Dependency } from "@flamework/core";
+import Make from "@rbxts/make";
 import { Players, ReplicatedStorage, StarterPlayer } from "@rbxts/services";
 import { Entity, EntityAttributes } from "server/components/entity.component";
 import { Participant } from "server/components/participant.component";
@@ -29,6 +30,13 @@ export class QuarrelGame implements OnStart, OnInit
         Players.PlayerAdded.Connect((player) =>
         {
             components.addComponent(player, Participant);
+            player.CharacterAdded.Connect((character) =>
+            {
+                const Humanoid = character.WaitForChild("Humanoid");
+                const Animator = Make("Animator", {
+                    Parent: Humanoid,
+                });
+            });
         });
 
         // setup events
@@ -53,8 +61,12 @@ export class QuarrelGame implements OnStart, OnInit
         return typeIs(item, "Instance") && !!components.getComponent(item, Participant);
     }
 
-    public GetParticipantFromCharacter(item: Instance): Participant | undefined
+    public GetParticipantFromCharacter(item: Instance | undefined): Participant | undefined
     {
+        if (item)
+
+            return undefined;
+
         const components = Dependency<Components>();
         const player = Players.GetPlayerFromCharacter(item);
 

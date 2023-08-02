@@ -1,10 +1,13 @@
-import { Dependency, OnStart } from "@flamework/core";
+import { Dependency, OnPhysics, OnStart } from "@flamework/core";
 import { Component, BaseComponent, Components } from "@flamework/components";
 import { Physics } from "./physics";
 import { HttpService, RunService } from "@rbxts/services";
 import { CombatService } from "server/services/combat.service";
 import { SprintState } from "server/services/movement.service";
 import { StateAttributes, StateComponent } from "shared/components/state.component";
+import { SchedulerService } from "server/services/scheduler.service";
+import { Animator } from "shared/components/animator.component";
+import { EntityState } from "shared/utility/lib";
 
 enum RotationMode {
     Unlocked,
@@ -13,30 +16,50 @@ enum RotationMode {
 
 type String<T> = string;
 
-enum EntityState {
-    KnockdownHard,
-    KnockdownSoft,
-    Knockdown,
-
-    Dash,
-    Walk,
-
-    Idle,
-    Midair,
-}
-
 export interface EntityAttributes extends StateAttributes {
+    /**
+     * The maximum health of the entity.
+     */
     MaxHealth: number,
+    /**
+     * The current health of the entity.
+     */
     Health: number,
 
+    /**
+     * The maximum stamina of the entity.
+     */
     MaxStamina: number,
+    /**
+     * The current stamina of the entity.
+     */
     Stamina: number,
 
+    /**
+     * The maximum block stamina.
+     * If the Entity runs out of block stamina, the
+     * next hit will be guaranteed to be a counter-hit.
+     */
     MaxBlockStamina: number,
+    /**
+     * The current block stamina.
+     * If the Entity runs out of block stamina, the
+     * next hit will be guaranteed to be a counter-hit.
+     */
     BlockStamina: number,
-    // Running out of either Stamina or BlockStamina
-    // will put the player into a guard-break counter state.
+    /**
+     * The amount of block stun the Entity is in.
+     * This will constantly reduce by 1 every in-game
+     * tick (1/{@link SchedulerService.gameTickRate gameTickRate}).
+     *
+     * The Entity cannot make any inputs
+     * while this value is above 0.
+     */
+    BlockStun: number | -1,
 
+    /**
+     * The current State the entity is in.
+     */
     State: String<EntityState>,
 }
 
@@ -51,17 +74,25 @@ export interface EntityAttributes extends StateAttributes {
     MaxBlockStamina: 100,
     BlockStamina: 100,
 
+    BlockStun: -1,
     State: EntityState.Idle,
     }
     })
 
-export class Entity extends StateComponent<EntityAttributes, Model> implements OnStart
+export class Entity extends StateComponent<EntityAttributes, Model> implements OnStart, OnPhysics
 {
+    public readonly animator: Animator.Animator;
+
+    public readonly stateAnimator: Animator.StateAnimator;
+
     constructor()
     {
         super();
-    }
+        const components = Dependency<Components>();
 
+        this.animator = components.getComponent(this.instance, Animator.Animator) ?? components.addComponent(this.instance, Animator.Animator);
+        this.stateAnimator = components.getComponent(this.instance, Animator.StateAnimator) ?? components.addComponent(this.instance, Animator.StateAnimator);
+    }
 
     private readonly staminaHandler = RunService.Heartbeat.Connect((dt) =>
     {
@@ -76,11 +107,9 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
         );
     })
 
-    onStart()
+    onPhysics(dt: number, time: number): void
     {
-        this.instance.PrimaryPart = this.instance.FindFirstChild("HumanoidRootPart") as BasePart | undefined ?? this.instance.PrimaryPart;
-
-        this.humanoid.GetPropertyChangedSignal("MoveDirection").Connect(() =>
+        if (!this.IsState(EntityState.Attacking))
         {
             if (this.IsGrounded())
             {
@@ -92,23 +121,17 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
 
                 }
                 else this.SetState(EntityState.Idle);
-
             }
-        });
+            else this.SetState(EntityState.Midair);
 
-        this.humanoid.GetPropertyChangedSignal("FloorMaterial").Connect(() =>
-        {
-            if (!this.IsGrounded())
+        }
+    }
 
-                this.SetState(EntityState.Midair);
+    onStart()
+    {
+        this.SetDefaultState(EntityState.Idle);
+        this.instance.PrimaryPart = this.instance.FindFirstChild("HumanoidRootPart") as BasePart | undefined ?? this.instance.PrimaryPart;
 
-            else
-            if (this.IsMoving())
-
-                this.SetState(EntityState.Walk);
-
-            else this.SetState(EntityState.Idle);
-        });
 
         print("guh");
         this.StateChanged.Connect((newState) =>
@@ -169,13 +192,14 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
         return this.humanoid.MoveDirection !== Vector3.zero;
     }
 
-    private humanoid = this.instance.WaitForChild("Humanoid") as Humanoid;
+    public readonly humanoid = this.instance.WaitForChild("Humanoid") as Humanoid;
 
-    private entityId = HttpService.GenerateGUID(false);
+    public readonly entityId = HttpService.GenerateGUID(false);
 
-    private baseWalkSpeed = 16;
+    public readonly baseWalkSpeed = 16;
 
-    private sprintWalkSpeed = 24;
+    public readonly sprintWalkSpeed = 24;
 }
 
 export { SprintState }  from "server/services/movement.service";
+export { EntityState }  from "shared/utility/lib";

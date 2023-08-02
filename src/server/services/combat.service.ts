@@ -6,7 +6,10 @@ import { ServerFunctions } from "shared/network";
 import { Workspace } from "@rbxts/services";
 import { Components } from "@flamework/components";
 import { EffectsService } from "./effects.service";
-import { Entity } from "server/components/entity.component";
+import { Entity, EntityState } from "server/components/entity.component";
+import { Input } from "shared/utility/input";
+import { getEnumValues } from "shared/utility/lib";
+import Gio from "shared/data/character/gio";
 
 export class KnockbackInstance
 {
@@ -71,6 +74,32 @@ export class CombatService implements OnStart, OnInit
             const knockbackTrail = this.effectsService.GenerateKnockbackTrail(player.Character);
 
             return true;
+        });
+
+        getEnumValues(Input).forEach(([inputName, inputTranslation]) =>
+        {
+            ServerFunctions[ `${inputTranslation}` as Input ].setCallback((player) =>
+            {
+                assert(this.quarrelGame.IsParticipant(player), "player is not a participant");
+                assert(player.Character, "character is not defined");
+
+                const entityComponent = Dependency<Components>().getComponent(player.Character, Entity);
+                assert(entityComponent, "entity component not found");
+
+                if (Gio.Attacks[ inputTranslation ])
+                {
+                    const attackFrameData = Gio.Attacks[ inputTranslation ]!.FrameData;
+
+                    entityComponent.SetState(EntityState.Attacking);
+
+                    return attackFrameData?.Execute(entityComponent).tap(() =>
+                    {
+                        entityComponent.ResetState();
+                    });
+                }
+
+                return Promise.resolve(false);
+            });
         });
     }
 

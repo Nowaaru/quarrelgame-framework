@@ -5,6 +5,9 @@ import { Physics } from "./physics";
 
 interface Attributes {}
 
+/**
+ * A Participant inside of the game.
+ */
 @Component({})
 export class Participant extends BaseComponent<Attributes, Player> implements OnStart
 {

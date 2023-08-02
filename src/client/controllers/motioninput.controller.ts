@@ -1,36 +1,14 @@
 import { Controller, OnStart, OnInit, OnTick } from "@flamework/core";
 import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
-import { InputMode, InputResult } from "shared/utility/input";
+import { InputMode, InputResult, Motion, Input } from "shared/utility/input";
 import { Client } from "./client.controller";
+
 
 export type Frames = number;
 
 export namespace GameInput {
     export interface OnMotionInput {
         onMotionInput(motionInput: MotionInput): void;
-    }
-
-    enum Input {
-        Dash = "DS",
-
-        Punch = "P",
-        Kick = "K",
-        Slash = "S",
-        Heavy = "HS",
-
-        Roman = "RC",
-        Burst = "BR"
-    }
-
-    enum Motion {
-        Up = 8,
-        UpForward = 9,
-        Forward = 5,
-        DownForward = 3,
-        Down = 2,
-        DownBack = 1,
-        Back = 4,
-        UpBack = 7,
     }
 
     interface LockedMotionInput
