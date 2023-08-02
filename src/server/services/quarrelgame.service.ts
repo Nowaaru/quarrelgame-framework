@@ -63,7 +63,7 @@ export class QuarrelGame implements OnStart, OnInit
 
     public GetParticipantFromCharacter(item: Instance | undefined): Participant | undefined
     {
-        if (item)
+        if (!item)
 
             return undefined;
 
