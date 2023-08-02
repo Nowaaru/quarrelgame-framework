@@ -133,15 +133,17 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
 
     private readonly mouseLockOffset = new Vector3(2, 1, 0);
 
-    private cameraOffset = new Vector3();
+    private crouchCameraOffset = new Vector3();
 
-    public InterpolateOffset(): Tween
+    private directionCameraOffset = new Vector3();
+
+    public InterpolateOffset(tweenInfo: TweenInfo = this.battleCameraTweenInfo): Tween
     {
         const Humanoid = this.LocalPlayer.Character?.WaitForChild("Humanoid");
         assert(Humanoid, "humanoid not found");
 
-        const interpolationTween = TweenService.Create(this.LocalPlayer.Character?.WaitForChild("Humanoid") as Humanoid, this.battleCameraTweenInfo, {
-            CameraOffset: this.mouseLockOffset.add(this.cameraOffset)
+        const interpolationTween = TweenService.Create(this.LocalPlayer.Character?.WaitForChild("Humanoid") as Humanoid, tweenInfo, {
+            CameraOffset: this.mouseLockOffset.add(this.crouchCameraOffset).add(this.directionCameraOffset),
         });
 
         interpolationTween.Play();
@@ -297,6 +299,13 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
 
         this.LocalPlayer.CharacterAdded.Connect(async (character) =>
         {
+            const Humanoid = (character.WaitForChild("Humanoid") as Humanoid);
+            Humanoid.GetPropertyChangedSignal("MoveDirection").Connect(() =>
+            {
+                this.directionCameraOffset = Humanoid.MoveDirection.mul(1.525);
+                this.InterpolateOffset(new TweenInfo(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out));
+            });
+
             const components = Dependency<Components>();
             const stateController = await components.waitForComponent(character, StateComponent);
 
@@ -306,22 +315,22 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
                 this.entityStateController = stateController;
                 this.entityStateController.onAttributeChanged("State", (_newState, _oldState) =>
                 {
-                    const _cameraOffset = this.cameraOffset;
+                    const _cameraOffset = this.crouchCameraOffset;
                     const newState = EntityState[ EntityState[ _newState as number ] as keyof typeof EntityState ];
                     const oldState = EntityState[ EntityState[ _oldState as number ] as keyof typeof EntityState ];
                     const crouchStateTest = [EntityState.Crouch, EntityState.CrouchBlocking];
 
                     if (crouchStateTest.includes(newState))
 
-                        this.cameraOffset = new Vector3(0, -2, 0);
+                        this.crouchCameraOffset = new Vector3(0, -2, 0);
 
                     else if (crouchStateTest.includes(oldState))
 
-                        this.cameraOffset = Vector3.zero;
+                        this.crouchCameraOffset = Vector3.zero;
 
-                    if (this.cameraOffset !== _cameraOffset)
+                    if (this.crouchCameraOffset !== _cameraOffset)
 
-                        this.InterpolateOffset();
+                        this.InterpolateOffset(new TweenInfo(0.15, Enum.EasingStyle.Sine, Enum.EasingDirection.Out));
 
                 });
             }
