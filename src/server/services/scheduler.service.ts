@@ -78,5 +78,5 @@ export class SchedulerService implements OnStart, OnInit
         return this.gameTickRate;
     }
 
-    private readonly gameTickRate = 24;
+    private readonly gameTickRate = 60;
 }

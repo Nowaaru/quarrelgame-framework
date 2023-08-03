@@ -109,6 +109,7 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
 
     onFrame(dt: number): void
     {
+        print("frame:", dt);
         if (this.IsNegative())
 
             return;

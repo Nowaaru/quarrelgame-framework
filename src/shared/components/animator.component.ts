@@ -10,11 +10,13 @@ import type { SchedulerService }  from "server/services/scheduler.service";
 import Signal from "@rbxts/signal";
 import { StateAttributes } from "./state.component";
 import Gio from "shared/data/character/gio";
+import { EntityState, GetTickRate } from "shared/utility/lib";
 
 export namespace Animator {
     interface PlayOptions {
         Speed?: number,
         Preload?: boolean,
+        FadeTime?: number,
 
     }
 
@@ -29,6 +31,10 @@ export namespace Animator {
         private readonly Id;
 
         private GameLength = 0;
+
+        public readonly Priority: Enum.AnimationPriority;
+
+        public readonly AnimationId: string;
 
         public Ended: Signal<() => void> = new Signal();
 
@@ -46,6 +52,9 @@ export namespace Animator {
             this.AnimationTrack.Priority = priority ?? Enum.AnimationPriority.Action;
             this.AnimationTrack.Looped = loop ?? false;
 
+            this.Priority = this.AnimationTrack.Priority;
+            this.AnimationId = this.Animation.AnimationId;
+
             this.AnimationTrack.Ended.Connect(() =>
             {
                 if (animator.attributes.ActiveAnimation === this.Id)
@@ -55,10 +64,7 @@ export namespace Animator {
                 this.Ended.Fire();
             });
 
-            const tickRate =
-                RunService.IsServer()
-                ? Dependency<SchedulerService>().GetTickRate()
-                : (ClientFunctions.GetGameTickRate().await()[ 1 ] as number | undefined);
+            const tickRate = GetTickRate();
 
             this.Loaded = new Promise<void>((res) =>
             {
@@ -115,7 +121,7 @@ export namespace Animator {
                 }
 
                 this.animator.attributes.ActiveAnimation = this.Id;
-                this.AnimationTrack.Play();
+                this.AnimationTrack.Play(playOptions?.FadeTime, undefined, playOptions?.Speed);
 
                 return res(this);
             });
@@ -167,16 +173,42 @@ export namespace Animator {
 
         onStart(): void
         {
-            this.onAttributeChanged("State", (newState) =>
+            this.onAttributeChanged("State", (newState, oldState) =>
             {
                 if (typeIs(newState, "number"))
                 {
-                    this.currentLoadedAnimation?.Stop({fadeTime: 0});
 
                     if (newState in Gio.Animations)
                     {
-                        this.currentLoadedAnimation = this.LoadAnimation(Gio.Animations[ newState as keyof typeof Gio.Animations ]!);
-                        this.currentLoadedAnimation.Play();
+                        const newLoadedAnimation = this.LoadAnimation(Gio.Animations[ newState as keyof typeof Gio.Animations ]!);
+                        let animationWasInterrupted = false;
+                        if (this.currentLoadedAnimation)
+                        {
+                            if (newLoadedAnimation.Priority.Value >= this.currentLoadedAnimation.Priority.Value)
+                            {
+                                if (newLoadedAnimation.AnimationId !== this.currentLoadedAnimation.AnimationId)
+                                {
+                                    animationWasInterrupted = true;
+                                    this.currentLoadedAnimation.Stop({fadeTime: 0});
+                                }
+                            }
+
+                            if (
+                                newLoadedAnimation.Priority === Enum.AnimationPriority.Idle
+                                && this.currentLoadedAnimation.Priority === Enum.AnimationPriority.Movement)
+                            {
+                                animationWasInterrupted = true;
+                                this.currentLoadedAnimation.Stop({fadeTime: 0.25});
+                            }
+                        }
+
+                        if (newLoadedAnimation.AnimationId !== this.currentLoadedAnimation?.AnimationId)
+                        {
+                            this.currentLoadedAnimation = newLoadedAnimation;
+                            this.currentLoadedAnimation.Play({
+                                FadeTime: newState === EntityState.Idle && animationWasInterrupted ? 0.125 : undefined,
+                            });
+                        }
                     }
 
                 }

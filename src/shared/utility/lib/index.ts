@@ -1,4 +1,8 @@
-import { Players } from "@rbxts/services";
+import { Dependency } from "@flamework/core";
+import { Players, RunService } from "@rbxts/services";
+import { ClientFunctions } from "shared/network";
+
+import type { SchedulerService } from "server/services/scheduler.service";
 
 declare global
 {
@@ -97,5 +101,9 @@ export enum EntityState {
 }
 
 export const ConvertPercentageToNumber = (percentage: string) => tonumber(percentage.match("(%d+)%%$")[ 0 ]);
+export const GetTickRate = () => (RunService.IsServer()
+    ? Dependency<SchedulerService>().GetTickRate()
+    : (ClientFunctions.GetGameTickRate().await()[ 1 ] as number | undefined));
+
 export { getEnumValues } from "shared/utility/lib/other/enum";
 
