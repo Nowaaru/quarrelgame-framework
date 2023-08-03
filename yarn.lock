@@ -135,6 +135,11 @@
   resolved "https://registry.yarnpkg.com/@rbxts/compiler-types/-/compiler-types-2.1.1-types.0.tgz#a1f02b57402dffec474dd6656ec1d8a897b9756b"
   integrity sha512-wBRma9MgPbOxvCaQEUvraHLHAmLFGW9R6fT65+MBu3uCYM6vUNWj8l4dHRxgkUK8lnGYdGWxsr/sZFk8sdvwog==
 
+"@rbxts/flipper@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@rbxts/flipper/-/flipper-2.0.1.tgz#25bd840441055da419c234a9d045309e40ac3ad2"
+  integrity sha512-kxb5AZizP05XSmo3waS/QkcfNMD5b6HX4gGwyHOyBow260R5MIT4L/ZUPLvleXXyb9b67X4NVmHoac1tPXOLNA==
+
 "@rbxts/maid@^1.0.0-ts.1":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@rbxts/maid/-/maid-1.1.0.tgz#ef4c4ea915d80f2e7baacb7e9ea037f3e2549bd6"
@@ -160,6 +165,11 @@
   dependencies:
     "@rbxts/services" "^1.5.1"
     "@rbxts/set-timeout" "^1.1.2"
+
+"@rbxts/raycast-hitbox@^4.0.1-ts.0":
+  version "4.0.1-ts.0"
+  resolved "https://registry.yarnpkg.com/@rbxts/raycast-hitbox/-/raycast-hitbox-4.0.1-ts.0.tgz#2c0927768f444a0d854ae89eb13e49e504829da0"
+  integrity sha512-Pvf/yF2TL+CO/E7jHaIEMzAMYRM2gRQTgIed0esp5mJFu9947tXi2IvmtYxMQuIq/9Ywj7Rv1xQgJ5IFJc+Kjg==
 
 "@rbxts/roact-hooked@^2.6.0":
   version "2.6.0"
