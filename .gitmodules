@@ -1,0 +1,3 @@
+[submodule "raycastHitboxRbxl"]
+	path = src/shared/utility/hitboxtets
+	url = https://github.com/Swordphin/raycastHitboxRbxl
