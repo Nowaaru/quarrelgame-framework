@@ -1,13 +1,13 @@
 import { Controller, OnStart, OnInit, Dependency } from "@flamework/core";
 import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
-import { InputMode, InputResult } from "shared/utility/input";
+import { InputMode, InputResult } from "shared/util/input";
 import { ContextActionService, Players } from "@rbxts/services";
 import { GlobalFunctions } from "shared/network";
 import { BattleCamera, CameraController } from "./camera.controller";
 import { Mouse, MouseButton, OnMouseButton, OnMouseMove } from "./mouse.controller";
 import { HudController } from "./hud.controller";
 
-import { EntityState, SprintState } from "shared/utility/lib";
+import { EntityState, SprintState } from "shared/util/lib";
 import { OnGamepadInput } from "./gamepad.controller";
 import { Components } from "@flamework/components";
 import { Animator } from "../../shared/components/animator.component";

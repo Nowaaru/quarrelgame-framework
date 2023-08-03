@@ -9,7 +9,7 @@ import { Gamepad, OnGamepadInput, type GamepadButtons } from "client/controllers
 import EventEmitter from "@rbxts/task-event-emitter";
 import { Signal, SignalCallback, SignalParams, SignalWait } from "@rbxts/beacon";
 
-import { InputType, InputMode, InputResult } from "shared/utility/input";
+import { InputType, InputMode, InputResult } from "shared/util/input";
 
 export interface OnInputTypeChange {
     onInputTypeChange(newInputType: InputType): void;

@@ -1,7 +1,8 @@
-import { Input } from "shared/utility/input";
-import { Animation, Character, Skill } from "shared/utility/character";
+import { Input } from "shared/util/input";
+import { Animation, Character, Skill } from "shared/util/character";
 import { ReplicatedStorage } from "@rbxts/services";
-import { EntityState } from "shared/utility/lib";
+import { EntityState } from "shared/util/lib";
+import { Hitbox } from "server/util/hitbox";
 
 const Gio =
     new Character.CharacterBuilder3D()
@@ -18,7 +19,14 @@ const Gio =
                         .SetStartup(7)
                         .SetActive(6)
                         .SetRecovery(10)
-                        .SetBlockStun(3)
+                        .SetContact(3)
+                        .SetBlock(3)
+                        .SetHitbox(
+                            new Hitbox.HitboxBuilder()
+                                .SetOffset()
+                                .SetSize(new Vector3(7,7,7))
+                                .Construct()
+                        )
                         .SetAnimation(
                             new Animation.AnimationBuilder()
                                 .SetName("Slash")

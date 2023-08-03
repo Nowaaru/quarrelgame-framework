@@ -1,6 +1,6 @@
 import { Controller, OnStart, OnInit, OnTick } from "@flamework/core";
 import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
-import { InputMode, InputResult, Motion, Input } from "shared/utility/input";
+import { InputMode, InputResult, Motion, Input } from "shared/util/input";
 import { Client } from "./client.controller";
 
 

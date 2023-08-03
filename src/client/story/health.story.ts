@@ -1,5 +1,5 @@
 import Health, { HealthProps } from "client/ui/health";
-import { story } from "shared/utility/story";
+import { story } from "shared/util/story";
 
 export = story<HealthProps>({
     component: Health

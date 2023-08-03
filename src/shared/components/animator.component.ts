@@ -2,7 +2,7 @@ import { BaseComponent, Component } from "@flamework/components";
 import { Controller, Dependency, OnInit, OnStart } from "@flamework/core";
 import Make from "@rbxts/make";
 
-import { Animation } from "shared/utility/character";
+import { Animation } from "shared/util/character";
 import { HttpService, RunService } from "@rbxts/services";
 import { ClientFunctions } from "shared/network";
 
@@ -10,7 +10,7 @@ import type { SchedulerService }  from "server/services/scheduler.service";
 import Signal from "@rbxts/signal";
 import { StateAttributes } from "./state.component";
 import Gio from "shared/data/character/gio";
-import { EntityState, GetTickRate } from "shared/utility/lib";
+import { EntityState, GetTickRate } from "shared/util/lib";
 
 export namespace Animator {
     interface PlayOptions {

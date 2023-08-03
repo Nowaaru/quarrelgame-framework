@@ -1,6 +1,6 @@
 import { OnStart } from "@flamework/core";
 import { Component, BaseComponent } from "@flamework/components";
-import type { EntityState } from "shared/utility/lib";
+import type { EntityState } from "shared/util/lib";
 
 import Signal from "@rbxts/signal";
 

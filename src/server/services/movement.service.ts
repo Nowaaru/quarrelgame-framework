@@ -2,7 +2,7 @@ import { Service, OnStart, OnInit, Dependency } from "@flamework/core";
 import { ServerFunctions } from "shared/network";
 import { QuarrelGame } from "./quarrelgame.service";
 import { Components } from "@flamework/components";
-import { EntityState } from "shared/utility/lib";
+import { EntityState } from "shared/util/lib";
 
 @Service({})
 export class MovementService implements OnStart, OnInit
@@ -47,4 +47,4 @@ export class MovementService implements OnStart, OnInit
     }
 }
 
-export { SprintState } from "shared/utility/lib";
+export { SprintState } from "shared/util/lib";

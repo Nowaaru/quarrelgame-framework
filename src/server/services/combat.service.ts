@@ -6,10 +6,10 @@ import { ServerFunctions } from "shared/network";
 import { Components } from "@flamework/components";
 import { EffectsService } from "./effects.service";
 import { Entity, EntityState } from "server/components/entity.component";
-import { Input } from "shared/utility/input";
-import { getEnumValues } from "shared/utility/lib";
+import { Input } from "shared/util/input";
+import { getEnumValues } from "shared/util/lib";
 import Gio from "shared/data/character/gio";
-import { Skill } from "shared/utility/character";
+import { Skill } from "shared/util/character";
 
 export class KnockbackInstance
 {

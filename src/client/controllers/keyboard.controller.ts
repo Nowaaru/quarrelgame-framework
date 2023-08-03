@@ -1,6 +1,6 @@
 
 import { Keyboard as ClackKeyboard } from "@rbxts/clack";
-import { InputMode, InputProcessed, InputResult } from "shared/utility/input";
+import { InputMode, InputProcessed, InputResult } from "shared/util/input";
 import { Controller, Modding, OnInit, OnStart } from "@flamework/core";
 import { FunctionParameters } from "@flamework/networking/out/types";
 

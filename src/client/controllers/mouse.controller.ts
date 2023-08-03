@@ -3,7 +3,7 @@ import { Controller, OnStart, OnInit, Reflect, Modding } from "@flamework/core";
 import { Mouse as ClackMouse } from "@rbxts/clack";
 import { Players, UserInputService } from "@rbxts/services";
 import EventEmitter from "@rbxts/task-event-emitter";
-import { InputMode } from "shared/utility/input";
+import { InputMode } from "shared/util/input";
 import { Cursor } from "./cursor.controller";
 
 export enum MouseButton {

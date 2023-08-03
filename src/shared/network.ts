@@ -1,7 +1,7 @@
 import { Networking } from "@flamework/networking";
 import type { SprintState } from "server/services/movement.service";
-import { Input } from "./utility/input";
-import type { EntityState } from "./utility/lib";
+import { Input } from "./util/input";
+import type { EntityState } from "./util/lib";
 
 interface ServerEvents {
     GameTick(): number

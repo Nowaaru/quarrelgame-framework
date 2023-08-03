@@ -1,8 +1,8 @@
 import { Controller, OnStart, OnInit } from "@flamework/core";
 import { Mouse, MouseButton, MouseMovement, OnMouseButton, OnMouseMove } from "./mouse.controller";
 import { Players, TweenService, UserInputService } from "@rbxts/services";
-import { ConvertPercentageToNumber } from "shared/utility/lib";
-import { InputMode } from "shared/utility/input";
+import { ConvertPercentageToNumber } from "shared/util/lib";
+import { InputMode } from "shared/util/input";
 
 export enum CursorMode {
     Scriptable,

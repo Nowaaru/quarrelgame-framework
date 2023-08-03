@@ -2,11 +2,11 @@ import { Controller, OnStart, OnInit, Modding, Dependency } from "@flamework/cor
 import { Players, RunService, TweenService, UserInputService, Workspace } from "@rbxts/services";
 import { LockType, Mouse, MouseMovement, OnMouseMove } from "./mouse.controller";
 import { Option, Result } from "@rbxts/rust-classes";
-import { BaseCamera, CameraUtils, PlayerModule } from "shared/utility/player";
+import { BaseCamera, CameraUtils, PlayerModule } from "shared/util/player";
 import { Cursor, CursorMode } from "./cursor.controller";
 import { Components } from "@flamework/components";
 import { StateAttributes, StateComponent } from "shared/components/state.component";
-import { EntityState } from "shared/utility/lib";
+import { EntityState } from "shared/util/lib";
 
 export interface BattleCamera {
     onBattleCameraEnabled?(): void;

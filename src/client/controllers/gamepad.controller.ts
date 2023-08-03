@@ -1,6 +1,6 @@
 import { Controller, Modding, OnStart } from "@flamework/core";
 import { Gamepad as ClackGamepad } from "@rbxts/clack";
-import { InputMode, InputProcessed, InputResult } from "shared/utility/input";
+import { InputMode, InputProcessed, InputResult } from "shared/util/input";
 import { FunctionParameters } from "@flamework/networking/out/types";
 
 import EventEmitter from "@rbxts/task-event-emitter";

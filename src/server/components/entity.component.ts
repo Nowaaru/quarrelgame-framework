@@ -7,7 +7,7 @@ import { SprintState } from "server/services/movement.service";
 import { StateAttributes, StateComponent } from "shared/components/state.component";
 import { OnFrame, SchedulerService } from "server/services/scheduler.service";
 import { Animator } from "shared/components/animator.component";
-import { EntityState } from "shared/utility/lib";
+import { EntityState } from "shared/util/lib";
 
 enum RotationMode {
     Unlocked,
@@ -254,4 +254,4 @@ export class Entity extends StateComponent<EntityAttributes, Model> implements O
 }
 
 export { SprintState }  from "server/services/movement.service";
-export { EntityState }  from "shared/utility/lib";
+export { EntityState }  from "shared/util/lib";
