@@ -8,6 +8,7 @@ import { StateAttributes, StateComponent } from "shared/components/state.compone
 import { OnFrame, SchedulerService } from "server/services/scheduler.service";
 import { Animator } from "shared/components/animator.component";
 import * as lib from "shared/util/lib";
+import { Identifier } from "shared/util/identifier";
 
 enum RotationMode {
     Unlocked,
@@ -19,7 +20,17 @@ type String<T> = string;
 export namespace Entity {
     export interface EntityAttributes extends StateAttributes
     {
+        /**
+         * The ID of the entity.
+         */
+        EntityId: string,
+        /**
+         * The maximum health of the entity.
+         */
         MaxHealth: number,
+        /**
+         * The current health of the entity.
+         */
         Health: number,
     }
 
@@ -28,22 +39,25 @@ export namespace Entity {
         {
         MaxHealth: 100,
         Health: 100,
+
+        EntityId: "generate"
         }
         })
     export class Entity extends StateComponent<EntityAttributes, Model>
     {
+        private readonly id = Identifier.GenerateID(this, "EntityId");
+
         constructor()
         {
             super();
+            this.onAttributeChanged("EntityId", () =>
+            {
+                this.attributes.EntityId = this.id;
+            });
         }
     }
 
     export interface CombatantAttributes extends EntityAttributes {
-        /**
-         * The ID of the entity.
-         */
-        EntityId: string,
-
         /**
          * The maximum stamina of the entity.
          */
@@ -104,7 +118,6 @@ export namespace Entity {
 
     @Component({
         defaults: {
-        EntityId: "generate",
         MaxHealth: 100,
         Health: 100,
 
