@@ -4,7 +4,7 @@ import type { Entity } from "server/components/entity.component";
 import { EntityState } from "shared/util/lib";
 
 import { Input, Motion, MotionInput } from "./input";
-import { Hitbox } from "../../server/util/hitbox";
+import { Hitbox } from "./hitbox";
 
 import { Dependency } from "@flamework/core";
 import { RunService } from "@rbxts/services";
@@ -300,7 +300,7 @@ export namespace Skill {
 
     class _FrameData
     {
-        protected AttackSetup({humanoid}: Entity)
+        protected AttackSetup({humanoid}: Entity.Entity)
         {
             humanoid.Move(Vector3.zero, true);
         }
@@ -370,7 +370,7 @@ export namespace Skill {
             this.Contact = Contact;
         }
 
-        public async Execute(entity: Entity): Promise<boolean>
+        public async Execute(entity: Entity.Entity): Promise<boolean>
         {
             const { animator } = entity;
 

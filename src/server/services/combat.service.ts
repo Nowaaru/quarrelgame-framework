@@ -5,7 +5,7 @@ import { Physics } from "server/components/physics";
 import { ServerFunctions } from "shared/network";
 import { Components } from "@flamework/components";
 import { EffectsService } from "./effects.service";
-import { Entity, EntityState } from "server/components/entity.component";
+import { Entity } from "server/components/entity.component";
 import { Input } from "shared/util/input";
 import { getEnumValues } from "shared/util/lib";
 import Gio from "shared/data/character/gio";
@@ -42,7 +42,7 @@ export class CombatService implements OnStart, OnInit
 
             const participantItem = this.quarrelGame.GetParticipantFromCharacter(player.Character)!;
             const physicsEntity = components.getComponent(participantItem.character!, Physics.PhysicsEntity);
-            const normalEntity = components.getComponent(participantItem.character!, Entity);
+            const normalEntity = components.getComponent(participantItem.character!, Entity.Entity);
 
             assert(physicsEntity, "physics entity not found");
 
@@ -83,7 +83,7 @@ export class CombatService implements OnStart, OnInit
                 assert(this.quarrelGame.IsParticipant(player), "player is not a participant");
                 assert(player.Character, "character is not defined");
 
-                const entityComponent = Dependency<Components>().getComponent(player.Character, Entity);
+                const entityComponent = Dependency<Components>().getComponent(player.Character, Entity.Entity);
                 assert(entityComponent, "entity component not found");
 
                 if (Gio.Attacks[ inputTranslation ])
