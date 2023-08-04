@@ -2,9 +2,10 @@ import { Dependency, OnStart } from "@flamework/core";
 import { Component, BaseComponent, Components } from "@flamework/components";
 import { Entity } from "./entity.component";
 import { Physics } from "./physics";
+import { HttpService } from "@rbxts/services";
 
-interface Attributes {
-    TestAttribute: 5
+interface ParticipantAttributes {
+    participantId: string,
 }
 
 /**
@@ -12,11 +13,13 @@ interface Attributes {
  */
 @Component({
     defaults: {
-    TestAttribute: 5
+    participantId: HttpService.GenerateGUID()
     }
     })
-export class Participant extends BaseComponent<Attributes, Player> implements OnStart
+export class Participant extends BaseComponent<ParticipantAttributes, Player> implements OnStart
 {
+    public readonly id: string = this.attributes.participantId
+
     onStart()
     {
         const components = Dependency<Components>();
