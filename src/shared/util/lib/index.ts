@@ -78,6 +78,15 @@ export enum EntityState {
 
     /**
      * A state where the Entity is
+     * blocking.
+     *
+     * Unused on MoveDirection-based
+     * blocking.
+     */
+    Block,
+
+    /**
+     * A state where the Entity is
      * midair.
      */
     Midair,
@@ -98,6 +107,7 @@ export enum EntityState {
      * attack.
      */
     Recovery,
+
     /**
      * A variant of the Recovery
      * state where the Entity is able
@@ -106,6 +116,19 @@ export enum EntityState {
      * @deprecated
      */
     RecoveryPositive,
+}
+
+export enum BlockMode {
+    /**
+     * Attacks are blocked relative to the MoveDirection
+     * of the character.
+     */
+    MoveDirection,
+    /**
+     * Attacks are blocked relative to the direction
+     * the character is facing.
+     */
+    Orientation,
 }
 
 export const ConvertPercentageToNumber = (percentage: string) => tonumber(percentage.match("(%d+)%%$")[ 0 ]);

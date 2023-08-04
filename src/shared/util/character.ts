@@ -370,7 +370,7 @@ export namespace Skill {
             this.Contact = Contact;
         }
 
-        public async Execute(entity: Entity.Combatant): Promise<boolean>
+        public async Execute(entity: Entity.Combatant, skill: Skill.Skill): Promise<boolean>
         {
             const { animator } = entity;
 
@@ -393,24 +393,39 @@ export namespace Skill {
 
                 }
 
+                let attackDidLand = false;
                 if (this.ActiveFrames > 0)
                 {
                     entity.SetState(EntityState.Attack);
+                    const activeHitbox = this.Hitbox.Initialize(entity.GetPrimaryPart(), skill);
+                    activeHitbox.Contact.Connect((hitModel, hitType) =>
+                    {
+                        if (hitType === Hitbox.HitResult.Blocked)
+
+                            return print("oh no! the attack was blocked!");
+
+                        attackDidLand = true;
+
+                        return print("aw yeah! the attack landed!");
+                    });
+
                     for (let i = 0; i < this.ActiveFrames; i++)
 
                         await schedulerService.WaitForNextTick();
 
-                    // do something to make hitboxes appear
-
+                    activeHitbox.Stop();
                 }
 
                 if (this.RecoveryFrames > 0)
                 {
-                    entity.SetState(EntityState.Recovery);
-                    for (let i = 0; i < this.RecoveryFrames; i++)
+                    if (!attackDidLand)
+                    {
+                        entity.SetState(EntityState.Recovery);
+                        for (let i = 0; i < this.RecoveryFrames; i++)
 
-                        await schedulerService.WaitForNextTick();
-
+                            await schedulerService.WaitForNextTick();
+                    }
+                    else entity.SetState(EntityState.Idle);
                 }
 
                 return new Promise<boolean>((res) =>

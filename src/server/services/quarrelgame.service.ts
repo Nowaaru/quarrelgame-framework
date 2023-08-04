@@ -5,6 +5,7 @@ import { Players, ReplicatedStorage, StarterPlayer } from "@rbxts/services";
 import { Participant } from "server/components/participant.component";
 
 import { GlobalFunctions } from "shared/network";
+import { BlockMode } from "shared/util/lib";
 const { server: ServerFunctions } = GlobalFunctions;
 
 @Service({
@@ -13,6 +14,8 @@ const { server: ServerFunctions } = GlobalFunctions;
 
 export class QuarrelGame implements OnStart, OnInit
 {
+    public readonly DefaultBlockMode = BlockMode.MoveDirection;
+
     onInit()
     {
         StarterPlayer.DevComputerCameraMovementMode = Enum.DevComputerCameraMovementMode.Classic;
@@ -28,14 +31,24 @@ export class QuarrelGame implements OnStart, OnInit
 
         Players.PlayerAdded.Connect((player) =>
         {
-            components.addComponent(player, Participant);
+            this.participants.push(components.addComponent(player, Participant));
             player.CharacterAdded.Connect((character) =>
             {
                 const Humanoid = character.WaitForChild("Humanoid");
-                const Animator = Make("Animator", {
+                Make("Animator", {
                     Parent: Humanoid,
                 });
             });
+        });
+
+        Players.PlayerRemoving.Connect((player) =>
+        {
+            for (const [i, participant] of pairs(this.participants))
+            {
+                if (participant.instance === player)
+
+                    this.participants.remove(i);
+            }
         });
 
         // setup events
