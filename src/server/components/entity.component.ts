@@ -56,6 +56,13 @@ export interface EntityAttributes extends StateAttributes {
      * while this value is above 0.
      */
     BlockStun: number | -1,
+    /**
+     * The amount of invulnerability frames
+     * the current Entity is in. In this state,
+     * any hurtboxes present will not put the
+     * character in a HitStun state.
+     */
+    IFrame: number | -1,
 
     /**
      * The current State the entity is in.
@@ -74,6 +81,7 @@ export interface EntityAttributes extends StateAttributes {
     MaxBlockStamina: 100,
     BlockStamina: 100,
 
+    IFrame: -1,
     BlockStun: -1,
     State: EntityState.Idle,
     }
