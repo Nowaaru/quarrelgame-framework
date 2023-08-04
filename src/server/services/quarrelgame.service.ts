@@ -2,7 +2,6 @@ import { Components } from "@flamework/components";
 import { Service, OnStart, OnInit, Dependency } from "@flamework/core";
 import Make from "@rbxts/make";
 import { Players, ReplicatedStorage, StarterPlayer } from "@rbxts/services";
-import { Entity, EntityAttributes } from "server/components/entity.component";
 import { Participant } from "server/components/participant.component";
 
 import { GlobalFunctions } from "shared/network";
@@ -56,9 +55,17 @@ export class QuarrelGame implements OnStart, OnInit
 
     public IsParticipant(item: unknown): boolean
     {
-        const components = Dependency<Components>();
+        return !!this.participants.find((n) => n.instance === item);
+    }
 
-        return typeIs(item, "Instance") && !!components.getComponent(item, Participant);
+    public GetParticipant(player: Player)
+    {
+        return this.participants.find((n) => n.instance === player);
+    }
+
+    public GetParticipantFromId(id: string)
+    {
+        return this.participants.find((n) => n.id === id);
     }
 
     public GetParticipantFromCharacter(item: Instance | undefined): Participant | undefined
