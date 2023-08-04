@@ -192,8 +192,6 @@ export namespace Entity {
             this.tickDown("IFrame");
             this.tickDown("BlockStun");
 
-            this.IsBlocking(new Vector3());
-
             if (this.IsNegative())
 
                 return;
@@ -338,10 +336,13 @@ export namespace Entity {
         {
             if (this.IsFacing(damageOrigin))
             {
+                print("is facing damage origin");
                 if (blockMode === BlockMode.MoveDirection)
                 {
+                    print("movedirection-based blocking");
                     const { MoveDirection } = this.humanoid;
                     const dotProduct = MoveDirection.Dot((damageOrigin.mul(new Vector3(1,0,1)).sub(MoveDirection)).Unit);
+                    print("facing:", dotProduct);
 
                     if (dotProduct >= this.facingLeniency)
 
@@ -355,17 +356,22 @@ export namespace Entity {
                     return true;
             }
 
+            print("not facing");
+
             return false;
         }
 
         private readonly facingLeniency = 0.725;
+        // TODO: Important - Fix bug where dot product in Facing is incorrect leading to blocks being non-functional
         public IsFacing(origin: Vector3, leniency = this.facingLeniency)
         {
-            const entityFacing = this.instance.GetPivot().LookVector;
+            const entityCFrame = this.instance.GetPivot();
+            const entityFacing = entityCFrame.LookVector;
             const normalizedFacing = entityFacing.sub(new Vector3(0, entityFacing.Y, 0));
-            const dotProduct = normalizedFacing.Dot((origin.mul(new Vector3(1,0,1)).sub(normalizedFacing)).Unit);
+            const dotProduct = normalizedFacing.Dot((origin.mul(new Vector3(1,0,1)).sub(entityCFrame.Position)).Unit);
+            print("dot:", dotProduct);
 
-            return dotProduct >= 0.725;
+            return dotProduct >= this.facingLeniency;
         }
 
         public GetPrimaryPart()

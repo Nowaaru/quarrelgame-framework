@@ -173,47 +173,58 @@ export namespace Animator {
 
         onStart(): void
         {
-            this.onAttributeChanged("State", (newState, oldState) =>
+            while (!this.instance.Parent)
+
+                task.wait();
+
+            this.GetAnimator()
+                .GetPlayingAnimationTracks()
+                .forEach((a) => a.Stop(0));
+
+            this.onStateChanged(EntityState.Idle);
+            this.onAttributeChanged("State", (newState, oldState) => this.onStateChanged(newState));
+        }
+
+        private onStateChanged(newState: AttributeValue)
+        {
+            if (typeIs(newState, "number"))
             {
-                if (typeIs(newState, "number"))
+                if (newState in Gio.Animations)
                 {
-
-                    if (newState in Gio.Animations)
+                    const newLoadedAnimation = this.LoadAnimation(Gio.Animations[ newState as keyof typeof Gio.Animations ]!);
+                    let animationWasInterrupted = false;
+                    if (this.currentLoadedAnimation)
                     {
-                        const newLoadedAnimation = this.LoadAnimation(Gio.Animations[ newState as keyof typeof Gio.Animations ]!);
-                        let animationWasInterrupted = false;
-                        if (this.currentLoadedAnimation)
+                        if (newLoadedAnimation.Priority.Value >= this.currentLoadedAnimation.Priority.Value)
                         {
-                            if (newLoadedAnimation.Priority.Value >= this.currentLoadedAnimation.Priority.Value)
-                            {
-                                if (newLoadedAnimation.AnimationId !== this.currentLoadedAnimation.AnimationId)
-                                {
-                                    animationWasInterrupted = true;
-                                    this.currentLoadedAnimation.Stop({fadeTime: 0});
-                                }
-                            }
-
-                            if (
-                                newLoadedAnimation.Priority === Enum.AnimationPriority.Idle
-                                && this.currentLoadedAnimation.Priority === Enum.AnimationPriority.Movement)
+                            if (newLoadedAnimation.AnimationId !== this.currentLoadedAnimation.AnimationId)
                             {
                                 animationWasInterrupted = true;
-                                this.currentLoadedAnimation.Stop({fadeTime: 0.25});
+                                this.currentLoadedAnimation.Stop({fadeTime: 0});
                             }
                         }
 
-                        if (newLoadedAnimation.AnimationId !== this.currentLoadedAnimation?.AnimationId)
+                        if (
+                            newLoadedAnimation.Priority === Enum.AnimationPriority.Idle
+                                && this.currentLoadedAnimation.Priority === Enum.AnimationPriority.Movement)
                         {
-                            this.currentLoadedAnimation = newLoadedAnimation;
-                            this.currentLoadedAnimation.Play({
-                                FadeTime: newState === EntityState.Idle && animationWasInterrupted ? 0.125 : undefined,
-                            });
+                            animationWasInterrupted = true;
+                            this.currentLoadedAnimation.Stop({fadeTime: 0.25});
                         }
                     }
 
+                    if (newLoadedAnimation.AnimationId !== this.currentLoadedAnimation?.AnimationId)
+                    {
+                        this.currentLoadedAnimation = newLoadedAnimation;
+                        this.currentLoadedAnimation.Play({
+                            FadeTime: newState === EntityState.Idle && animationWasInterrupted ? 0.125 : undefined,
+                        });
+                    }
                 }
-            });
 
+            }
         }
+
+
     }
 }

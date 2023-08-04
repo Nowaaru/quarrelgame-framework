@@ -191,7 +191,7 @@ export namespace Hitbox {
                 Parent: preferredHitboxVisualizer,
             });
 
-            task.delay(3, () =>
+            task.delay(0.5, () =>
             {
                 preferredHitboxVisualizer.Destroy();
             });
@@ -222,7 +222,6 @@ export namespace Hitbox {
                         const entityImport = await import("server/components/entity.component");
                         const entityComponent = Dependency<Components>().getComponent(hitModel, entityImport.Entity.Combatant);
 
-                        print("model hit! :: ", hitModel);
                         if (entityComponent)
                         {
                             const quarrelGameService = await import("server/services/quarrelgame.service");
