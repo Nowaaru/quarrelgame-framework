@@ -2,12 +2,14 @@ import { HttpService } from "@rbxts/services";
 import { BaseComponent } from "@flamework/components";
 
 export namespace Identifier {
-    export function GenerateID<Attributes extends defined>(component: BaseComponent<Attributes, Instance>, attr: keyof typeof component["attributes"]): string
+    export function GenerateID<Attributes extends defined>(component: BaseComponent<Attributes, Instance>, attr: string): string
     {
-        if (component.attributes[ attr ] === "generate")
+        print("id generated lfg");
+        const generatedId = HttpService.GenerateGUID(false);
+        if (component.attributes[ attr as keyof Attributes ] === "generate")
 
-            return component.attributes[ attr ] = HttpService.GenerateGUID(false) as never;
+            component.setAttribute(attr as keyof Attributes, generatedId as Attributes[keyof Attributes]);
 
-        return component.attributes[ attr ];
+        return generatedId;
     }
 }
