@@ -7,8 +7,11 @@ import { SprintState } from "server/services/movement.service";
 import { StateAttributes, StateComponent } from "shared/components/state.component";
 import { OnFrame, SchedulerService } from "server/services/scheduler.service";
 import { Animator } from "shared/components/animator.component";
-import * as lib from "shared/util/lib";
+import { BlockMode } from "shared/util/lib";
 import { Identifier } from "shared/util/identifier";
+
+import * as lib from "shared/util/lib";
+import { QuarrelGame } from "server/services/quarrelgame.service";
 
 enum RotationMode {
     Unlocked,
@@ -18,6 +21,8 @@ enum RotationMode {
 type String<T> = string;
 
 export namespace Entity {
+
+    export import EntityState = lib.EntityState
     export interface EntityAttributes extends StateAttributes
     {
         /**
@@ -40,10 +45,11 @@ export namespace Entity {
         MaxHealth: 100,
         Health: 100,
 
-        EntityId: "generate"
+        EntityId: "generate",
+        State: EntityState.Idle,
         }
         })
-    export class Entity extends StateComponent<EntityAttributes, Model>
+    export class Entity<I extends EntityAttributes> extends StateComponent<I, Model>
     {
         private readonly id = Identifier.GenerateID(this, "EntityId");
 
@@ -52,7 +58,9 @@ export namespace Entity {
             super();
             this.onAttributeChanged("EntityId", () =>
             {
-                this.attributes.EntityId = this.id;
+                if (this.attributes.EntityId !== this.id)
+
+                    this.attributes.EntityId = this.id;
             });
         }
     }
@@ -129,10 +137,12 @@ export namespace Entity {
 
         IFrame: -1,
         BlockStun: -1,
+
+        EntityId: "generate",
         State: EntityState.Idle,
         }
         })
-    export class Combatant extends StateComponent<CombatantAttributes, Model> implements OnStart, OnFrame
+    export class Combatant extends Entity<CombatantAttributes> implements OnStart, OnFrame
     {
         public readonly animator: Animator.Animator;
 
@@ -141,6 +151,7 @@ export namespace Entity {
         constructor()
         {
             super();
+
             const components = Dependency<Components>();
 
             this.animator = components.getComponent(this.instance, Animator.Animator) ?? components.addComponent(this.instance, Animator.Animator);
@@ -199,7 +210,9 @@ export namespace Entity {
                             this.SetState(EntityState.Walk);
 
                     }
-                    else this.ResetState();
+                    else if (!this.IsState(EntityState.Crouch, EntityState.Idle))
+
+                        this.ResetState();
                 }
                 else this.SetState(EntityState.Midair);
             }
@@ -208,10 +221,20 @@ export namespace Entity {
         onStart()
         {
             this.SetDefaultState(EntityState.Idle);
+            this.ResetState();
+
             this.instance.PrimaryPart = this.instance.FindFirstChild("HumanoidRootPart") as BasePart | undefined ?? this.instance.PrimaryPart;
 
             const zeroWalkSpeed = () => this.humanoid.WalkSpeed = 0;
-            const resetWalkSpeed = () => this.humanoid.WalkSpeed = this.baseWalkSpeed;
+            const slowButNotImmobile = () => this.humanoid.WalkSpeed = 0.0125;
+
+            const onNeutral = () =>
+            {
+                this.attributes.Counter = undefined;
+                this.humanoid.WalkSpeed = this.baseWalkSpeed;
+
+                return true;
+            };
 
             this.SetStateGuard(EntityState.Crouch, () =>
             {
@@ -239,38 +262,15 @@ export namespace Entity {
 
             this.SetStateEffect(EntityState.Startup, zeroWalkSpeed);
 
-            this.SetStateEffect(EntityState.Idle, resetWalkSpeed);
+            this.SetStateEffect(EntityState.Idle, onNeutral);
 
-            this.SetStateEffect(EntityState.Crouch, zeroWalkSpeed);
+            this.SetStateEffect(EntityState.Crouch, slowButNotImmobile);
 
             this.SetStateEffect(EntityState.Attack, zeroWalkSpeed);
 
             this.SetStateEffect(EntityState.Recovery, zeroWalkSpeed);
 
-            this.SetStateEffect(EntityState.Walk, resetWalkSpeed);
-        }
-
-        public Sprint(sprintState: SprintState): undefined
-        {
-            if (sprintState === SprintState.Sprinting)
-            {
-                if (this.attributes.Stamina > this.attributes.MaxStamina * 1/8 && this.IsMoving())
-                {
-                    this.SetState(EntityState.Dash);
-
-                    return undefined;
-                }
-
-                return this.Sprint(SprintState.Walking);
-            }
-            else if (sprintState === SprintState.Walking)
-            {
-                this.humanoid.WalkSpeed = this.baseWalkSpeed;
-
-                return undefined;
-            }
-
-            return undefined;
+            this.SetStateEffect(EntityState.Walk, onNeutral);
         }
 
         /**
@@ -285,7 +285,7 @@ export namespace Entity {
 
         /**
          * Place the entity in their Counter sub-state
-         * if the entity is in their
+         * if the entity is currently being attacked.
          */
         public Counter(fromEntity: Entity.Combatant)
         {
@@ -331,25 +331,41 @@ export namespace Entity {
             return this.humanoid.MoveDirection !== Vector3.zero;
         }
 
-        public IsBlocking(damageOrigin: Vector3)
+
+        // TODO: Implement a global state that allows developers to swap between
+        // blocking through a blocking state or through move direction.
+        public IsBlocking(damageOrigin: Vector3, blockMode: BlockMode = Dependency<QuarrelGame>().DefaultBlockMode)
         {
-            const entityPosition = this.GetPrimaryPart().GetPivot();
-            const normalizedEntityPosition = entityPosition.sub(new Vector3(0, entityPosition.Y, 0)); // shouldn't really matter, but JIC!
+            if (this.IsFacing(damageOrigin))
+            {
+                if (blockMode === BlockMode.MoveDirection)
+                {
+                    const { MoveDirection } = this.humanoid;
+                    const dotProduct = MoveDirection.Dot((damageOrigin.mul(new Vector3(1,0,1)).sub(MoveDirection)).Unit);
 
-            const dotProduct = normalizedEntityPosition.LookVector.Dot(
-                (
-                    damageOrigin
-                        .mul(new Vector3(1,0,1))
-                        .sub(
-                            this.GetPrimaryPart().Position.mul(
-                                new Vector3(1,0,1)
-                            )
-                        )
-                ).Unit
-            );
-            print("dotProduct:", dotProduct);
+                    if (dotProduct >= this.facingLeniency)
 
-            return dotProduct <= -0.125;
+                        return true;
+
+                    return false;
+                }
+
+                if (this.IsState(EntityState.Block))
+
+                    return true;
+            }
+
+            return false;
+        }
+
+        private readonly facingLeniency = 0.725;
+        public IsFacing(origin: Vector3, leniency = this.facingLeniency)
+        {
+            const entityFacing = this.instance.GetPivot().LookVector;
+            const normalizedFacing = entityFacing.sub(new Vector3(0, entityFacing.Y, 0));
+            const dotProduct = normalizedFacing.Dot((origin.mul(new Vector3(1,0,1)).sub(normalizedFacing)).Unit);
+
+            return dotProduct >= 0.725;
         }
 
         public GetPrimaryPart()
@@ -394,7 +410,5 @@ export namespace Entity {
 
         public readonly sprintWalkSpeed = 24;
     }
-
-    export import EntityState = lib.EntityState
 }
 export { SprintState }  from "server/services/movement.service";
