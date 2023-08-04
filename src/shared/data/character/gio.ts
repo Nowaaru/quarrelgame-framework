@@ -1,14 +1,14 @@
 import { Input } from "shared/util/input";
 import { Animation, Character, Skill } from "shared/util/character";
-import { ReplicatedStorage } from "@rbxts/services";
 import { EntityState } from "shared/util/lib";
 import { Hitbox } from "shared/util/hitbox";
+import Characters from "data/models/character";
 
 const Gio =
     new Character.CharacterBuilder3D()
         .SetName("Giovanna?")
         .SetDescription("Test character")
-        .SetModel(ReplicatedStorage.WaitForChild("R15") as Model)
+        .SetModel(Characters.jane)
         .SetEasiness(3)
         .SetAttack(
             Input.Slash,
@@ -23,8 +23,8 @@ const Gio =
                         .SetBlock(3)
                         .SetHitbox(
                             new Hitbox.HitboxBuilder()
-                                .SetOffset()
-                                .SetSize(new Vector3(7,7,7))
+                                .SetOffset(new Vector3(0, 0.5, 2))
+                                .SetSize(new Vector3(2, 2, 3.5))
                                 .Construct()
                         )
                         .SetAnimation(
@@ -68,6 +68,12 @@ const Gio =
                         .SetStartup(4)
                         .SetActive(6)
                         .SetRecovery(-4)
+                        .SetHitbox(
+                            new Hitbox.HitboxBuilder()
+                                .SetOffset()
+                                .SetSize(new Vector3(7,7,7))
+                                .Construct()
+                        )
                 )
                 .SetGaugeRequired(25)
                 .SetGroundedType(Skill.SkillGroundedType.Ground)
