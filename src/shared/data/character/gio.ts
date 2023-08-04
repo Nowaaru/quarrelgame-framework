@@ -2,7 +2,7 @@ import { Input } from "shared/util/input";
 import { Animation, Character, Skill } from "shared/util/character";
 import { ReplicatedStorage } from "@rbxts/services";
 import { EntityState } from "shared/util/lib";
-import { Hitbox } from "server/util/hitbox";
+import { Hitbox } from "shared/util/hitbox";
 
 const Gio =
     new Character.CharacterBuilder3D()
