@@ -88,20 +88,25 @@ export class CombatService implements OnStart, OnInit
 
                 if (Gio.Attacks[ inputTranslation ])
                 {
-                    let attackFrameData;
+                    let attackSkill: Skill.Skill | undefined;
 
                     if (typeIs(Gio.Attacks[ inputTranslation ], "function"))
 
-                        attackFrameData = (Gio.Attacks[ inputTranslation ] as (() => Skill.Skill) | undefined)?.().FrameData;
+                        attackSkill = (Gio.Attacks[ inputTranslation ] as (() => Skill.Skill) | undefined)?.();
 
-                    else attackFrameData = (Gio.Attacks[ inputTranslation ] as Skill.Skill | undefined)?.FrameData;
+                    else attackSkill = (Gio.Attacks[ inputTranslation ] as Skill.Skill | undefined);
 
-                    if (!entityComponent.IsNegative())
+
+                    if (attackSkill)
                     {
-                        return attackFrameData?.Execute(entityComponent).tap(() =>
+                        const attackFrameData = attackSkill.FrameData;
+                        if (!entityComponent.IsNegative())
                         {
-                            entityComponent.ResetState();
-                        }) ?? Promise.resolve(false);
+                            return attackFrameData.Execute(entityComponent, attackSkill).tap(() =>
+                            {
+                                entityComponent.ResetState();
+                            }) ?? Promise.resolve(false);
+                        }
                     }
 
                     return Promise.resolve(false);
