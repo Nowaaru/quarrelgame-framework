@@ -48,6 +48,17 @@ export enum EntityState {
 
     /**
      * A state where the Entity
+     * was hit.
+     */
+    Hitstun,
+    /**
+     * A state where the Entity
+     * was hit while crouching.
+     */
+    HitstunCrouching,
+
+    /**
+     * A state where the Entity
      * was slammed down onto the
      * floor.
      */
@@ -91,6 +102,8 @@ export enum EntityState {
      * A variant of the Recovery
      * state where the Entity is able
      * to cancel their move.
+     *
+     * @deprecated
      */
     RecoveryPositive,
 }
