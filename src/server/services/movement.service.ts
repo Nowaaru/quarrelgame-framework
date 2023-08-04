@@ -29,8 +29,6 @@ export class MovementService implements OnStart, OnInit
 
         ServerFunctions.RequestSprint.setCallback((player, sprintState) =>
         {
-            fetchEntityFromPlayer(player).Sprint(sprintState);
-
             return true;
         });
 
