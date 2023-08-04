@@ -300,7 +300,7 @@ export namespace Skill {
 
     class _FrameData
     {
-        protected AttackSetup({humanoid}: Entity.Entity)
+        protected AttackSetup({humanoid}: Entity.Combatant)
         {
             humanoid.Move(Vector3.zero, true);
         }
@@ -370,7 +370,7 @@ export namespace Skill {
             this.Contact = Contact;
         }
 
-        public async Execute(entity: Entity.Entity): Promise<boolean>
+        public async Execute(entity: Entity.Combatant): Promise<boolean>
         {
             const { animator } = entity;
 

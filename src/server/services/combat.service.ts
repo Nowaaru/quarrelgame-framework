@@ -42,7 +42,7 @@ export class CombatService implements OnStart, OnInit
 
             const participantItem = this.quarrelGame.GetParticipantFromCharacter(player.Character)!;
             const physicsEntity = components.getComponent(participantItem.character!, Physics.PhysicsEntity);
-            const normalEntity = components.getComponent(participantItem.character!, Entity.Entity);
+            const normalEntity = components.getComponent(participantItem.character!, Entity.Combatant);
 
             assert(physicsEntity, "physics entity not found");
 
@@ -83,7 +83,7 @@ export class CombatService implements OnStart, OnInit
                 assert(this.quarrelGame.IsParticipant(player), "player is not a participant");
                 assert(player.Character, "character is not defined");
 
-                const entityComponent = Dependency<Components>().getComponent(player.Character, Entity.Entity);
+                const entityComponent = Dependency<Components>().getComponent(player.Character, Entity.Combatant);
                 assert(entityComponent, "entity component not found");
 
                 if (Gio.Attacks[ inputTranslation ])

@@ -176,7 +176,7 @@ export namespace Hitbox {
                 assert(hitModel, "hit model is not found");
 
                 const entityImport = await import("server/components/entity.component");
-                const entityComponent = Dependency<Components>().getComponent(hitModel, entityImport.Entity.Entity);
+                const entityComponent = Dependency<Components>().getComponent(hitModel, entityImport.Entity.Combatant);
                 assert(entityComponent, "entity component not found");
 
                 const quarrelGameService = await import("server/services/quarrelgame.service");
@@ -192,7 +192,7 @@ export namespace Hitbox {
                 assert(hitboxPossessor, "could not find hitbox possessor");
 
                 const entityIsBlocking = entityComponent.IsBlocking(hitboxPossessor.GetPivot().Position);
-                const possessorEntityComponent = Dependency<Components>().getComponent(hitboxPossessor, entityImport.Entity.Entity);
+                const possessorEntityComponent = Dependency<Components>().getComponent(hitboxPossessor, entityImport.Entity.Combatant);
                 const { hitRegion } = this.hitbox;
                 if (entityIsBlocking)
                 {

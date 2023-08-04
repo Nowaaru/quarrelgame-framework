@@ -17,20 +17,32 @@ enum RotationMode {
 type String<T> = string;
 
 export namespace Entity {
-    export interface EntityAttributes extends StateAttributes {
+    export interface EntityAttributes extends StateAttributes
+    {
+        MaxHealth: number,
+        Health: number,
+    }
+
+    @Component({
+        defaults:
+        {
+        MaxHealth: 100,
+        Health: 100,
+        }
+        })
+    export class Entity extends StateComponent<EntityAttributes, Model>
+    {
+        constructor()
+        {
+            super();
+        }
+    }
+
+    export interface CombatantAttributes extends EntityAttributes {
         /**
          * The ID of the entity.
          */
         EntityId: string,
-
-        /**
-         * The maximum health of the entity.
-         */
-        MaxHealth: number,
-        /**
-         * The current health of the entity.
-         */
-        Health: number,
 
         /**
          * The maximum stamina of the entity.
@@ -107,7 +119,7 @@ export namespace Entity {
         State: EntityState.Idle,
         }
         })
-    export class Entity extends StateComponent<EntityAttributes, Model> implements OnStart, OnFrame
+    export class Combatant extends StateComponent<CombatantAttributes, Model> implements OnStart, OnFrame
     {
         public readonly animator: Animator.Animator;
 
@@ -119,7 +131,8 @@ export namespace Entity {
             const components = Dependency<Components>();
 
             this.animator = components.getComponent(this.instance, Animator.Animator) ?? components.addComponent(this.instance, Animator.Animator);
-            this.stateAnimator = components.getComponent(this.instance, Animator.StateAnimator) ?? components.addComponent(this.instance, Animator.StateAnimator);
+            this.stateAnimator =
+                components.getComponent(this.instance, Animator.StateAnimator) ?? components.addComponent(this.instance, Animator.StateAnimator);
         }
 
         private readonly staminaHandler = RunService.Heartbeat.Connect((dt) =>
@@ -135,7 +148,7 @@ export namespace Entity {
             );
         })
 
-        private tickDown(attr: keyof EntityAttributes)
+        private tickDown(attr: keyof CombatantAttributes)
         {
             assert(attr, `invalid attribute: ${attr}`);
             assert(typeIs(this.attributes[ attr ], "number"), attr);
@@ -261,7 +274,7 @@ export namespace Entity {
          * Place the entity in their Counter sub-state
          * if the entity is in their
          */
-        public Counter(fromEntity: Entity.Entity)
+        public Counter(fromEntity: Entity.Combatant)
         {
             if (this.IsState(EntityState.Hitstun, EntityState.HitstunCrouching, EntityState.Knockdown, EntityState.KnockdownHard))
             {
