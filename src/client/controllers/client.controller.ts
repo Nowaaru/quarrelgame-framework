@@ -95,7 +95,6 @@ export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, 
 
             case (Enum.KeyCode.H):
             {
-                print("Toggling the Heads-Up display.");
                 if (this.hud.IsHudEnabled())
 
                     this.hud.DisableHud();
