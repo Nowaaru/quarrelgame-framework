@@ -64,11 +64,6 @@ export enum EntityState {
      * is crouching.
      */
     Crouch,
-    /**
-     * A state where the Entity
-     * is crouching while blocking.
-     */
-    CrouchBlocking,
 
     /**
      * A state where the Entity is

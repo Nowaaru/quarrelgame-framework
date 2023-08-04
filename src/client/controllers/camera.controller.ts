@@ -318,7 +318,7 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
                     const _cameraOffset = this.crouchCameraOffset;
                     const newState = EntityState[ EntityState[ _newState as number ] as keyof typeof EntityState ];
                     const oldState = EntityState[ EntityState[ _oldState as number ] as keyof typeof EntityState ];
-                    const crouchStateTest = [EntityState.Crouch, EntityState.CrouchBlocking];
+                    const crouchStateTest = [EntityState.Crouch];
 
                     if (crouchStateTest.includes(newState))
 
