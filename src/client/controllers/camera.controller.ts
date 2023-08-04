@@ -77,7 +77,7 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
                         this.lockOnTarget.Position
                     );
 
-                    gameSettings.RotationType = Enum.RotationType.CameraRelative;
+                    // gameSettings.RotationType = Enum.RotationType.CameraRelative;
                     TweenService.Create(this.Camera, new TweenInfo(0.1, Enum.EasingStyle.Sine), {
                         CFrame: lockOnTargetCFrame,
                         // cameraOccluderIsNotTarget
@@ -176,15 +176,16 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
 
                 return reject(new CameraError("The character does not have a humanoid."));
 
+            const userSettings = UserSettings().GetService("UserGameSettings");
             if (enabled)
             {
                 this.CameraUtils.setMouseBehaviorOverride(Enum.MouseBehavior.LockCenter);
 
                 RunService.BindToRenderStep("BattleCamera", Enum.RenderPriority.Last.Value + 1, (dt: number) =>
                 {
-                    if (!this.lockOnTarget)
+                    // if (!this.lockOnTarget)
 
-                        UserSettings().GetService("UserGameSettings").RotationType = Enum.RotationType.MovementRelative;
+                    userSettings.RotationType = Enum.RotationType.CameraRelative;
 
                     this.mouse.Lock();
                     this.CameraModule.SetIsMouseLocked(true);
@@ -194,6 +195,7 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
             else
             {
                 RunService.UnbindFromRenderStep("BattleCamera");
+                userSettings.RotationType = Enum.RotationType.MovementRelative;
                 this.SetLockOnTarget(undefined);
 
                 Promise.fromEvent(this.cursor.InterpolateTransparency(undefined, 1).Completed).then(() =>
