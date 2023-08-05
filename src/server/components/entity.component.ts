@@ -12,6 +12,7 @@ import { Identifier } from "shared/util/identifier";
 
 import * as lib from "shared/util/lib";
 import { QuarrelGame } from "server/services/quarrelgame.service";
+import { Input } from "shared/util/input";
 
 enum RotationMode {
     Unlocked,
