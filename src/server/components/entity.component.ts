@@ -172,18 +172,32 @@ export namespace Entity {
             );
         })
 
-        private tickDown(attr: keyof CombatantAttributes)
+        private tickDowns: Set<keyof CombatantAttributes> = new Set();
+        private tickDown(attr: keyof {
+            [K in keyof CombatantAttributes as (CombatantAttributes[K] extends number ? K : never )]: number
+        })
         {
-            assert(attr, `invalid attribute: ${attr}`);
-            assert(typeIs(this.attributes[ attr ], "number"), attr);
-            if ( (this.attributes[ attr ] as number) > 0 )
+            const attributeValue = this.attributes[ attr ];
+            assert(attr && attr in this.attributes, `invalid attribute: ${attr}`);
+            assert(typeIs(attributeValue, "number"), `invalid attribute type of ${attr} for tickDown: ${typeOf(attr)}`);
 
-                (this.attributes[ attr ] as number) -= 1;
+            // wait for one extra frame if the tickdown
+            // was just applied
+            if (this.tickDowns.has(attr))
+            {
+                if (attributeValue > 0)
 
-            else if (this.attributes[ attr ] !== -1)
+                    this.setAttribute(attr, attributeValue - 1);
 
-                (this.attributes[ attr ] as number) = -1;
+                else if (attributeValue !== -1)
+                {
+                    this.tickDowns.delete(attr);
+                    this.setAttribute(attr, -1);
+                }
+            }
+            else if (attributeValue > 0)
 
+                this.tickDowns.add(attr);
         }
 
         onFrame(dt: number): void
