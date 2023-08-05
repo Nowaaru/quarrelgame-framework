@@ -4,7 +4,7 @@ import { Physics } from "./physics";
 import { HttpService, RunService } from "@rbxts/services";
 import { CombatService } from "server/services/combat.service";
 import { SprintState } from "server/services/movement.service";
-import { StateAttributes, StateComponent } from "shared/components/state.component";
+import { StateAttributes, StatefulComponent } from "shared/components/state.component";
 import { OnFrame, SchedulerService } from "server/services/scheduler.service";
 import { Animator } from "shared/components/animator.component";
 import { BlockMode } from "shared/util/lib";
@@ -50,7 +50,7 @@ export namespace Entity {
         State: EntityState.Idle,
         }
         })
-    export class Entity<I extends EntityAttributes> extends StateComponent<I, Model>
+    export class Entity<I extends EntityAttributes> extends StatefulComponent<I, Model>
     {
         private readonly id = Identifier.GenerateComponentId(this, "EntityId");
 

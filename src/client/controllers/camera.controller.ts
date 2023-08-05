@@ -5,7 +5,7 @@ import { Option, Result } from "@rbxts/rust-classes";
 import { BaseCamera, CameraUtils, PlayerModule } from "shared/util/player";
 import { Cursor, CursorMode } from "./cursor.controller";
 import { Components } from "@flamework/components";
-import { StateAttributes, StateComponent } from "shared/components/state.component";
+import { StateAttributes, StatefulComponent } from "shared/components/state.component";
 import { EntityState } from "shared/util/lib";
 
 export interface BattleCamera {
@@ -309,7 +309,7 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
             });
 
             const components = Dependency<Components>();
-            const stateController = await components.waitForComponent(character, StateComponent);
+            const stateController = await components.waitForComponent(character, StatefulComponent);
 
             if (stateController)
             {
@@ -341,7 +341,7 @@ export class CameraController implements OnStart, OnInit, OnMouseMove
 
     private battleCameraEnabled = false;
 
-    private entityStateController?: StateComponent<StateAttributes, Instance>;
+    private entityStateController?: StatefulComponent<StateAttributes, Instance>;
 
     private listeners: Set<BattleCamera> = new Set();
 }

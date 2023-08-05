@@ -14,7 +14,7 @@ export interface StateAttributes {
     State: AttributeValue,
 }
 @Component({})
-export class StateComponent<A extends StateAttributes, I extends Instance> extends BaseComponent<A, I> implements OnStart
+export class StatefulComponent<A extends StateAttributes, I extends Instance> extends BaseComponent<A, I> implements OnStart
 {
     private defaultState?: EntityState;
 

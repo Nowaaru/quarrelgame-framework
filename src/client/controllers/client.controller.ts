@@ -11,7 +11,7 @@ import { EntityState, SprintState } from "shared/util/lib";
 import { OnGamepadInput } from "./gamepad.controller";
 import { Components } from "@flamework/components";
 import { Animator } from "../../shared/components/animator.component";
-import { StateComponent } from "shared/components/state.component";
+import { StatefulComponent } from "shared/components/state.component";
 
 const { client: ClientFunctions } = GlobalFunctions;
 
@@ -39,7 +39,7 @@ export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, 
         {
             char.WaitForChild("Humanoid").WaitForChild("Animator");
             Dependency<Components>().addComponent(char, Animator.Animator);
-            Dependency<Components>().addComponent(char, StateComponent);
+            Dependency<Components>().addComponent(char, StatefulComponent);
         });
     }
 
