@@ -756,8 +756,8 @@ export namespace Skill {
         }
 
         /**
-         * Set an attack's invulnerability after Frame 1.
-         * @param isReversal Whether this attack is a Reversal.
+         * Set the skill's invulnerability after Frame 1.
+         * @param isReversal Whether this skill is a Reversal.
          */
         public SetReversal(isReversal = false)
         {
@@ -767,7 +767,7 @@ export namespace Skill {
         }
 
         /**
-         * Set an attack's motion input.
+         * Set the skill's motion input.
          * @param motionInput The motion input required to execute the Skill.
          */
         public SetMotionInput(motionInput: MotionInput = [])
