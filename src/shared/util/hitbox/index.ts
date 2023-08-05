@@ -14,10 +14,7 @@ import * as lib from "shared/util/lib";
 
 type Frames = number;
 export namespace Hitbox {
-    export enum HitResult {
-        Blocked,
-        Contact,
-    }
+    export import HitResult = lib.HitResult;
 
     export class HitboxBuilder
     {
@@ -139,6 +136,7 @@ export namespace Hitbox {
 
         AttackerIsBlocking: boolean;
         Region: HitboxRegion
+        Skill: Skill.Skill,
     }
 
     export class ActiveHitbox
@@ -237,6 +235,7 @@ export namespace Hitbox {
 
                                     AttackerIsBlocking: entityIsBlocking,
                                     Region: this.hitbox.hitRegion,
+                                    Skill: skill,
                                 });
                             }
                             else warn("Attacker model found, but the model does not possess a component?");

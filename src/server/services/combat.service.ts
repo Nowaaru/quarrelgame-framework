@@ -110,10 +110,22 @@ export class CombatService implements OnStart, OnInit
                         const attackFrameData = attackSkill.FrameData;
                         if (!combatantComponent.IsNegative())
                         {
-                            return attackFrameData.Execute(combatantComponent, attackSkill).tap(() =>
+                            const previousSkillId = combatantComponent.attributes.PreviousSkill;
+                            let skillDoesGatling = false;
+
+                            if (previousSkillId)
                             {
-                                combatantComponent.ResetState();
-                            }) ?? Promise.resolve(false);
+                                const previousSkill = Skill.GetCachedSkill(previousSkillId);
+                                skillDoesGatling = !!(previousSkill?.GatlingsInto.has(attackSkill) || previousSkill?.GatlingsInto.has(attackSkill.Id));
+                            }
+
+                            if (!previousSkillId || skillDoesGatling)
+                            {
+                                return attackFrameData.Execute(combatantComponent, attackSkill).tap(() =>
+                                {
+                                    combatantComponent.ResetState();
+                                }) ?? Promise.resolve(false);
+                            }
                         }
                     }
 

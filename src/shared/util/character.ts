@@ -1,13 +1,16 @@
 import type { SchedulerService } from "server/services/scheduler.service";
 import type { Animator } from "shared/components/animator.component";
 import type { Entity } from "server/components/entity.component";
-import { EntityState } from "shared/util/lib";
+import { EntityState, HitResult, HitboxRegion } from "shared/util/lib";
 
 import { Input, Motion, MotionInput } from "./input";
 import { Hitbox } from "./hitbox";
 
 import { Dependency } from "@flamework/core";
-import { RunService } from "@rbxts/services";
+import { HttpService, RunService } from "@rbxts/services";
+import { Identifier } from "./identifier";
+
+type SkillName = string;
 
 export namespace Animation {
     export interface AnimationData {
@@ -370,6 +373,11 @@ export namespace Skill {
             this.Contact = Contact;
         }
 
+        public OnHitboxTick(entity: Entity.Combatant<Entity.CombatantAttributes>, skill: Skill.Skill)
+        {
+            entity.attributes.PreviousSkill = skill.Id;
+        }
+
         public async Execute(entity: Entity.Combatant<Entity.CombatantAttributes>, skill: Skill.Skill): Promise<boolean>
         {
             const { animator } = entity;
@@ -379,21 +387,20 @@ export namespace Skill {
             assert(this.Animation, "Builder incomplete! Animation not defined.");
 
             const animatorAnimation = animator.LoadAnimation(this.Animation);
+            const previousSkill = entity.attributes.PreviousSkill;
 
             return animatorAnimation.Play().then(async () =>
             {
                 const schedulerService = Dependency<SchedulerService>();
                 if (this.StartupFrames > 0)
-
                 {
                     entity.SetState(EntityState.Startup);
                     for (let i = 0; i < this.StartupFrames; i++)
 
                         await schedulerService.WaitForNextTick();
-
                 }
 
-                const attackDidLand = false;
+                let attackDidLand = HitResult.Whiffed;
                 if (this.ActiveFrames > 0)
                 {
                     entity.SetState(EntityState.Attack);
@@ -411,24 +418,29 @@ export namespace Skill {
                             if (Attacked.IsState(EntityState.Crouch))
                             {
                                 if (Region === HitboxRegion.Overhead)
-
+                                {
+                                    attackDidLand = HitResult.Contact;
                                     Attacker.SetState(EntityState.HitstunCrouching);
-
+                                }
                                 else
-
+                                {
+                                    attackDidLand = HitResult.Blocked;
                                     Attacker.AddBlockStun(skill.FrameData.BlockStunFrames);
+                                }
 
                                 return;
                             }
 
                             if (Region === HitboxRegion.Low)
-
+                            {
+                                attackDidLand = HitResult.Contact;
                                 Attacker.SetState(EntityState.Hitstun);
-
+                            }
                             else
-
+                            {
+                                attackDidLand = HitResult.Blocked;
                                 Attacker.AddBlockStun(skill.FrameData.BlockStunFrames);
-
+                            }
 
                             return;
 
@@ -436,11 +448,17 @@ export namespace Skill {
 
                         if (Attacker.IsState(EntityState.Crouch))
 
+
                             Attacker.SetState(EntityState.HitstunCrouching);
 
-                        else Attacker.SetState(EntityState.Hitstun);
+                        else
+                        {
+                            attackDidLand = HitResult.Contact;
+                            Attacker.SetState(EntityState.Hitstun);
+                        }
 
-                        if (Attacker)
+                        attackDidLand = HitResult.Contact;
+                        if (Attacked.IsState(EntityState.Startup, EntityState.Attack, EntityState.Recovery))
 
                             Attacked.Counter(Attacker);
 
@@ -458,8 +476,13 @@ export namespace Skill {
 
                 if (this.RecoveryFrames > 0)
                 {
-                    if (!attackDidLand)
+                    if (attackDidLand !== HitResult.Whiffed)
                     {
+                        let addedFrames = 0;
+                        if (attackDidLand === HitResult.Blocked)
+
+                            addedFrames += this.BlockStunFrames;
+
                         entity.SetState(EntityState.Recovery);
                         for (let i = 0; i < this.RecoveryFrames; i++)
 
@@ -601,6 +624,14 @@ export namespace Skill {
         }
     }
 
+    type SkillId = string;
+    const allCachedSkills: Map<SkillId, Skill> = new Map();
+
+    export function GetCachedSkill(skillId: SkillId): Skill | undefined
+    {
+        return allCachedSkills.get(skillId);
+    }
+
     interface SkillClassProps {
         name: string,
 
@@ -617,6 +648,8 @@ export namespace Skill {
         canCounterHit: boolean,
 
         gaugeRequired: number,
+
+        gatlings: Set<(Skill.Skill | SkillName)>,
     }
 
     /**
@@ -625,7 +658,7 @@ export namespace Skill {
     export class Skill
     {
         constructor(
-            { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired }: SkillClassProps
+            { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired, gatlings}: SkillClassProps
         )
         {
             this.Name = name;
@@ -636,7 +669,15 @@ export namespace Skill {
             this.IsReversal = isReversal;
             this.CanCounter = canCounterHit;
             this.GaugeRequired = gaugeRequired;
+            this.GatlingsInto = gatlings;
+
+            allCachedSkills.set(this.Id, this);
         }
+
+        /**
+         * The ID of the skill.
+         */
+        public readonly Id = Identifier.GenerateId();
 
         /**
          * The name of the skill.
@@ -667,6 +708,11 @@ export namespace Skill {
        */
        public readonly IsReversal: boolean;
 
+        /**
+         * What normals the skill can be canceled into.
+         */
+        public readonly GatlingsInto: SkillClassProps["gatlings"]
+
        /**
         * Whether this move can put an Entity
         * in the Counter state under the
@@ -694,6 +740,13 @@ export namespace Skill {
         AirOnly,
     }
 
+    export enum SkillType {
+        Normal,
+        CommandNormal,
+
+        Super,
+    }
+
     export class SkillBuilder
     {
         private name?: string;
@@ -708,7 +761,11 @@ export namespace Skill {
 
         private isReversal = false;
 
+        private skillType?: SkillType;
+
         private canCounterHit = true;
+
+        private gatlings: Set<Skill.Skill & { skillType: SkillType.Normal } | string> = new Set();
 
         private gaugeRequired = 0;
 
@@ -818,6 +875,32 @@ export namespace Skill {
         }
 
         /**
+         * Set the Skills that this Skill can
+         * cancel into.
+         */
+        public SetGatling<Normal extends Skill.Skill & { skillType: SkillType.Normal }>(...skills: (Normal | SkillName)[] ): this
+        {
+            skills.forEach((skill) =>
+            {
+                this.gatlings.add(skill);
+            });
+
+            return this;
+        }
+
+        /**
+         * Set the type of this skill.
+         * Any normal skill can be canceled by a super skill.
+         * @param skillType The type of skill.
+         */
+        public SkillType(skillType: SkillType): this
+        {
+            this.skillType = skillType;
+
+            return this;
+        }
+
+        /**
          * Set the amount of gauge required for the skill to activate.
          * @param gaugeRequired The amount of gauge required.
          */
@@ -834,7 +917,7 @@ export namespace Skill {
          */
         public Construct(): Skill
         {
-            const { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired } = this;
+            const { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired, gatlings } = this;
             assert(name, "Builder incomplete! Name is unset.");
             assert(description !== undefined, "Builder incomplete! Description is unset.");
             assert(frameData, "Builder incomplete! Frame Data is unset.");
@@ -849,6 +932,7 @@ export namespace Skill {
                 isReversal,
                 canCounterHit,
                 gaugeRequired,
+                gatlings,
             });
         }
     }
