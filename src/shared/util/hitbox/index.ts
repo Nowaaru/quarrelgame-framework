@@ -6,9 +6,11 @@ import { $env } from "rbxts-transform-env";
 import { Skill } from "shared/util/character";
 
 import type { QuarrelGame } from "server/services/quarrelgame.service";
-import { EntityState } from "../lib";
 import Make from "@rbxts/make";
 import Signal from "@rbxts/signal";
+
+import type { Entity } from "server/components/entity.component";
+import * as lib from "shared/util/lib";
 
 type Frames = number;
 export namespace Hitbox {
@@ -90,28 +92,7 @@ export namespace Hitbox {
         }
     }
 
-    /**
-     * The region where the Hitbox
-     * will hit.
-     */
-    enum HitboxRegion {
-        /**
-         * The attack can be blocked by
-         * crouch-blocking entities only.
-         */
-        Low,
-        /**
-         * The attack can be blocked by
-         * standing-blocking entities or
-         * crouch-blocking entities.
-         */
-        High,
-        /**
-         * The attack can be blocked by
-         * standing-blocking entities only.
-         */
-        Overhead
-    }
+    export import HitboxRegion =  lib.HitboxRegion;
     interface HitboxProps {
         size: Vector3;
         disjointOffset: Vector3;
@@ -152,9 +133,17 @@ export namespace Hitbox {
         }
     }
 
+    interface Contact {
+        Attacker: Entity.Combatant<Entity.CombatantAttributes>;
+        Attacked: Entity.Combatant<Entity.CombatantAttributes>;
+
+        AttackerIsBlocking: boolean;
+        Region: HitboxRegion
+    }
+
     export class ActiveHitbox
     {
-        public readonly Contact: Signal<(contactedModel: Model, contactType: HitResult) => void> = new Signal();
+        public readonly Contact: Signal<(contact: Contact) => void> = new Signal();
 
         private readonly hitbox: Omit<Hitbox, "Initialize">;
 
@@ -239,53 +228,18 @@ export namespace Hitbox {
                             const entityIsBlocking = entityComponent.IsBlocking(hitboxPossessor.GetPivot().Position);
                             const possessorEntityComponent = Dependency<Components>().getComponent(hitboxPossessor, entityImport.Entity.Combatant);
 
-                            const { hitRegion } = this.hitbox;
-                            if (entityIsBlocking)
-                            {
-                                if (entityComponent.IsState(EntityState.Crouch))
-                                {
-                                    if (hitRegion === HitboxRegion.Overhead)
-                                    {
-                                        this.Contact.Fire(hitModel, HitResult.Contact);
-                                        entityComponent.SetState(EntityState.HitstunCrouching);
-                                    }
-                                    else
-                                    {
-                                        this.Contact.Fire(hitModel, HitResult.Blocked);
-                                        entityComponent.AddBlockStun(skill.FrameData.BlockStunFrames);
-                                    }
-
-                                    return;
-                                }
-
-                                if (hitRegion === HitboxRegion.Low)
-                                {
-                                    this.Contact.Fire(hitModel, HitResult.Contact);
-                                    entityComponent.SetState(EntityState.Hitstun);
-                                }
-                                else
-                                {
-
-                                    this.Contact.Fire(hitModel, HitResult.Blocked);
-                                    entityComponent.AddBlockStun(skill.FrameData.BlockStunFrames);
-                                }
-
-                                return;
-
-                            }
-
-                            this.Contact.Fire(hitModel, HitResult.Contact);
-                            if (entityComponent.IsState(EntityState.Crouch))
-
-                                entityComponent.SetState(EntityState.HitstunCrouching);
-
-                            else entityComponent.SetState(EntityState.Hitstun);
-
                             if (possessorEntityComponent)
 
-                                entityComponent.Counter(possessorEntityComponent);
+                            {
+                                this.Contact.Fire({
+                                    Attacker: possessorEntityComponent,
+                                    Attacked: entityComponent,
 
-                            else print("no possessorEntityComponent");
+                                    AttackerIsBlocking: entityIsBlocking,
+                                    Region: this.hitbox.hitRegion,
+                                });
+                            }
+                            else warn("Attacker model found, but the model does not possess a component?");
 
                         }
                     });

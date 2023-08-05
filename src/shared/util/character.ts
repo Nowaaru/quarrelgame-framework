@@ -393,20 +393,60 @@ export namespace Skill {
 
                 }
 
-                let attackDidLand = false;
+                const attackDidLand = false;
                 if (this.ActiveFrames > 0)
                 {
                     entity.SetState(EntityState.Attack);
                     const activeHitbox = this.Hitbox.Initialize(entity.GetPrimaryPart(), skill);
-                    activeHitbox.Contact.Connect((hitModel, hitType) =>
+                    activeHitbox.Contact.Connect(({
+                        Attacker,
+                        Attacked,
+
+                        AttackerIsBlocking,
+                        Region
+                    }) =>
                     {
-                        if (hitType === Hitbox.HitResult.Blocked)
+                        if (AttackerIsBlocking)
+                        {
+                            if (Attacked.IsState(EntityState.Crouch))
+                            {
+                                if (Region === HitboxRegion.Overhead)
 
-                            return print("oh no! the attack was blocked!");
+                                    Attacker.SetState(EntityState.HitstunCrouching);
 
-                        attackDidLand = true;
+                                else
 
-                        return print("aw yeah! the attack landed!");
+                                    Attacker.AddBlockStun(skill.FrameData.BlockStunFrames);
+
+                                return;
+                            }
+
+                            if (Region === HitboxRegion.Low)
+
+                                Attacker.SetState(EntityState.Hitstun);
+
+                            else
+
+                                Attacker.AddBlockStun(skill.FrameData.BlockStunFrames);
+
+
+                            return;
+
+                        }
+
+                        if (Attacker.IsState(EntityState.Crouch))
+
+                            Attacker.SetState(EntityState.HitstunCrouching);
+
+                        else Attacker.SetState(EntityState.Hitstun);
+
+                        if (Attacker)
+
+                            Attacked.Counter(Attacker);
+
+                        else print("no Attacked");
+
+
                     });
 
                     for (let i = 0; i < this.ActiveFrames; i++)

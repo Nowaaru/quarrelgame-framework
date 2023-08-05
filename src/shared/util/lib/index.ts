@@ -118,6 +118,29 @@ export enum EntityState {
     RecoveryPositive,
 }
 
+/**
+ * The region where the Hitbox
+ * will hit.
+ */
+export enum HitboxRegion {
+    /**
+     * The attack can be blocked by
+     * crouch-blocking entities only.
+     */
+    Low,
+    /**
+     * The attack can be blocked by
+     * standing-blocking entities or
+     * crouch-blocking entities.
+     */
+    High,
+    /**
+     * The attack can be blocked by
+     * standing-blocking entities only.
+     */
+    Overhead
+}
+
 export enum BlockMode {
     /**
      * Attacks are blocked relative to the MoveDirection
