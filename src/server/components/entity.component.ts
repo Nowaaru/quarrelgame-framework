@@ -356,7 +356,7 @@ export namespace Entity {
                     print("movedirection-based blocking");
                     const { MoveDirection } = this.humanoid;
                     const dotProduct = MoveDirection.Dot((damageOrigin.mul(new Vector3(1,0,1)).sub(MoveDirection.mul(new Vector3(1,0,1)))).Unit);
-                    print("facing:", dotProduct);
+                    print("facing:", dotProduct, MoveDirection.Magnitude);
 
                     if (dotProduct >= this.facingLeniency)
 
