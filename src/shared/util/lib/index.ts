@@ -119,6 +119,17 @@ export enum EntityState {
 }
 
 /**
+ * The result of a skill making
+ * contact with an Entity.
+ */
+export enum HitResult {
+    Whiffed,
+    Blocked,
+    Contact,
+    Counter,
+}
+
+/**
  * The region where the Hitbox
  * will hit.
  */
