@@ -76,8 +76,16 @@ export class CombatService implements OnStart, OnInit
             return true;
         });
 
+        // read input enums and setup events
         getEnumValues(Input).forEach(([inputName, inputTranslation]) =>
         {
+            if (`${inputTranslation}` as Input in ServerFunctions)
+            {
+                warn(`${inputTranslation} is not a valid ServerFunction.`);
+
+                return;
+            }
+
             ServerFunctions[ `${inputTranslation}` as Input ].setCallback((player) =>
             {
                 assert(this.quarrelGame.IsParticipant(player), "player is not a participant");
