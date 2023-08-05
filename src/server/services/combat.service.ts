@@ -91,8 +91,8 @@ export class CombatService implements OnStart, OnInit
                 assert(this.quarrelGame.IsParticipant(player), "player is not a participant");
                 assert(player.Character, "character is not defined");
 
-                const entityComponent = Dependency<Components>().getComponent(player.Character, Entity.Combatant);
-                assert(entityComponent, "entity component not found");
+                const combatantComponent = this.GetCombatant(player.Character);
+                assert(combatantComponent, "entity component not found");
 
                 if (Gio.Attacks[ inputTranslation ])
                 {
@@ -108,11 +108,11 @@ export class CombatService implements OnStart, OnInit
                     if (attackSkill)
                     {
                         const attackFrameData = attackSkill.FrameData;
-                        if (!entityComponent.IsNegative())
+                        if (!combatantComponent.IsNegative())
                         {
-                            return attackFrameData.Execute(entityComponent, attackSkill).tap(() =>
+                            return attackFrameData.Execute(combatantComponent, attackSkill).tap(() =>
                             {
-                                entityComponent.ResetState();
+                                combatantComponent.ResetState();
                             }) ?? Promise.resolve(false);
                         }
                     }
@@ -123,6 +123,13 @@ export class CombatService implements OnStart, OnInit
                 return Promise.resolve(false);
             });
         });
+    }
+
+    public GetCombatant<T extends Model>(instance: T)
+    {
+        const components = Dependency<Components>();
+
+        return components.getComponent(instance, Entity.PlayerCombatant) ?? components.getComponent(instance, Entity.Combatant);
     }
 
     public ApplyImpulse(impulseTarget: Model)
