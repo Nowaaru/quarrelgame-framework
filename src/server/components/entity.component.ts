@@ -379,13 +379,14 @@ export namespace Entity {
         // TODO: Important - Fix bug where dot product in Facing is incorrect leading to blocks being non-functional
         public IsFacing(origin: Vector3, leniency = this.facingLeniency)
         {
-            const entityCFrame = this.instance.GetPivot();
-            const entityFacing = entityCFrame.LookVector;
-            const normalizedFacing = entityFacing.sub(new Vector3(0, entityFacing.Y, 0));
-            const dotProduct = normalizedFacing.Dot((origin.mul(new Vector3(1,0,1)).sub(entityCFrame.Position)).Unit);
+            const { LookVector: normalizedFacing, Position: normalizedPosition } = this.instance.GetPivot().sub(new Vector3(0, this.instance.GetPivot().Y, 0));
+            const normalizedOrigin = origin.sub((new Vector3(0,origin.Y, 0)));
+
+            const dotArg = normalizedPosition.sub(normalizedOrigin).Unit;
+            const dotProduct = normalizedFacing.Dot(dotArg);
             print("dot:", dotProduct);
 
-            return dotProduct >= this.facingLeniency;
+            return dotProduct <= this.facingLeniency;
         }
 
         public GetPrimaryPart()
