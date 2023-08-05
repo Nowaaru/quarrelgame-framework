@@ -142,7 +142,7 @@ export namespace Entity {
         State: EntityState.Idle,
         }
         })
-    export class Combatant extends Entity<CombatantAttributes> implements OnStart, OnFrame
+    export class Combatant<A extends CombatantAttributes> extends Entity<A> implements OnStart, OnFrame
     {
         public readonly animator: Animator.Animator;
 
