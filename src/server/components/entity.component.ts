@@ -52,7 +52,7 @@ export namespace Entity {
         })
     export class Entity<I extends EntityAttributes> extends StateComponent<I, Model>
     {
-        private readonly id = Identifier.GenerateID(this, "EntityId");
+        private readonly id = Identifier.GenerateComponentId(this, "EntityId");
 
         constructor()
         {
@@ -116,14 +116,22 @@ export namespace Entity {
          * take more hitstun, and receive less
          * forgiveness by the Combo system.
          */
-        Counter?: string
+        Counter?: string,
 
         /**
-         * The current State the entity is in.
+         * The Id of the skill that the Entity
+         * is currently doing.
+         */
+        PreviousSkill?: string,
+
+        /**
+         * The current State the Entity is in.
          */
         State: String<EntityState>,
 
     }
+
+    type SkillId = string;
 
     @Component({
         defaults: {
@@ -243,6 +251,7 @@ export namespace Entity {
 
             const onNeutral = () =>
             {
+                this.attributes.PreviousSkill = undefined;
                 this.attributes.Counter = undefined;
                 this.humanoid.WalkSpeed = this.baseWalkSpeed;
 
