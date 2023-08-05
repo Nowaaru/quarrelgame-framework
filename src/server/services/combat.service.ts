@@ -79,7 +79,7 @@ export class CombatService implements OnStart, OnInit
         // read input enums and setup events
         getEnumValues(Input).forEach(([inputName, inputTranslation]) =>
         {
-            if (`${inputTranslation}` as Input in ServerFunctions)
+            if (!(`${inputTranslation}` as Input in ServerFunctions))
             {
                 warn(`${inputTranslation} is not a valid ServerFunction.`);
 
@@ -105,28 +105,36 @@ export class CombatService implements OnStart, OnInit
                     else attackSkill = (Gio.Attacks[ inputTranslation ] as Skill.Skill | undefined);
 
 
+                    print("attack skill");
                     if (attackSkill)
                     {
                         const attackFrameData = attackSkill.FrameData;
-                        if (!combatantComponent.IsNegative())
+
+                        const previousSkillId = combatantComponent.attributes.PreviousSkill;
+                        let skillDoesGatling = false;
+
+                        if (previousSkillId)
                         {
-                            const previousSkillId = combatantComponent.attributes.PreviousSkill;
-                            let skillDoesGatling = false;
-
-                            if (previousSkillId)
-                            {
-                                const previousSkill = Skill.GetCachedSkill(previousSkillId);
-                                skillDoesGatling = !!(previousSkill?.GatlingsInto.has(attackSkill) || previousSkill?.GatlingsInto.has(attackSkill.Id));
-                            }
-
-                            if (!previousSkillId || skillDoesGatling)
-                            {
-                                return attackFrameData.Execute(combatantComponent, attackSkill).tap(() =>
-                                {
-                                    combatantComponent.ResetState();
-                                }) ?? Promise.resolve(false);
-                            }
+                            const previousSkill = Skill.GetCachedSkill(previousSkillId);
+                            skillDoesGatling = !!(previousSkill?.GatlingsInto.has(attackSkill) || previousSkill?.GatlingsInto.has(attackSkill.Id));
                         }
+
+                        if ((!previousSkillId || skillDoesGatling) || !combatantComponent.IsNegative())
+                        {
+                            if (skillDoesGatling)
+
+                                print("it do gattle tho");
+
+                            return attackFrameData.Execute(combatantComponent, attackSkill).tap(() =>
+                            {
+                                combatantComponent.ResetState();
+                            }) ?? Promise.resolve(false);
+                        }
+
+                        print("nah that dont gattle");
+
+                        return Promise.resolve(false);
+
                     }
 
                     return Promise.resolve(false);

@@ -19,7 +19,8 @@ export class CombatController implements OnStart, OnInit, OnKeyboardInput
     }
 
     private keybindMap = new Map<Enum.KeyCode, Input>([
-        [Enum.KeyCode.F, Input.Slash]
+        [Enum.KeyCode.F, Input.Slash],
+        [Enum.KeyCode.G, Input.Kick]
     ])
 
     onKeyboardInput(buttonPressed: Enum.KeyCode, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult)
@@ -37,20 +38,12 @@ export class CombatController implements OnStart, OnInit, OnKeyboardInput
 
         if (buttonType)
         {
-            switch (buttonType)
-            {
-                case Input.Slash:
-                {
-                    const characterAnimator = Dependency<Components>().getComponent(character, Animator.Animator);
-                    assert(characterAnimator, `no characterAnimator found in character ${character}`);
+            const characterAnimator = Dependency<Components>().getComponent(character, Animator.Animator);
+            assert(characterAnimator, `no characterAnimator found in character ${character}`);
 
-                    if (gio.Attacks.S)
+            if (buttonType in gio.Attacks)
 
-                        ClientFunctions[ Input.Slash ].invoke();
-
-                    break;
-                }
-            }
+                ClientFunctions[ buttonType as Input ].invoke();
         }
 
         return InputResult.Fail;

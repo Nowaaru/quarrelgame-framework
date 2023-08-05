@@ -373,11 +373,6 @@ export namespace Skill {
             this.Contact = Contact;
         }
 
-        public OnHitboxTick(entity: Entity.Combatant<Entity.CombatantAttributes>, skill: Skill.Skill)
-        {
-            entity.attributes.PreviousSkill = skill.Id;
-        }
-
         public async Execute(entity: Entity.Combatant<Entity.CombatantAttributes>, skill: Skill.Skill): Promise<boolean>
         {
             const { animator } = entity;
@@ -388,6 +383,7 @@ export namespace Skill {
 
             const animatorAnimation = animator.LoadAnimation(this.Animation);
             const previousSkill = entity.attributes.PreviousSkill;
+            entity.attributes.PreviousSkill = skill.Id;
 
             return animatorAnimation.Play().then(async () =>
             {
@@ -425,7 +421,7 @@ export namespace Skill {
                                 else
                                 {
                                     attackDidLand = HitResult.Blocked;
-                                    Attacker.AddBlockStun(skill.FrameData.BlockStunFrames);
+                                    Attacked.AddBlockStun(skill.FrameData.BlockStunFrames);
                                 }
 
                                 return;
@@ -439,7 +435,7 @@ export namespace Skill {
                             else
                             {
                                 attackDidLand = HitResult.Blocked;
-                                Attacker.AddBlockStun(skill.FrameData.BlockStunFrames);
+                                Attacked.AddBlockStun(skill.FrameData.BlockStunFrames);
                             }
 
                             return;
@@ -650,6 +646,8 @@ export namespace Skill {
         gaugeRequired: number,
 
         gatlings: Set<(Skill.Skill | SkillName)>,
+
+        skillType: SkillType
     }
 
     /**
@@ -658,7 +656,7 @@ export namespace Skill {
     export class Skill
     {
         constructor(
-            { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired, gatlings}: SkillClassProps
+            { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired, gatlings, skillType}: SkillClassProps
         )
         {
             this.Name = name;
@@ -670,6 +668,7 @@ export namespace Skill {
             this.CanCounter = canCounterHit;
             this.GaugeRequired = gaugeRequired;
             this.GatlingsInto = gatlings;
+            this.Type = skillType;
 
             allCachedSkills.set(this.Id, this);
         }
@@ -683,6 +682,11 @@ export namespace Skill {
          * The name of the skill.
          */
         public readonly Name: string;
+
+        /**
+         * The Type of the skill.
+         */
+        public readonly Type: SkillType;
 
         /**
          * The description of the skill.
@@ -749,6 +753,9 @@ export namespace Skill {
 
     export class SkillBuilder
     {
+        constructor(public readonly skillType: SkillType = SkillType.Normal)
+        {}
+
         private name?: string;
 
         private description?: string = "";
@@ -761,11 +768,9 @@ export namespace Skill {
 
         private isReversal = false;
 
-        private skillType?: SkillType;
-
         private canCounterHit = true;
 
-        private gatlings: Set<Skill.Skill & { skillType: SkillType.Normal } | string> = new Set();
+        private gatlings: Set<Skill.Skill> = new Set();
 
         private gaugeRequired = 0;
 
@@ -878,24 +883,14 @@ export namespace Skill {
          * Set the Skills that this Skill can
          * cancel into.
          */
-        public SetGatling<Normal extends Skill.Skill & { skillType: SkillType.Normal }>(...skills: (Normal | SkillName)[] ): this
+        public SetGatling<NormalSkill extends Skill.Skill>(...skills: NormalSkill[])
         {
+            assert(skills.every(({Type}) => Type === SkillType.Normal), "skill is not a Normal skill");
+
             skills.forEach((skill) =>
             {
                 this.gatlings.add(skill);
             });
-
-            return this;
-        }
-
-        /**
-         * Set the type of this skill.
-         * Any normal skill can be canceled by a super skill.
-         * @param skillType The type of skill.
-         */
-        public SkillType(skillType: SkillType): this
-        {
-            this.skillType = skillType;
 
             return this;
         }
@@ -917,7 +912,7 @@ export namespace Skill {
          */
         public Construct(): Skill
         {
-            const { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired, gatlings } = this;
+            const { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired, skillType, gatlings } = this;
             assert(name, "Builder incomplete! Name is unset.");
             assert(description !== undefined, "Builder incomplete! Description is unset.");
             assert(frameData, "Builder incomplete! Frame Data is unset.");
@@ -932,6 +927,7 @@ export namespace Skill {
                 isReversal,
                 canCounterHit,
                 gaugeRequired,
+                skillType,
                 gatlings,
             });
         }
