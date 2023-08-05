@@ -238,6 +238,7 @@ export namespace Hitbox {
 
                             const entityIsBlocking = entityComponent.IsBlocking(hitboxPossessor.GetPivot().Position);
                             const possessorEntityComponent = Dependency<Components>().getComponent(hitboxPossessor, entityImport.Entity.Combatant);
+
                             const { hitRegion } = this.hitbox;
                             if (entityIsBlocking)
                             {
