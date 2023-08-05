@@ -368,7 +368,7 @@ export namespace Skill {
             this.RecoveryFrames = Recovery;
             this.BlockStunFrames = BlockStun;
             this.ActiveFrames = Active;
-            this.Animation = Animation as Readonly<Animation.AnimationData>;
+            this.Animation = Animation as Readonly<NonNullable<Animation.AnimationData>>;
             this.Hitbox = Hitbox;
             this.Contact = Contact;
         }
@@ -383,6 +383,17 @@ export namespace Skill {
 
             const animatorAnimation = animator.LoadAnimation(this.Animation);
             const previousSkill = entity.attributes.PreviousSkill;
+            const cachedPreviousSkill = previousSkill ? GetCachedSkill(previousSkill) : undefined;
+            if (cachedPreviousSkill)
+            {
+                const lastSkillAnimation = animator.GetAnimator()
+                    .GetPlayingAnimationTracks()
+                    .find((t) => t.Animation?.AnimationId === cachedPreviousSkill.FrameData.Animation.assetId);
+
+                if (lastSkillAnimation)
+                    lastSkillAnimation.Stop(0);
+            }
+
             entity.attributes.PreviousSkill = skill.Id;
 
             return animatorAnimation.Play().then(async () =>
@@ -656,7 +667,7 @@ export namespace Skill {
     export class Skill
     {
         constructor(
-            { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired, gatlings, skillType}: SkillClassProps
+            { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired, skillType}: SkillClassProps
         )
         {
             this.Name = name;
@@ -667,7 +678,6 @@ export namespace Skill {
             this.IsReversal = isReversal;
             this.CanCounter = canCounterHit;
             this.GaugeRequired = gaugeRequired;
-            this.GatlingsInto = gatlings;
             this.Type = skillType;
 
             allCachedSkills.set(this.Id, this);
@@ -712,11 +722,6 @@ export namespace Skill {
        */
        public readonly IsReversal: boolean;
 
-        /**
-         * What normals the skill can be canceled into.
-         */
-        public readonly GatlingsInto: SkillClassProps["gatlings"]
-
        /**
         * Whether this move can put an Entity
         * in the Counter state under the
@@ -736,6 +741,28 @@ export namespace Skill {
        */
        public readonly GaugeRequired: number;
 
+       /**
+        * The Skills that tkis Skill can cancel
+        * into.
+       */
+       public readonly GatlingsInto = new Set<Skill>();
+       /**
+         * Set the Skills that this Skill can
+         * cancel into.
+         */
+       public AddGatling<NormalSkill extends Skill.Skill>(...skills: NormalSkill[])
+       {
+           assert(skills.every(({Type}) => Type === SkillType.Normal), "skill is not a Normal skill");
+
+           skills.forEach((skill) =>
+           {
+               if (!this.GatlingsInto.has(skill))
+
+                   skill.GatlingsInto.add(skill);
+           });
+
+           return this;
+       }
     }
 
     export enum SkillGroundedType {
@@ -875,22 +902,6 @@ export namespace Skill {
         public SetMotionInput(motionInput: MotionInput = [])
         {
             this.motionInput = motionInput;
-
-            return this;
-        }
-
-        /**
-         * Set the Skills that this Skill can
-         * cancel into.
-         */
-        public SetGatling<NormalSkill extends Skill.Skill>(...skills: NormalSkill[])
-        {
-            assert(skills.every(({Type}) => Type === SkillType.Normal), "skill is not a Normal skill");
-
-            skills.forEach((skill) =>
-            {
-                this.gatlings.add(skill);
-            });
 
             return this;
         }

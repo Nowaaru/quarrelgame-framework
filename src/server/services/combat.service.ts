@@ -116,10 +116,13 @@ export class CombatService implements OnStart, OnInit
                         if (previousSkillId)
                         {
                             const previousSkill = Skill.GetCachedSkill(previousSkillId);
-                            skillDoesGatling = !!(previousSkill?.GatlingsInto.has(attackSkill) || previousSkill?.GatlingsInto.has(attackSkill.Id));
+                            print("previous skill:", previousSkill?.Name);
+                            skillDoesGatling = !!(
+                                previousSkill?.GatlingsInto.has(attackSkill)
+                            );
                         }
 
-                        if ((!previousSkillId || skillDoesGatling) || !combatantComponent.IsNegative())
+                        if (skillDoesGatling || !combatantComponent.IsNegative())
                         {
                             if (skillDoesGatling)
 

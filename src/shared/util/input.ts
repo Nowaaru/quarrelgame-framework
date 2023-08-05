@@ -1,8 +1,15 @@
+/**
+ * The medium the User is using
+ * to interact with the client.
+ */
 export enum InputType {
     Gamepad,
     MouseKeyboard,
 }
 
+/**
+ * The state of an input.
+ */
 export enum InputMode {
     Release,
     Press,
@@ -10,16 +17,29 @@ export enum InputMode {
     Down = InputMode[ "Press" ]
 }
 
+/**
+ * Whether the input was allowed
+ * or denied.
+ */
 export enum InputResult {
     Success,
     Fail,
 }
 
+/**
+ * Whether an input was processed by the
+ * game client.
+ */
 export enum InputProcessed {
     Processed,
     Unprocessed,
     Either,
 }
+
+/**
+ * A directional input.
+ */
+export type CommandNormal = readonly [Motion, Input];
 
 export enum Input {
     Dash = "DS",

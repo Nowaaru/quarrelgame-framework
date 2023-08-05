@@ -187,6 +187,7 @@ export namespace Hitbox {
             overlapParams.FilterDescendantsInstances = [target.FindFirstAncestorWhichIsA("Model")].filterUndefined();
             overlapParams.FilterType = Enum.RaycastFilterType.Exclude;
 
+            print("params lol:", overlapParams);
             this.hitProcessor = RunService.Heartbeat.Connect(async () =>
             {
                 const instancesInHitbox = Workspace.GetPartBoundsInBox(targetCFrame, this.hitbox.size, overlapParams);

@@ -20,6 +20,7 @@ export class CombatController implements OnStart, OnInit, OnKeyboardInput
 
     private keybindMap = new Map<Enum.KeyCode, Input>([
         [Enum.KeyCode.F, Input.Slash],
+        [Enum.KeyCode.V, Input.Heavy],
         [Enum.KeyCode.G, Input.Kick]
     ])
 

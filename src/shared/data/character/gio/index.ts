@@ -2,7 +2,7 @@ import { Character, Animation, Skill } from "shared/util/character";
 import { Hitbox } from "shared/util/hitbox";
 import { Input } from "shared/util/input";
 import { EntityState } from "shared/util/lib";
-import { ForwardKick, SlashClose } from "./normals";
+import { ForwardKick, CloseSlash, LowHeavy } from "./normals";
 
 import Characters from "data/models/character";
 
@@ -12,8 +12,9 @@ const Gio =
         .SetDescription("Test character")
         .SetModel(Characters.jane)
         .SetEasiness(3)
-        .SetAttack(Input.Slash, SlashClose)
+        .SetAttack(Input.Slash, CloseSlash)
         .SetAttack(Input.Kick, ForwardKick)
+        .SetAttack(Input.Heavy, LowHeavy)
         .SetAnimation(EntityState.Idle,
             new Animation.AnimationBuilder()
                 .SetName("Idle")
