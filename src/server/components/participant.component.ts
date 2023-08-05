@@ -33,5 +33,5 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player> im
 
     public character = this.instance.Character;
 
-    public entity?: Entity.Combatant;
+    public entity?: Entity.PlayerCombatant<Entity.CombatantAttributes>;
 }

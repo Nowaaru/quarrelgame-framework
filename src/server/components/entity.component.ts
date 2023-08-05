@@ -299,7 +299,7 @@ export namespace Entity {
          * Place the entity in their Counter sub-state
          * if the entity is currently being attacked.
          */
-        public Counter(fromEntity: Entity.Combatant)
+        public Counter<T extends CombatantAttributes>(fromEntity: Entity.Combatant<T>)
         {
             if (this.IsState(EntityState.Hitstun, EntityState.HitstunCrouching, EntityState.Knockdown, EntityState.KnockdownHard))
             {
@@ -429,6 +429,36 @@ export namespace Entity {
         public readonly baseWalkSpeed = 16;
 
         public readonly sprintWalkSpeed = 24;
+    }
+
+    interface PlayerCombatantAttributes extends CombatantAttributes {
+        QueuedInput?: Input,
+    }
+
+    @Component({
+        defaults: {
+        MaxHealth: 100,
+        Health: 100,
+
+        MaxStamina: 100,
+        Stamina: 100,
+
+        MaxBlockStamina: 100,
+        BlockStamina: 100,
+
+        IFrame: -1,
+        BlockStun: -1,
+
+        EntityId: "generate",
+        State: EntityState.Idle,
+        }
+        })
+    export class PlayerCombatant<A extends PlayerCombatantAttributes> extends Combatant<A>
+    {
+        constructor()
+        {
+            super();
+        }
     }
 }
 export { SprintState }  from "server/services/movement.service";
