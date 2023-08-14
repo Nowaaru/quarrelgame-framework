@@ -1,10 +1,9 @@
-import { useEffect, useState, withHooks } from "@rbxts/roact-hooked";
+import { useEffect, useState } from "@rbxts/roact";
 import { Players } from "@rbxts/services";
 
 import Health from "./health";
 import Roact from "@rbxts/roact";
 import Stamina from "./stamina";
-import { useProperty } from "@rbxts/pretty-roact-hooks";
 
 export interface HudOptions {
 
@@ -20,7 +19,7 @@ interface StaminaTracker {
     MaxStamina: number
 }
 
-function HeadsUpDisplay(props: HudOptions)
+export default function HeadsUpDisplay(props: HudOptions)
 {
     const [playerCharacter, setCharacter] = useState<Model | undefined>(Players.LocalPlayer.Character);
 
@@ -81,7 +80,7 @@ function HeadsUpDisplay(props: HudOptions)
 
     return (
         <frame
-            Key={"Heads-Up Display"}
+            key={"Heads-Up Display"}
             BackgroundTransparency={1}
             AnchorPoint={new Vector2(0.5, 0)}
             Position={UDim2.fromScale(0.5, 0.85)}
@@ -101,5 +100,3 @@ function HeadsUpDisplay(props: HudOptions)
         </frame>
     );
 }
-
-export default withHooks(HeadsUpDisplay);

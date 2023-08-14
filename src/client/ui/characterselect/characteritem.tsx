@@ -1,9 +1,12 @@
-import Make from "@rbxts/make";
-import { useBindingState, useLifetime, useMountEffect, useMouse, usePropertyBinding } from "@rbxts/pretty-roact-hooks";
 import Roact from "@rbxts/roact";
-import { useCallback, useEffect, useMemo, useRef, useState, withHooks } from "@rbxts/roact-hooked";
+import Make from "@rbxts/make";
+
+import { useEffect, useRef, useState } from "@rbxts/roact";
 import { RunService } from "@rbxts/services";
 import { Character } from "shared/util/character";
+import { EntityState } from "shared/util/lib";
+import { Animation } from "shared/util/animation";
+import CharacterPortrait3D from "./characterportrait";
 
 export interface CharacterItemProps {
     /**
@@ -39,95 +42,7 @@ export interface CharacterItemProps {
     OnSelected?: (character: Character.Character) => void,
 }
 
-export interface CharacterPortraitProps3D {
-    Character: Character.Character & { Model: Model & { PrimaryPart: BasePart, Humanoid: Humanoid & { Animator?: Animator } }}
-    Facing?: Enum.NormalId,
-    CameraFocus?: BasePart,
-    CameraDirection?: Enum.NormalId,
-    CameraOffset?: CFrame,
-    OnClick?: (selectedCharacter: CharacterPortraitProps3D["Character"]) => void,
-    [Roact.Children]?: JSX.Element[]
-}
-
-const CharacterPortrait3D = withHooks(({
-    Character,
-    Facing = Enum.NormalId.Front,
-    CameraFocus = Character.Model.PrimaryPart,
-    CameraDirection = Enum.NormalId.Back,
-    CameraOffset = new CFrame(0,1.5,-2),
-    OnClick = () => undefined,
-    [ Roact.Children ]: children
-}: CharacterPortraitProps3D) =>
-{
-    const viewportFrame = useRef<ViewportFrame>();
-    const [viewportCamera, setViewportCamera] = useState<Camera | undefined>();
-
-    useMountEffect(() =>
-    {
-        const characterModelClone = Character.Model.Clone();
-        if (!characterModelClone.Humanoid.FindFirstChildWhichIsA("Animator"))
-        {
-            Make("Animator", {
-                Parent: characterModelClone.Humanoid,
-            });
-        }
-
-        const worldModel = Make("WorldModel", {
-            Name: `World${Character.Name}`,
-            Parent: viewportFrame.getValue(),
-            Children: [
-                characterModelClone
-            ]
-        });
-
-        characterModelClone.PivotTo(
-            new CFrame(
-                new CFrame().ToObjectSpace(CameraFocus.CFrame).Position
-            ).mul(
-                CFrame.lookAt(
-                    Vector3.zero,
-                    Vector3.FromNormalId(Facing)
-                )
-            ));
-
-        setViewportCamera(Make("Camera", {
-            CameraType: Enum.CameraType.Scriptable,
-            CFrame: CFrame.lookAt(Vector3.zero, Vector3.FromNormalId(CameraDirection))
-                .mul(CameraOffset.add(new Vector3(0, 0, CameraOffset.Z*-2)))
-                .add(characterModelClone.GetPivot().Position),
-            Parent: viewportFrame.getValue(),
-        }));
-    });
-
-    return (
-        <textbutton
-            Text={""}
-            TextTransparency={1}
-            BackgroundTransparency={1}
-            RichText={false}
-            Event={{
-                MouseButton1Down: () => OnClick(Character),
-            }}
-        >
-            <viewportframe
-                Size={UDim2.fromScale(1,1)}
-                BackgroundColor3={new Color3(1,1,1)}
-                BorderColor3={new Color3()}
-                CurrentCamera={viewportCamera}
-                Ref={viewportFrame}
-            >
-                <uigradient
-                    Transparency={new NumberSequence(0,0.5)}
-                    Rotation={-90}
-                />
-
-                {children}
-            </viewportframe>
-        </textbutton>
-    );
-});
-
-function CharacterItem({Character, Selected, LockedIn, Locked, Image, OnSelected}: CharacterItemProps)
+export default function CharacterItem({Character, Selected, LockedIn, Locked, Image, OnSelected}: CharacterItemProps)
 {
     const strokeRef = useRef<UIStroke>();
 
@@ -137,7 +52,7 @@ function CharacterItem({Character, Selected, LockedIn, Locked, Image, OnSelected
                 CornerRadius={new UDim(0.1,0)}
             />
             <uistroke
-                Ref={strokeRef}
+                ref={strokeRef}
                 ApplyStrokeMode={Enum.ApplyStrokeMode.Contextual}
                 Color={
                     LockedIn
@@ -153,7 +68,7 @@ function CharacterItem({Character, Selected, LockedIn, Locked, Image, OnSelected
 
     useEffect(() =>
     {
-        const currentUIStroke = strokeRef.getValue();
+        const currentUIStroke = strokeRef.current;
         if (currentUIStroke && (LockedIn || Selected))
         {
             let totalRuntime = 0;
@@ -167,7 +82,7 @@ function CharacterItem({Character, Selected, LockedIn, Locked, Image, OnSelected
         }
 
 
-    }, [strokeRef.getValue(), LockedIn]);
+    }, [strokeRef.current, LockedIn, Selected]);
 
     return Image
     ? (
@@ -177,7 +92,7 @@ function CharacterItem({Character, Selected, LockedIn, Locked, Image, OnSelected
             ZIndex={100}
             Image={Image}
             Event={{
-                MouseButton1Down: (() => OnSelected?.(Character))
+                MouseButton1Down: (async () => OnSelected?.(Character))
             }}
         >
             {_interior}
@@ -192,5 +107,3 @@ function CharacterItem({Character, Selected, LockedIn, Locked, Image, OnSelected
         </CharacterPortrait3D>
     );
 }
-
-export default withHooks(CharacterItem);

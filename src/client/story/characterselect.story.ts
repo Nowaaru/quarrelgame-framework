@@ -6,5 +6,5 @@ import { story } from "shared/util/story";
 export = story<CharacterSelectProps>({
     component: CharacterSelect,
     props: { Characters },
-    target: StarterGui.WaitForChild("TestGui")
+    // target: StarterGui.WaitForChild("TestGui")
 })

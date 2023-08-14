@@ -1,10 +1,12 @@
-import Roact from "@rbxts/roact";
-import { useState, withHooks } from "@rbxts/roact-hooked";
+import Roact, { useState } from "@rbxts/roact";
 import { Character } from "shared/util/character";
 import CharactersList from "shared/data/character";
 import CharacterItem from "./characteritem";
 import Gio from "shared/data/character/gio";
 import Object from "@rbxts/object-utils";
+import CharacterData from "./characterdata";
+import CharacterPortrait3D from "./characterportrait";
+import { EntityState } from "shared/util/lib";
 
 export interface CharacterSelectProps {
     Characters: ReadonlyMap<string, Character.Character>,
@@ -14,7 +16,7 @@ export const ChainsImage = "rbxassetid://137751994";
 
 export const DotsImage = "rbxassetid://4376776276";
 
-function CharacterSelect(characterSelectProps: CharacterSelectProps = {Characters: CharactersList})
+export default function CharacterSelect(characterSelectProps: CharacterSelectProps = {Characters: CharactersList})
 {
     const { Characters } = characterSelectProps ?? { Characters: CharactersList };
     const [selectedCharacter, setSelectedCharacter] = useState<Character.Character | undefined>();
@@ -44,7 +46,7 @@ function CharacterSelect(characterSelectProps: CharacterSelectProps = {Character
     />;
 
     const darken = (flipped?: boolean) => <frame
-        Key="Darken"
+        key="Darken"
         BackgroundColor3={new Color3(1,1,1)}
         Size={new UDim2(1,0,1,0)}
         ZIndex={-1}
@@ -64,14 +66,106 @@ function CharacterSelect(characterSelectProps: CharacterSelectProps = {Character
     </frame>;
 
     return <>
+        {selectedCharacter ? <CharacterData Character={selectedCharacter} /> : undefined}
+        {selectedCharacter ?
+            <frame
+                key="SelectedCharacterPortrait"
+                Size={new UDim2(0.5, 0, 0.75, 0)}
+                Position={new UDim2(0.0,0,0.1,0)}
+            >
+                <CharacterPortrait3D
+                    Character={selectedCharacter}
+                    Animation={EntityState.Idle}
+                    Facing={Enum.NormalId.Right}
+                    CameraDirection={Enum.NormalId.Front}
+                    CameraOffset={new CFrame(0,0.5,-7)}
+                />
+            </frame>
+        : undefined}
         <canvasgroup
-            Key={"Detail"}
+            key={"CharacterFrame"}
+            BackgroundTransparency={1}
+            BorderColor3={new Color3()}
+            BorderSizePixel={0}
+            BackgroundColor3={new Color3(1,1,1)}
+            Size={new UDim2(1,0,1,0)}
+            Position={new UDim2(0,0,0,0)}
+            ZIndex={150}
+        >
+            <frame
+                key={"CharacterContainer"}
+                BackgroundColor3={Color3.fromRGB(50,50,50)}
+                BackgroundTransparency={0.2}
+                AnchorPoint={new Vector2(0.5,0)}
+                Position={new UDim2(0.5,0,0.75,0)}
+                Size={new UDim2(1.01,0,0.3,0)}
+                ZIndex={1}
+            >
+                <uicorner
+                    CornerRadius={new UDim(0.1,0)}
+                />
+                <uistroke
+                    Color={new Color3(1,1,1)}
+                    Thickness={2}
+                    Transparency={0.7}
+                    ApplyStrokeMode={Enum.ApplyStrokeMode.Contextual}
+                />
+                <frame
+                    key={"CharacterList"}
+                    BackgroundTransparency={1}
+                    AnchorPoint={new Vector2(0.5,0)}
+                    Position={new UDim2(0.5,0,0,0)}
+                    Size={new UDim2(0.75,0,1,0)}
+                    ZIndex={1}
+                >
+                    <uiaspectratioconstraint
+                        AspectRatio={2.7}
+                        AspectType={Enum.AspectType.ScaleWithParentSize}
+                        DominantAxis={Enum.DominantAxis.Width}
+                    />
+                    <uigridlayout
+                        CellSize={new UDim2(0.084, 0,0.236, 0)}
+                        CellPadding={new UDim2(0,8,0,8)}
+                        FillDirection={Enum.FillDirection.Horizontal}
+                        FillDirectionMaxCells={8}
+                        HorizontalAlignment={Enum.HorizontalAlignment.Center}
+                        SortOrder={"LayoutOrder"}
+                        StartCorner={Enum.StartCorner.TopLeft}
+                    />
+                    <uipadding
+                        PaddingBottom={new UDim(0,8)}
+                        PaddingTop={new UDim(0,8)}
+                    />
+                    {(() =>
+                    {
+                        const allCharacters: Roact.Element[] = [];
+                        for (const [,character] of Characters)
+                        {
+                            allCharacters.push(
+                                <CharacterItem
+                                    Character={character}
+                                    Selected={selectedCharacter === character}
+                                    OnSelected={(selectedCharacter) =>
+                                    {
+                                        setSelectedCharacter(selectedCharacter);
+                                    }}
+                                />
+                            );
+                        }
+
+                        return allCharacters;
+                    })()}
+                </frame>
+            </frame>
+        </canvasgroup>
+        <canvasgroup
+            key={"Detail"}
             BackgroundTransparency={1}
             Size={UDim2.fromScale(1,1)}
             ZIndex={-25}
         >
             <frame
-                Key="FlavorTextContainer"
+                key="FlavorTextContainer"
                 Size={new UDim2(0.281,0,0.187,0)}
                 AnchorPoint={new Vector2(0,0.5)}
                 Position={new UDim2(0.35,0,0.5,0)}
@@ -144,14 +238,14 @@ function CharacterSelect(characterSelectProps: CharacterSelectProps = {Character
                 />
             </frame>
             <canvasgroup
-                Key={"DetailBack"}
+                key={"DetailBack"}
                 BackgroundTransparency={1}
                 GroupColor3={Color3.fromRGB(116, 15, 0)}
                 Size={UDim2.fromScale(1,1)}
                 ZIndex={-250}
             >
                 <canvasgroup
-                    Key={"LeftRed"}
+                    key={"LeftRed"}
                     GroupColor3={new Color3(1,1,1)}
                     GroupTransparency={0}
                     Position={new UDim2(-0.35,0,-0.313,0)}
@@ -163,7 +257,7 @@ function CharacterSelect(characterSelectProps: CharacterSelectProps = {Character
                     {[chains, dots]}
                 </canvasgroup>
                 <canvasgroup
-                    Key={"RightRed"}
+                    key={"RightRed"}
                     GroupColor3={new Color3(1,1,1)}
                     GroupTransparency={0}
                     Position={new UDim2(0.763,0,-0.313,0)}
@@ -175,12 +269,12 @@ function CharacterSelect(characterSelectProps: CharacterSelectProps = {Character
                     {[chains, dots]}
                 </canvasgroup>
                 <canvasgroup
-                    Key={"Shadows"}
+                    key={"Shadows"}
                     Size={new UDim2(1,0,1,0)}
                     BackgroundTransparency={1}
                 >
                     <frame
-                        Key="Back"
+                        key="Back"
                         BackgroundTransparency={0.6}
                         BackgroundColor3={new Color3(0,0,0)}
                         Position={new UDim2(0.5,0,0.5,0)}
@@ -189,7 +283,7 @@ function CharacterSelect(characterSelectProps: CharacterSelectProps = {Character
                         ZIndex={-1}
                     />
                     <frame
-                        Key="L1"
+                        key="L1"
                         BackgroundTransparency={0.6}
                         BackgroundColor3={new Color3(0,0,0)}
                         Position={new UDim2(-0.1,0,0.4,0)}
@@ -199,7 +293,7 @@ function CharacterSelect(characterSelectProps: CharacterSelectProps = {Character
                         Rotation={10}
                     />
                     <frame
-                        Key="R1"
+                        key="R1"
                         BackgroundTransparency={0.6}
                         BackgroundColor3={new Color3(0,0,0)}
                         Position={new UDim2(1.183,0,0.57,0)}
@@ -209,7 +303,7 @@ function CharacterSelect(characterSelectProps: CharacterSelectProps = {Character
                         Rotation={10}
                     />
                     <frame
-                        Key="Top"
+                        key="Top"
                         BackgroundTransparency={0.6}
                         BackgroundColor3={new Color3(0,0,0)}
                         Position={new UDim2(0.5,0,0.5,0)}
@@ -220,72 +314,5 @@ function CharacterSelect(characterSelectProps: CharacterSelectProps = {Character
                 </canvasgroup>
             </canvasgroup>
         </canvasgroup>
-        <canvasgroup
-            Key={"CharacterFrame"}
-            BackgroundTransparency={1}
-            BorderColor3={new Color3()}
-            BorderSizePixel={0}
-            BackgroundColor3={new Color3(1,1,1)}
-            Size={new UDim2(1,0,1,0)}
-            Position={new UDim2(0,0,0,0)}
-            ZIndex={1}
-        >
-            <frame
-                Key={"CharacterContainer"}
-                BackgroundColor3={Color3.fromRGB(50,50,50)}
-                BackgroundTransparency={0.2}
-                AnchorPoint={new Vector2(0.5,0)}
-                Position={new UDim2(0.5,0,0.75,0)}
-                Size={new UDim2(1.01,0,0.3,0)}
-                ZIndex={1}
-            >
-                <uicorner
-                    CornerRadius={new UDim(0.1,0)}
-                />
-                <uistroke
-                    Color={new Color3(1,1,1)}
-                    Thickness={2}
-                    Transparency={0.7}
-                    ApplyStrokeMode={Enum.ApplyStrokeMode.Contextual}
-                />
-                {chains}
-                <frame
-                    Key={"CharacterList"}
-                    BackgroundTransparency={1}
-                    AnchorPoint={new Vector2(0.5,0)}
-                    Position={new UDim2(0.5,0,0,0)}
-                    Size={new UDim2(0.75,0,1,0)}
-                    ZIndex={1}
-                >
-                    <uiaspectratioconstraint />
-                    <uigridlayout />
-                    <uipadding
-                        PaddingBottom={new UDim(0,8)}
-                        PaddingTop={new UDim(0,8)}
-                    />
-                    {(() =>
-                    {
-                        const allCharacters: Roact.Element[] = [];
-                        for (const [,character] of Characters)
-                        {
-                            allCharacters.push(
-                                <CharacterItem
-                                    Character={character}
-                                    Selected={selectedCharacter === character}
-                                    OnSelected={(selectedCharacter) =>
-                                    {
-                                        setSelectedCharacter(selectedCharacter);
-                                    }}
-                                />
-                            );
-                        }
-
-                        return allCharacters;
-                    })()}
-                </frame>
-            </frame>
-        </canvasgroup>
     </>;
 }
-
-export default withHooks(CharacterSelect);

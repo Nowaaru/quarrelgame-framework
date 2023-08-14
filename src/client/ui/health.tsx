@@ -1,6 +1,4 @@
-import Roact from "@rbxts/roact";
-import { useMemo, withHooks } from "@rbxts/roact-hooked";
-
+import Roact, { useMemo } from "@rbxts/roact";
 export interface HealthProps {
     Health?: number,
     MaxHealth?: number,
@@ -10,7 +8,7 @@ export interface HealthProps {
     Size?: UDim2,
 }
 
-function Health({
+export default function Health({
     Health = 100,
     MaxHealth = 100,
 
@@ -50,7 +48,7 @@ function Health({
                 TextTransparency={1 - (Health / MaxHealth)}
             />
             <textlabel
-                Key="HealthAmount"
+                key="HealthAmount"
                 Text = { `${tostring(math.floor((Health / MaxHealth) * 100))}%` }
                 Size = { UDim2.fromScale(0.5, 0.25) }
                 Position = { UDim2.fromScale(math.clamp(Health / MaxHealth, 0.4, 0.85), 0.63) }
@@ -74,7 +72,7 @@ function Health({
             >
                 <frame
                     Size = { UDim2.fromScale(Health / MaxHealth, 1) }
-                    Key="HealthFront"
+                    key="HealthFront"
                     BackgroundColor3={new Color3(0.53,0.87,0.64)}
                 >
                     <uicorner
@@ -88,5 +86,3 @@ function Health({
         </frame>
     );
 }
-
-export default withHooks(Health);

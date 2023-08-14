@@ -20,11 +20,12 @@
 			"QuarrelGame": {
 				"$className": "Folder",
 				"$ignoreUnknownInstances": true,
-				"QuarrelGame/include": {
-					"$path": "include"
-				},
 				"QuarrelGame/modules": {
 					"$className": "Folder",
+					"$path": "include",
+					"rbxts_include": {
+						"$path": "include"
+					},
 					"node_modules": {
 						"$className": "Folder",
 						"@rbxts": {

@@ -7,9 +7,9 @@ import { Animation } from "shared/util/animation";
 
 import Characters from "data/models/character";
 
-const Gio =
+const Manbed =
     new Character.CharacterBuilder3D()
-        .SetName("Manbed")
+        .SetName("Manbed?")
         .SetDescription("Test character 2")
         .SetModel(Characters.shedletsky as never)
         .SetEasiness(3)
@@ -62,4 +62,4 @@ const Gio =
         )
         .Construct();
 
-export = Gio;
+export = Manbed;

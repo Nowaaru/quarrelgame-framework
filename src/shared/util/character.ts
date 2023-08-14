@@ -17,9 +17,11 @@ import { HttpService, RunService } from "@rbxts/services";
 type SkillName = string;
 
 export namespace Character {
+    export const MaximumEaseOfUse = 5;
+
     type EaseOfUse = 1 | 2 | 3 | 4 | 5;
 
-    export enum CharacterType {
+    export enum Archetype {
         WellRounded = "Well-Rounded",
         Technical = "Technical",
         Rushdown = "Rushdown",
@@ -46,7 +48,7 @@ export namespace Character {
 
         animations: Animations;
 
-        characterType: CharacterType;
+        characterArchetype: Archetype;
 
         attacks: {
             [k in Input]?: Skill.Skill | (() => Skill.Skill);
@@ -78,13 +80,13 @@ export namespace Character {
 
         readonly Skills: ReadonlySet<Skill.Skill>;
 
-        readonly Type: CharacterType;
+        readonly Archetype: Archetype;
 
         readonly Animations: Animations;
 
         readonly Attacks: Readonly<CharacterProps["attacks"]>;
 
-        constructor({name, description, easeOfUse, characterModel, skills, animations, attacks, characterType}: CharacterProps)
+        constructor({name, description, easeOfUse, characterModel, skills, animations, attacks, characterArchetype: characterArchetype}: CharacterProps)
         {
             this.Name = name;
             this.Description = description;
@@ -92,7 +94,7 @@ export namespace Character {
             this.Model = characterModel;
             this.Skills = skills;
             this.Animations = animations;
-            this.Type = characterType;
+            this.Archetype = characterArchetype;
             this.Attacks = attacks;
         }
     }
@@ -113,7 +115,7 @@ export namespace Character {
 
         protected attacks: CharacterProps["attacks"] = {}
 
-        protected characterType: CharacterType = CharacterType.WellRounded;
+        protected characterArchetype: Archetype = Archetype.WellRounded;
 
         public SetName(name: string)
         {
@@ -166,14 +168,14 @@ export namespace Character {
 
         public Compile()
         {
-            const { name, description, easeOfUse, characterModel, skills, attacks, animations, characterType } = this;
+            const { name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype: charachterArchetype } = this;
             assert(characterModel, "Builder incomplete! Character model is unset.");
             assert(name, "Builder incomplete! Name is unset.");
             assert(description, "Builder incomplete! Description is unset.");
             assert(easeOfUse, "Builder incomplete! Ease of use is unset.");
 
             return {
-                name, description, easeOfUse, characterModel, skills, attacks, animations, characterType,
+                name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype: charachterArchetype,
             };
         }
 
@@ -194,14 +196,14 @@ export namespace Character {
 
         public Compile(): CharacterProps2D
         {
-            const { name, description, easeOfUse, characterModel, skills, attacks, animations, characterType, character3D } = this;
+            const { name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype, character3D } = this;
             assert(characterModel, "Builder incomplete! Character model is unset.");
             assert(name, "Builder incomplete! Name is unset.");
             assert(description, "Builder incomplete! Description is unset.");
             assert(easeOfUse, "Builder incomplete! Ease of use is unset.");
 
             return {
-                name, description, easeOfUse, characterModel, skills, attacks, animations, characterType
+                name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype: characterArchetype
             };
         }
     }
@@ -217,14 +219,14 @@ export namespace Character {
 
         public Compile(): CharacterProps3D
         {
-            const { name, description, easeOfUse, characterModel, skills, attacks, animations, characterType, character2D } = this;
+            const { name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype, character2D } = this;
             assert(characterModel, "Builder incomplete! Character model is unset.");
             assert(name, "Builder incomplete! Name is unset.");
             assert(description, "Builder incomplete! Description is unset.");
             assert(easeOfUse, "Builder incomplete! Ease of use is unset.");
 
             return {
-                name, description, easeOfUse, characterModel, skills, attacks, animations, characterType
+                name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype: characterArchetype
             };
         }
     }

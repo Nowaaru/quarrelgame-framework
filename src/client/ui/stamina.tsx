@@ -1,5 +1,4 @@
-import Roact from "@rbxts/roact";
-import { useMemo, withHooks } from "@rbxts/roact-hooked";
+import Roact, { useMemo } from "@rbxts/roact";
 
 export interface StaminaProps {
     Stamina?: number,
@@ -10,7 +9,7 @@ export interface StaminaProps {
     Size?: UDim2,
 }
 
-function Stamina({
+export default function Stamina({
     Stamina = 100,
     MaxStamina = 100,
 
@@ -60,7 +59,7 @@ function Stamina({
                 <frame
                     Size = { UDim2.fromScale(Stamina / MaxStamina, 1) }
                     Position = { UDim2.fromScale(1 - (Stamina / MaxStamina), 0)}
-                    Key="StaminaFront"
+                    key="StaminaFront"
                     BackgroundColor3={new Color3(0.53,0.87,0.82)}
                 >
                     <uicorner
@@ -74,5 +73,3 @@ function Stamina({
         </frame>
     );
 }
-
-export default withHooks(Stamina);
