@@ -90,7 +90,6 @@
         "no-mixed-operators": "warn",
         "no-duplicate-case": "error",
         "no-sequences": "error",
-        "consistent-return": "warn",
         "indent": [
             "error",
             4,

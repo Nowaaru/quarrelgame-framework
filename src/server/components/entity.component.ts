@@ -1,19 +1,19 @@
-import { Dependency, OnPhysics, OnStart } from "@flamework/core";
+import "shared/components/entity.component";
+
+import { Dependency, OnPhysics, OnStart, OnTick } from "@flamework/core";
 import { Component, BaseComponent, Components } from "@flamework/components";
+import { RotatorComponent } from "shared/components/rotator.component";
 import { Physics } from "./physics";
-import { HttpService, RunService } from "@rbxts/services";
-import { CombatService } from "server/services/combat.service";
-import { SprintState } from "server/services/movement.service";
-import { StateAttributes, StatefulComponent } from "shared/components/state.component";
+import { RunService } from "@rbxts/services";
 import { OnFrame, SchedulerService } from "server/services/scheduler.service";
 import { Animator } from "shared/components/animator.component";
 import { BlockMode } from "shared/util/lib";
-import { Identifier } from "shared/util/identifier";
+
 
 import * as lib from "shared/util/lib";
 import { QuarrelGame } from "server/services/quarrelgame.service";
 import { Input } from "shared/util/input";
-
+import * as entityExport from "shared/components/entity.component";
 enum RotationMode {
     Unlocked,
     Locked,
@@ -23,49 +23,11 @@ type String<T> = string;
 
 export namespace Entity {
 
-    export import EntityState = lib.EntityState
-    export interface EntityAttributes extends StateAttributes
-    {
-        /**
-         * The ID of the entity.
-         */
-        EntityId: string,
-        /**
-         * The maximum health of the entity.
-         */
-        MaxHealth: number,
-        /**
-         * The current health of the entity.
-         */
-        Health: number,
-    }
+    export import EntityState = lib.EntityState;
 
-    @Component({
-        defaults:
-        {
-        MaxHealth: 100,
-        Health: 100,
+    export import Entity = entityExport.Entity;
 
-        EntityId: "generate",
-        State: EntityState.Idle,
-        }
-        })
-    export class Entity<I extends EntityAttributes> extends StatefulComponent<I, Model>
-    {
-        private readonly id = Identifier.GenerateComponentId(this, "EntityId");
-
-        constructor()
-        {
-            super();
-            this.onAttributeChanged("EntityId", () =>
-            {
-                if (this.attributes.EntityId !== this.id)
-
-                    this.attributes.EntityId = this.id;
-            });
-        }
-    }
-
+    export import EntityAttributes = entityExport.EntityAttributes;
     export interface CombatantAttributes extends EntityAttributes {
         /**
          * The maximum stamina of the entity.
@@ -146,6 +108,7 @@ export namespace Entity {
 
         IFrame: -1,
         BlockStun: -1,
+        HitStop: -1,
 
         EntityId: "generate",
         State: EntityState.Idle,
@@ -181,61 +144,47 @@ export namespace Entity {
             );
         })
 
-        private tickDowns: Set<keyof CombatantAttributes> = new Set();
-        private tickDown(attr: keyof {
-            [K in keyof CombatantAttributes as (CombatantAttributes[K] extends number ? K : never )]: number
-        })
-        {
-            const attributeValue = this.attributes[ attr ];
-            assert(attr && attr in this.attributes, `invalid attribute: ${attr}`);
-            assert(typeIs(attributeValue, "number"), `invalid attribute type of ${attr} for tickDown: ${typeOf(attr)}`);
-
-            // wait for one extra frame if the tickdown
-            // was just applied
-            if (this.tickDowns.has(attr))
-            {
-                if (attributeValue > 0)
-
-                    this.setAttribute(attr, attributeValue - 1);
-
-                else if (attributeValue !== -1)
-                {
-                    this.tickDowns.delete(attr);
-                    this.setAttribute(attr, -1);
-                }
-            }
-            else if (attributeValue > 0)
-
-                this.tickDowns.add(attr);
-        }
-
         onFrame(dt: number): void
         {
             // tick-down stun and iframes
-            this.tickDown("IFrame");
-            this.tickDown("BlockStun");
+            this.tickDown<CombatantAttributes>("IFrame");
+            this.tickDown<CombatantAttributes>("BlockStun");
+            this.tickDown<CombatantAttributes>("HitStop");
 
-            if (this.IsNegative())
+            if (this.attributes.HitStop > 0)
+            {
 
-                return;
+                this.animator.GetPlayingAnimations().forEach((animation) =>
+                {
+                    if (animation.AnimationData.isAttackAnimation && animation.IsPlaying())
 
+                        animation.Pause();
+
+                });
+
+                this.instance.PrimaryPart.Anchored = true;
+                this.stateAnimator.Pause();
+            }
+            else if (this.attributes.HitStop !== -1)
+
+                this.ClearHitstop();
 
             if (this.IsNeutral())
             {
                 if (this.IsGrounded())
                 {
                     if (this.IsMoving())
-                    {
-                        if (this.IsState(EntityState.Idle))
 
-                            this.SetState(EntityState.Walk);
+                        this.SetState(EntityState.Walk);
 
-                    }
-                    else if (!this.IsState(EntityState.Crouch, EntityState.Idle))
+                    else if (!this.IsState(EntityState.Crouch))
 
                         this.ResetState();
                 }
-                else this.SetState(EntityState.Midair);
+                else
+                if (!this.IsNegative())
+
+                    this.SetState(EntityState.Midair);
             }
         }
 
@@ -273,12 +222,11 @@ export namespace Entity {
 
                     return false;
 
-                return true;
+                return !this.IsGrounded();
             });
 
             this.SetStateEffect(EntityState.Midair, () =>
             {
-                this.humanoid.Jump = true;
                 zeroWalkSpeed();
             });
 
@@ -286,13 +234,27 @@ export namespace Entity {
 
             this.SetStateEffect(EntityState.Idle, onNeutral);
 
-            this.SetStateEffect(EntityState.Crouch, slowButNotImmobile);
+            this.SetStateEffect(EntityState.Crouch, () =>
+            {
+                if (!this.IsAttacked)
+
+                    this.ClearBlockstun();
+
+                slowButNotImmobile();
+            });
 
             this.SetStateEffect(EntityState.Attack, zeroWalkSpeed);
 
             this.SetStateEffect(EntityState.Recovery, zeroWalkSpeed);
 
-            this.SetStateEffect(EntityState.Walk, onNeutral);
+            this.SetStateEffect(EntityState.Walk, () =>
+            {
+                if (!this.IsAttacked())
+
+                    this.ClearBlockstun();
+
+                onNeutral();
+            });
         }
 
         /**
@@ -323,9 +285,33 @@ export namespace Entity {
          * Clears the entity's block stun.
          * Good for bursts and cancels.
          */
-        public ClearBlockStun()
+        public ClearBlockstun()
         {
             this.attributes.BlockStun = -1;
+        }
+
+        /**
+         * Clears the entity's hitstop.
+         */
+        public ClearHitstop()
+        {
+            this.stateAnimator.Unpause();
+            this.attributes.HitStop = -1;
+            this.instance.PrimaryPart.Anchored = false;
+
+            this.animator.GetPlayingAnimations().forEach((animation) =>
+            {
+                if (animation.AnimationData.isAttackAnimation && animation.IsPaused())
+
+                    animation.Resume();
+            });
+        }
+
+        public Jump()
+        {
+            this.ClearHitstop();
+
+            return this.instance.Humanoid.Jump = true;
         }
 
         private rotationLocked = RotationMode.Unlocked;
@@ -343,27 +329,16 @@ export namespace Entity {
             this.LockRotation(RotationMode.Unlocked);
         }
 
-        public IsGrounded()
-        {
-            return this.humanoid.FloorMaterial !== Enum.Material.Air;
-        }
-
-        public IsMoving()
-        {
-            return this.humanoid.MoveDirection !== Vector3.zero;
-        }
-
-
         // TODO: Implement a global state that allows developers to swap between
         // blocking through a blocking state or through move direction.
         public IsBlocking(damageOrigin: Vector3, blockMode: BlockMode = Dependency<QuarrelGame>().DefaultBlockMode)
         {
             if (this.IsFacing(damageOrigin))
             {
-                print("is facing damage origin");
+                // print("is facing damage origin");
                 if (blockMode === BlockMode.MoveDirection)
                 {
-                    print("movedirection-based blocking");
+                    // print("movedirection-based blocking");
                     const { MoveDirection } = this.humanoid;
                     const dotProduct = MoveDirection.Dot((damageOrigin.mul(new Vector3(1,0,1)).sub(MoveDirection.mul(new Vector3(1,0,1)))).Unit);
                     print("facing:", dotProduct, MoveDirection.Magnitude);
@@ -394,16 +369,13 @@ export namespace Entity {
 
             const dotArg = normalizedPosition.sub(normalizedOrigin).Unit;
             const dotProduct = normalizedFacing.Dot(dotArg);
-            print("dot:", dotProduct);
 
             return dotProduct <= this.facingLeniency;
         }
 
-        public GetPrimaryPart()
+        public CanCounter()
         {
-            assert(this.instance.PrimaryPart, "primary part not found");
-
-            return this.instance.PrimaryPart;
+            return this.IsState(EntityState.Startup, EntityState.Attack);
         }
 
         public IsAttacking()
@@ -433,16 +405,19 @@ export namespace Entity {
             );
         }
 
-        public readonly humanoid = this.instance.WaitForChild("Humanoid") as Humanoid;
+        public IsAttacked()
+        {
+            return this.IsState(
+                EntityState.Hitstun,
+                EntityState.HitstunCrouching,
 
-        public readonly entityId = HttpService.GenerateGUID(false);
-
-        public readonly baseWalkSpeed = 16;
-
-        public readonly sprintWalkSpeed = 24;
+                EntityState.Knockdown,
+                EntityState.KnockdownHard,
+            );
+        }
     }
 
-    interface PlayerCombatantAttributes extends CombatantAttributes {
+    export interface PlayerCombatantAttributes extends CombatantAttributes {
         QueuedInput?: Input,
     }
 
@@ -459,6 +434,7 @@ export namespace Entity {
 
         IFrame: -1,
         BlockStun: -1,
+        HitStop: -1,
 
         EntityId: "generate",
         State: EntityState.Idle,
@@ -469,6 +445,17 @@ export namespace Entity {
         constructor()
         {
             super();
+        }
+    }
+
+    interface EntityRotatorAttributes {}
+    @Component({})
+    export class EntityRotator extends RotatorComponent implements OnStart, OnTick
+    {
+        onTick(dt: number): void
+        {
+            const entityComponent = Dependency<Components>().getComponent(this.instance, Entity);
+            this.DoRotate();
         }
     }
 }

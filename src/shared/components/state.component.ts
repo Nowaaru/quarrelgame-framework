@@ -1,6 +1,6 @@
 import { OnStart } from "@flamework/core";
 import { Component, BaseComponent } from "@flamework/components";
-import type { EntityState } from "shared/util/lib";
+import { EntityState } from "shared/util/lib";
 
 import Signal from "@rbxts/signal";
 
@@ -65,7 +65,7 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
             {
                 if (!this.stateGuards.get(state)?.())
                 {
-                    print("State guard failed.");
+                    print(`State guard failed: ${EntityState[ state ]}`);
 
                     return false;
                 }

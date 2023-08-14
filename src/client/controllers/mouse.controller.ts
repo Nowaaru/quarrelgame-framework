@@ -87,7 +87,7 @@ export class Mouse implements OnStart, OnInit
 
                         else this.pressedButtons.delete(MouseButton.Left);
 
-                        listener.onMouseButton?.(MouseButton.Left, mode);
+                        Promise.try(() => listener.onMouseButton?.(MouseButton.Left, mode));
                     }
                     break;
                 case Enum.UserInputType.MouseButton2:
@@ -99,7 +99,7 @@ export class Mouse implements OnStart, OnInit
 
                         else this.pressedButtons.delete(MouseButton.Right);
 
-                        listener.onMouseButton?.(MouseButton.Right, mode);
+                        Promise.try(() => listener.onMouseButton?.(MouseButton.Right, mode));
                     }
                     break;
                 case Enum.UserInputType.MouseButton3:
@@ -111,7 +111,7 @@ export class Mouse implements OnStart, OnInit
 
                         else this.pressedButtons.delete(MouseButton.Middle);
 
-                        listener.onMouseButton?.(MouseButton.Middle, mode);
+                        Promise.try(() => Promise.try(() => listener.onMouseButton?.(MouseButton.Middle, mode)));
                     }
             }
         };
@@ -124,20 +124,20 @@ export class Mouse implements OnStart, OnInit
             {
                 for (const listener of this.moveListeners)
                 {
-                    listener.onMouseMove?.({
+                    Promise.try(() => listener.onMouseMove?.({
                         delta: [key.Delta.X, key.Delta.Y] as const,
                         position: [key.Position.X, key.Position.Y] as const,
-                    });
+                    }));
                 }
             }
             else if (key.UserInputType === Enum.UserInputType.MouseWheel)
             {
                 for (const listener of this.wheelListeners)
                 {
-                    listener.onMouseWheel?.({
+                    Promise.try(() => listener.onMouseWheel?.({
                         value: key.Delta.Z,
                         direction: key.Delta.Z > 0 ? ScrollDirection.Up : ScrollDirection.Down,
-                    });
+                    }));
                 }
             }
         });

@@ -9,9 +9,9 @@ import Characters from "data/models/character";
 
 const Gio =
     new Character.CharacterBuilder3D()
-        .SetName("Giovanna?")
-        .SetDescription("Test character")
-        .SetModel(Characters.jane as never)
+        .SetName("Manbed")
+        .SetDescription("Test character 2")
+        .SetModel(Characters.shedletsky as never)
         .SetEasiness(3)
         .SetAttack(Input.Slash, CloseSlash)
         .SetAttack(Input.Kick, ForwardKick)

@@ -1,151 +1,74 @@
-import { Controller, OnStart, OnInit, Dependency } from "@flamework/core";
+import { Controller, OnStart, OnInit, Dependency, Modding } from "@flamework/core";
 import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
 import { InputMode, InputResult } from "shared/util/input";
-import { ContextActionService, Players } from "@rbxts/services";
+import { Players, Workspace } from "@rbxts/services";
 import { GlobalFunctions } from "shared/network";
-import { BattleCamera, CameraController } from "./camera.controller";
-import { Mouse, MouseButton, OnMouseButton, OnMouseMove } from "./mouse.controller";
+import { BattleCamera, CameraController3D } from "./camera3d.controller";
+import { Mouse, MouseButton, OnMouseButton } from "./mouse.controller";
 import { HudController } from "./hud.controller";
 
 import { EntityState, SprintState } from "shared/util/lib";
-import { OnGamepadInput } from "./gamepad.controller";
 import { Components } from "@flamework/components";
 import { Animator } from "../../shared/components/animator.component";
 import { StatefulComponent } from "shared/components/state.component";
+import { CombatController } from "./combat.controller";
+import { CharacterController2D } from "./2dcontroller.controller";
+import { CharacterController3D } from "./3dcontroller.controller";
 
 const { client: ClientFunctions } = GlobalFunctions;
+export interface OnRespawn {
+    onRespawn(character: Model): void,
+}
 
 @Controller({})
-export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, BattleCamera
+export class Client implements OnStart, OnInit, OnMouseButton, BattleCamera
 {
+    private respawnTrackers: Set<OnRespawn> = new Set();
+
     constructor(
-        private readonly camera: CameraController,
+        private readonly camera: CameraController3D,
+        private readonly keyboard: Keyboard,
         private readonly hud: HudController,
         private readonly mouse: Mouse,
+        private readonly combatController: CombatController,
+        private readonly characterController2D: CharacterController2D,
+        private readonly characterController3D: CharacterController3D,
     )
     {}
 
     onInit()
     {
-        ContextActionService.UnbindAction("jumpAction");
-
         Players.LocalPlayer.CameraMinZoomDistance = 8;
         Players.LocalPlayer.CameraMaxZoomDistance = Players.LocalPlayer.CameraMinZoomDistance;
     }
 
     onStart()
     {
+        const components = Dependency<Components>();
+        Modding.onListenerAdded<OnRespawn>((a) => this.respawnTrackers.add(a));
+        Modding.onListenerRemoved<OnRespawn>((a) => this.respawnTrackers.delete(a));
+
         this.player.CharacterAdded.Connect((char) =>
         {
+            this.character = char;
             char.WaitForChild("Humanoid").WaitForChild("Animator");
-            Dependency<Components>().addComponent(char, Animator.Animator);
-            Dependency<Components>().addComponent(char, StatefulComponent);
+            components.addComponent(char, Animator.Animator);
+            components.addComponent(char, StatefulComponent);
+
+            this.respawnTrackers.forEach((l) =>
+            {
+                l.onRespawn(char);
+            });
+
+            this.characterController2D.SetAxisTowardsModel(Workspace.WaitForChild("jane") as Model);
+            this.characterController2D.SetEnabled(true);
         });
-    }
-
-    onKeyboardInput(buttonPressed: Enum.KeyCode, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult)
-    {
-        if (inputMode === InputMode.Release)
-        {
-            switch (buttonPressed)
-            {
-                case (Enum.KeyCode.LeftShift):
-                {
-                    ClientFunctions.RequestSprint(SprintState.Walking);
-                    break;
-                }
-
-                case (Enum.KeyCode.LeftControl):
-                {
-                    ClientFunctions.Crouch(EntityState.Idle);
-                    break;
-                }
-            }
-
-            return true;
-        }
-
-        switch (buttonPressed)
-        {
-            case (Enum.KeyCode.R):
-            {
-                ClientFunctions.RespawnCharacter.invoke()
-                    .then(() => print("Reloaded character."));
-
-                break;
-            }
-
-            case (Enum.KeyCode.E):
-            {
-                ClientFunctions.KnockbackTest.invoke()
-                    .then(() => warn("Knockback test initiated."))
-                    .catch((e) => warn(`Knockback test failed: \n${e}`));
-
-                break;
-            }
-
-            case (Enum.KeyCode.T):
-            {
-                ClientFunctions.TrailTest.invoke()
-                    .then(() => "Trail test initiated.")
-                    .catch(() => "Trail test failed.");
-
-                break;
-            }
-
-            case (Enum.KeyCode.H):
-            {
-                if (this.hud.IsHudEnabled())
-
-                    this.hud.DisableHud();
-
-                else this.hud.EnableHud();
-                break;
-            }
-
-            case (Enum.KeyCode.LeftShift):
-            {
-                ClientFunctions.RequestSprint(SprintState.Sprinting);
-                break;
-            }
-
-            case (Enum.KeyCode.LeftAlt):
-            {
-                this.camera.ToggleBattleCameraEnabled().catch((e) =>
-                {
-                    warn(e);
-                    print(this.camera.PlayerModule);
-                });
-
-                break;
-            }
-
-            case (Enum.KeyCode.LeftControl):
-            {
-                ClientFunctions.Crouch(EntityState.Crouch)
-                    .catch((e) => warn(`Crouch failed: ${e}`));
-
-                break;
-            }
-
-            case (Enum.KeyCode.Space):
-            {
-                ClientFunctions.Jump()
-                    .catch((e) => warn(`Jump failed: ${e}`));
-
-                break;
-            }
-        }
-
-        return true;
     }
 
     onBattleCameraDisabled()
     {
         print("Battle Camera is disabled. Turning off the Widescreen effect.");
-        this.hud.SetLockOnEffectEnabled(false);
-        this.hud.SetLockOnTarget(undefined);
-        this.camera.SetLockOnTarget(undefined);
+        this.combatController.LockOn(undefined);
     }
 
     onMouseButton(mouseButton: MouseButton, inputMode: InputMode): void
@@ -178,9 +101,7 @@ export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, 
 
                                 if (ancestorHumanoid && ancestorPrimaryPart)
                                 {
-                                    this.hud.SetLockOnEffectEnabled(true);
-                                    this.hud.SetLockOnTarget(ancestorModel);
-                                    this.camera.SetLockOnTarget(ancestorPrimaryPart);
+                                    this.combatController.LockOn(undefined);
 
                                     break;
                                 }
@@ -188,18 +109,16 @@ export class Client implements OnStart, OnInit, OnKeyboardInput, OnMouseButton, 
                         }
                     }
 
-                    this.hud.SetLockOnEffectEnabled(false);
-                    this.hud.SetLockOnTarget(undefined);
-                    this.camera.SetLockOnTarget(undefined);
                     break;
                 }
 
-                this.hud.SetLockOnEffectEnabled(false);
-                this.camera.SetLockOnTarget(undefined);
+                this.combatController.LockOn(undefined);
                 break;
             }
         }
     }
 
     public readonly player = Players.LocalPlayer;
+
+    public character = this.player.Character;
 }

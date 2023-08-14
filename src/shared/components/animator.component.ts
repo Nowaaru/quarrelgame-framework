@@ -1,30 +1,31 @@
 import { BaseComponent, Component } from "@flamework/components";
-import { Controller, Dependency, OnInit, OnStart } from "@flamework/core";
-import Make from "@rbxts/make";
+import { OnStart } from "@flamework/core";
 
-import { Animation } from "shared/util/character";
-import { HttpService, RunService } from "@rbxts/services";
-import { ClientFunctions } from "shared/network";
-
-import type { SchedulerService }  from "server/services/scheduler.service";
-import Signal from "@rbxts/signal";
+import { HttpService } from "@rbxts/services";
 import { StateAttributes } from "./state.component";
-import Gio from "shared/data/character/gio";
 import { EntityState, GetTickRate } from "shared/util/lib";
+import { Animation } from "shared/util/animation";
 
+import Make from "@rbxts/make";
+import Signal from "@rbxts/signal";
+import Characters from "shared/data/character";
 export namespace Animator {
     interface PlayOptions {
         Speed?: number,
         Preload?: boolean,
         FadeTime?: number,
-
+        Weight?: number
     }
 
     export class Animation
     {
-        private readonly Animation: Instances["Animation"];
+        public readonly Animation: Instances["Animation"];
 
-        private readonly AnimationTrack: Instances["AnimationTrack"];
+        public readonly AnimationTrack: Instances["AnimationTrack"];
+
+        public readonly AnimationData: Animation.AnimationData;
+
+        public readonly IsAttackAnimation;
 
         private readonly Name;
 
@@ -38,12 +39,15 @@ export namespace Animator {
 
         public Ended: Signal<() => void> = new Signal();
 
-        constructor(private readonly animator: Animator, {assetId, priority, name, loop}: Animation.AnimationData)
+        constructor(private readonly animator: Animator, animationData: Animation.AnimationData)
         {
+            const {assetId, priority, name, loop} = animationData;
             this.Animation = Make("Animation", {
                 AnimationId: assetId,
                 Name: name,
             });
+
+            this.AnimationData = animationData;
 
             this.Name = name;
             this.Id = `${this.Name}-${HttpService.GenerateGUID(false)}`;
@@ -54,6 +58,7 @@ export namespace Animator {
 
             this.Priority = this.AnimationTrack.Priority;
             this.AnimationId = this.Animation.AnimationId;
+            this.IsAttackAnimation = this.AnimationData.isAttackAnimation;
 
             this.AnimationTrack.Ended.Connect(() =>
             {
@@ -94,6 +99,11 @@ export namespace Animator {
             return this.AnimationTrack.IsPlaying;
         }
 
+        public IsPaused()
+        {
+            return this.AnimationTrack.Speed === 0 && this.IsPlaying();
+        }
+
         public IsLoaded()
         {
             if (this.AnimationTrack.IsPropertyModified("Length"))
@@ -114,17 +124,31 @@ export namespace Animator {
                     return this.Loaded.then(() =>
                     {
                         this.animator.attributes.ActiveAnimation = this.Id;
-                        this.AnimationTrack.Play();
+                        this.AnimationTrack.Play(playOptions?.FadeTime, playOptions?.Weight, playOptions?.Speed ?? 1);
 
                         return res(this);
                     });
                 }
 
                 this.animator.attributes.ActiveAnimation = this.Id;
-                this.AnimationTrack.Play(playOptions?.FadeTime, undefined, playOptions?.Speed);
+                this.AnimationTrack.Play(playOptions?.FadeTime, playOptions?.Weight, playOptions?.Speed ?? 1);
 
                 return res(this);
             });
+        }
+
+        public async Pause(): Promise<this>
+        {
+            this.AnimationTrack?.AdjustSpeed(0);
+
+            return this;
+        }
+
+        public async Resume(): Promise<this>
+        {
+            this.AnimationTrack?.AdjustSpeed(1);
+
+            return this;
         }
 
         public async Stop({fadeTime, yieldFade}: {fadeTime?: number, yieldFade?: boolean}): Promise<this>
@@ -149,9 +173,22 @@ export namespace Animator {
     @Component({})
     export class Animator<I extends AnimatorProps = AnimatorProps> extends BaseComponent<I, Model & { Humanoid: Humanoid & { Parent: Model, Animator: Instances["Animator"] & { Parent: Humanoid } }}>
     {
+        protected loadedAnimations: Animation[] = [];
+
         public LoadAnimation(animation: Animation.AnimationData): Animation
         {
-            return new Animation(this, animation);
+            const loadedAnimation = new Animation(this, animation);
+            this.loadedAnimations.push(loadedAnimation);
+
+            return loadedAnimation;
+        }
+
+        public GetPlayingAnimations(): Animation[]
+        {
+            return this.Animator.GetPlayingAnimationTracks().mapFiltered((n) =>
+            {
+                return this.loadedAnimations.find((x) => x.AnimationId === n.Animation?.AnimationId);
+            });
         }
 
         public GetAnimator()
@@ -185,8 +222,13 @@ export namespace Animator {
             this.onAttributeChanged("State", (newState, oldState) => this.onStateChanged(newState));
         }
 
-        private onStateChanged(newState: AttributeValue)
+        private async onStateChanged(newState: AttributeValue)
         {
+            const Gio = Characters.get("Giovanna?")!;
+            if (this.paused)
+
+                return;
+
             if (typeIs(newState, "number"))
             {
                 if (newState in Gio.Animations)
@@ -225,6 +267,34 @@ export namespace Animator {
             }
         }
 
+        private pausedState?: AttributeValue;
+        public Pause(paused = true)
+        {
+            if (!paused)
+            {
+                this.Unpaused.Fire();
+                if (this.currentLoadedAnimation?.IsPaused())
 
+                    this.currentLoadedAnimation?.Resume();
+
+                if (this.attributes.State !== this.pausedState)
+
+                    this.onStateChanged(this.attributes.State);
+            }
+            else
+            {
+                this.paused = true;
+                this.currentLoadedAnimation?.Pause();
+            }
+        }
+
+        public Unpause()
+        {
+            return this.Pause(false);
+        }
+
+        private paused = false;
+
+        private Unpaused: Signal<() => void> = new Signal();
     }
 }

@@ -1,4 +1,4 @@
-import { Service, OnStart, OnInit, Dependency } from "@flamework/core";
+import { Service, OnStart, OnInit, Dependency, Modding } from "@flamework/core";
 import { QuarrelGame } from "./quarrelgame.service";
 
 import { Physics } from "server/components/physics";
@@ -6,17 +6,13 @@ import { ServerFunctions } from "shared/network";
 import { Components } from "@flamework/components";
 import { EffectsService } from "./effects.service";
 import { Entity } from "server/components/entity.component";
-import { Input } from "shared/util/input";
-import { getEnumValues } from "shared/util/lib";
-import Gio from "shared/data/character/gio";
+import { Input, Motion } from "shared/util/input";
+import { ConvertPercentageToNumber, EntityState, HitResult, HitboxRegion, getEnumValues } from "shared/util/lib";
 import { Skill } from "shared/util/character";
-
-export class KnockbackInstance
-{
-    constructor(targetInstance: Physics.PhysicsEntity<Physics.PhysicsAttributes, Model & { PrimaryPart: Instance }>)
-    {
-        print("Physics Attribute for model ");
-    }
+import Gio from "shared/data/character/gio";
+import { Hitbox } from "shared/util/hitbox";
+export interface OnHit {
+    onHit(contactData: Hitbox.Contact): void
 }
 
 @Service({
@@ -24,11 +20,20 @@ export class KnockbackInstance
     })
 export class CombatService implements OnStart, OnInit
 {
+    public readonly HitstopFrames: number = 12;
+
+    private readonly lastSkillData = new Map<defined, {
+        lastSkillTime?: number,
+        lastSkillHitResult?: HitResult;
+    }>();
+
     constructor(private readonly quarrelGame: QuarrelGame, private readonly effectsService: EffectsService)
     {}
 
     onInit()
     {
+        Modding.onListenerAdded<OnHit>((l) => Hitbox.ActiveHitbox.onHitListeners.add(l));
+        Modding.onListenerRemoved<OnHit>((l) => Hitbox.ActiveHitbox.onHitListeners.delete(l));
     }
 
     onStart()
@@ -94,6 +99,9 @@ export class CombatService implements OnStart, OnInit
                 const combatantComponent = this.GetCombatant(player.Character);
                 assert(combatantComponent, "entity component not found");
 
+                const {lastSkillHitResult, lastSkillTime} = this.lastSkillData.get(combatantComponent)
+                    ?? this.lastSkillData.set(combatantComponent, {}).get(combatantComponent)!;
+
                 if (Gio.Attacks[ inputTranslation ])
                 {
                     let attackSkill: Skill.Skill | undefined;
@@ -105,36 +113,73 @@ export class CombatService implements OnStart, OnInit
                     else attackSkill = (Gio.Attacks[ inputTranslation ] as Skill.Skill | undefined);
 
 
-                    print("attack skill");
                     if (attackSkill)
                     {
                         const attackFrameData = attackSkill.FrameData;
-
                         const previousSkillId = combatantComponent.attributes.PreviousSkill;
+                        const attackDidLand = (lastSkillHitResult !== HitResult.Whiffed);
+
                         let skillDoesGatling = false;
 
                         if (previousSkillId)
                         {
                             const previousSkill = Skill.GetCachedSkill(previousSkillId);
-                            print("previous skill:", previousSkill?.Name);
+
                             skillDoesGatling = !!(
-                                previousSkill?.GatlingsInto.has(attackSkill)
+                                previousSkill?.GatlingsInto.has(attackSkill.Id)
                             );
                         }
 
-                        if (skillDoesGatling || !combatantComponent.IsNegative())
+                        const isRecovering = combatantComponent.IsState(EntityState.Recovery);
+                        if ((isRecovering && attackDidLand && skillDoesGatling) || !combatantComponent.IsNegative())
                         {
                             if (skillDoesGatling)
-
-                                print("it do gattle tho");
-
-                            return attackFrameData.Execute(combatantComponent, attackSkill).tap(() =>
                             {
-                                combatantComponent.ResetState();
+                                if (attackDidLand)
+
+                                    print("ooh that does gattle fr");
+
+                                else print("attack does gattle, but it didn't land!");
+                            }
+                            else print("doesn't gattle, but not negative!");
+
+                            const currentLastSkillTime = os.clock();
+                            combatantComponent.SetHitstop(-1);
+                            this.lastSkillData.set(combatantComponent, {
+                                lastSkillTime: currentLastSkillTime,
+                                lastSkillHitResult
+                            });
+
+
+                            return attackFrameData.Execute(combatantComponent, attackSkill).then(async (hitData) =>
+                            {
+                                print('hit data received:', hitData);
+                                if (await hitData.hitResult !== HitResult.Whiffed)
+                                {
+                                    print("omg they didnt whiff!");
+                                    const hitstopFrames = Dependency<CombatService>().HitstopFrames;
+                                    hitData.attacker.SetHitstop(hitstopFrames);
+                                    hitData.attacked?.SetHitstop(hitstopFrames);
+                                }
+
+                                this.lastSkillData.set(combatantComponent, {
+                                    lastSkillHitResult: await hitData.hitResult,
+                                    lastSkillTime
+                                });
+
+                                if (currentLastSkillTime === lastSkillTime)
+
+                                    combatantComponent.ResetState();
+
+                                else print("state seems to have changed");
+
+                                return true;
                             }) ?? Promise.resolve(false);
                         }
+                        else if (!skillDoesGatling)
 
-                        print("nah that dont gattle");
+                            print(`nah that dont gattle (${skillDoesGatling}):`, previousSkillId ? Skill.GetCachedSkill(previousSkillId)?.GatlingsInto ?? "invalid skill id" : "no skill id");
+
 
                         return Promise.resolve(false);
 

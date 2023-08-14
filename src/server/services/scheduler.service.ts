@@ -49,9 +49,9 @@ export class SchedulerService implements OnStart, OnInit
     {
         this.dtFrameCounter = dt;
 
-        this.tickListeners.forEach((listener) =>
+        this.tickListeners.forEach(async (listener) =>
         {
-            listener.onFrame(this.dtFrameCounter);
+            Promise.try(() => listener.onFrame(this.dtFrameCounter));
         });
     }
 

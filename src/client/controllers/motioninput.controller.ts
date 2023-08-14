@@ -1,7 +1,6 @@
 import { Controller, OnStart, OnInit, OnTick } from "@flamework/core";
 import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
 import { InputMode, InputResult, Motion, Input } from "shared/util/input";
-import { Client } from "./client.controller";
 
 
 export type Frames = number;
@@ -59,7 +58,7 @@ export namespace GameInput {
             return false;
         }
 
-        constructor(private readonly keyboard: Keyboard, private readonly client: Client)
+        constructor(private readonly keyboard: Keyboard)
         {}
 
         private pushToMotionInput(input: Motion | Input)

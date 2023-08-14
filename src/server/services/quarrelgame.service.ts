@@ -1,20 +1,31 @@
 import { Components } from "@flamework/components";
-import { Service, OnStart, OnInit, Dependency } from "@flamework/core";
+import { Service, OnStart, OnInit, Dependency, Modding } from "@flamework/core";
 import Make from "@rbxts/make";
-import { Players, ReplicatedStorage, StarterPlayer } from "@rbxts/services";
+import { Players, ReplicatedStorage, StarterPlayer, Workspace } from "@rbxts/services";
 import { Participant } from "server/components/participant.component";
 
 import { GlobalFunctions } from "shared/network";
 import { BlockMode } from "shared/util/lib";
 const { server: ServerFunctions } = GlobalFunctions;
 
+export interface OnParticipantAdded
+{
+    onParticipantAdded(participant: Participant): void;
+}
+
 @Service({
     loadOrder: -1,
     })
-
 export class QuarrelGame implements OnStart, OnInit
 {
     public readonly DefaultBlockMode = BlockMode.MoveDirection;
+
+    public readonly CharacterContainer = Make("Folder", {
+        Parent: Workspace,
+        Name: "CharacterContainer",
+    })
+
+    private readonly participantAddedHandler = new Set<OnParticipantAdded>();
 
     onInit()
     {
@@ -22,21 +33,38 @@ export class QuarrelGame implements OnStart, OnInit
         StarterPlayer.EnableMouseLockOption = false;
         Players.CharacterAutoLoads = false;
 
+        Modding.onListenerAdded<OnParticipantAdded>((l) => this.participantAddedHandler.add(l));
+        Modding.onListenerRemoved<OnParticipantAdded>((l) => this.participantAddedHandler.delete(l));
+
         print("Quarrel Game is ready.");
     }
 
     onStart()
     {
         const components = Dependency<Components>();
+        const reparentCharacter = (t: Model) =>
+        {
+            task.wait(0.5);
+            t.Parent = this.CharacterContainer;
+        };
 
         Players.PlayerAdded.Connect((player) =>
         {
-            this.participants.push(components.addComponent(player, Participant));
+            const newParticipant = components.addComponent(player, Participant);
+            this.participants.push(newParticipant);
+            for (const participant of this.participantAddedHandler)
+
+                participant.onParticipantAdded(newParticipant);
+
             player.CharacterAdded.Connect((character) =>
             {
-                const Humanoid = character.WaitForChild("Humanoid");
+
+                if (!character.Parent)
+                    character.AncestryChanged.Once(() => reparentCharacter(character));
+                else reparentCharacter(character);
+
                 Make("Animator", {
-                    Parent: Humanoid,
+                    Parent: character.WaitForChild("Humanoid"),
                 });
             });
         });

@@ -54,6 +54,15 @@
 						"$path": "out/client"
 					} 
 				}
+			},
+			"StarterCharacterScripts": {
+				"$className": "StarterCharacterScripts",
+				"Animate": {
+					"$className": "LocalScript",
+					"$properties": {
+						"Source": "--// disabled"
+					}
+				}
 			}
 		},
 		"Workspace": {

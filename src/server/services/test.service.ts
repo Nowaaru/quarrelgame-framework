@@ -10,19 +10,21 @@ export class TestService implements OnStart, OnInit
     onInit()
     {
         const janeModel = Character.jane.Clone();
-        janeModel.PrimaryPart!.Anchored = true;
         janeModel.Parent = Workspace;
+        janeModel.PivotTo(new CFrame(0,0,-17));
 
+        const janeCombatant = Dependency<Components>().addComponent(janeModel, Entity.Combatant);
+        const janeRotator = Dependency<Components>().addComponent(janeModel, Entity.EntityRotator);
         RunService.Stepped.Connect(() =>
         {
+            janeModel.Humanoid.WalkSpeed = 0;
             const targetPlayer = Players.GetPlayers()[ 0 ]?.Character;
             if (targetPlayer)
             {
                 janeModel.Humanoid.Move(targetPlayer.GetPivot().LookVector);
-                janeModel.PivotTo(CFrame.lookAt(new Vector3(2, 3, -15), targetPlayer.GetPivot().Position ?? new Vector3()));
+                janeRotator.RotateTowards(targetPlayer.PrimaryPart);
             }
         });
-        Dependency<Components>().addComponent(janeModel, Entity.Combatant);
     }
 
     onStart()

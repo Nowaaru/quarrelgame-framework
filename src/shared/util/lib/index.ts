@@ -3,6 +3,7 @@ import { Players, RunService } from "@rbxts/services";
 import { ClientFunctions } from "shared/network";
 
 import type { SchedulerService } from "server/services/scheduler.service";
+import type { Entity } from "server/components/entity.component";
 
 declare global
 {
@@ -123,10 +124,28 @@ export enum EntityState {
  * contact with an Entity.
  */
 export enum HitResult {
+    /**
+     * If the attack missed.
+     */
     Whiffed,
+    /**
+     * If the attack was blocked.
+     */
     Blocked,
+    /**
+     * If the hit landed.
+     */
     Contact,
+    /**
+     * If the hit landed and put the entity in a counter state.
+     */
     Counter,
+}
+
+export interface HitData<Attacked extends Entity.EntityAttributes, Attacker extends Entity.CombatantAttributes> {
+    hitResult: HitResult | Promise<HitResult>,
+    attacked?: Entity.Entity<Attacked>,
+    attacker: Entity.Combatant<Attacker>
 }
 
 /**

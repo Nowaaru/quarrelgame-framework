@@ -11,14 +11,14 @@ export namespace Identifier {
         {
             if (component.attributes[ attr as never ] === "generate")
 
-                component.attributes[ attr as never ] = GenerateId() as never;
+                component.attributes[ attr as never ] = Generate() as never;
 
         }
 
         return generatedId;
     }
 
-    export function GenerateId()
+    export function Generate()
     {
         return HttpService.GenerateGUID(false);
     }

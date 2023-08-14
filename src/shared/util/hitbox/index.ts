@@ -6,10 +6,12 @@ import { $env } from "rbxts-transform-env";
 import { Skill } from "shared/util/character";
 
 import type { QuarrelGame } from "server/services/quarrelgame.service";
+import type { CombatService } from "server/services/combat.service";
 import Make from "@rbxts/make";
 import Signal from "@rbxts/signal";
 
 import type { Entity } from "server/components/entity.component";
+import type { OnHit } from "server/services/combat.service";
 import * as lib from "shared/util/lib";
 
 type Frames = number;
@@ -130,17 +132,19 @@ export namespace Hitbox {
         }
     }
 
-    interface Contact {
-        Attacker: Entity.Combatant<Entity.CombatantAttributes>;
-        Attacked: Entity.Combatant<Entity.CombatantAttributes>;
+    export interface Contact<A1 extends Entity.CombatantAttributes = Entity.CombatantAttributes, A2 extends Entity.Combatant<A1> = Entity.Combatant<A1>> {
+        Attacker: A2;
+        Attacked: A2;
 
         AttackerIsBlocking: boolean;
-        Region: HitboxRegion
-        Skill: Skill.Skill,
+        Region: HitboxRegion;
+        Skill: Skill.Skill;
     }
 
     export class ActiveHitbox
     {
+        public static onHitListeners: Set<OnHit> = new Set();
+
         public readonly Contact: Signal<(contact: Contact) => void> = new Signal();
 
         private readonly hitbox: Omit<Hitbox, "Initialize">;
@@ -167,15 +171,18 @@ export namespace Hitbox {
                 CanQuery: false,
                 CanCollide: false,
                 CanTouch: false,
+                Transparency: 0.7,
+                Color: new Color3(1,0,0)
             });
 
 
             Make("Highlight", {
                 Adornee: preferredHitboxVisualizer,
+                Parent: preferredHitboxVisualizer,
                 FillTransparency: 0.8,
                 OutlineTransparency: 0.9,
-
-                Parent: preferredHitboxVisualizer,
+                OutlineColor: new Color3(1,0,0),
+                FillColor: new Color3(1,0,0),
             });
 
             task.delay(0.5, () =>
@@ -187,7 +194,6 @@ export namespace Hitbox {
             overlapParams.FilterDescendantsInstances = [target.FindFirstAncestorWhichIsA("Model")].filterUndefined();
             overlapParams.FilterType = Enum.RaycastFilterType.Exclude;
 
-            print("params lol:", overlapParams);
             this.hitProcessor = RunService.Heartbeat.Connect(async () =>
             {
                 const instancesInHitbox = Workspace.GetPartBoundsInBox(targetCFrame, this.hitbox.size, overlapParams);
@@ -213,6 +219,7 @@ export namespace Hitbox {
                         if (entityComponent)
                         {
                             const quarrelGameService = await import("server/services/quarrelgame.service");
+                            const combatGameService = await import("server/services/combat.service");
                             assert(quarrelGameService, "quarrel game service not found");
 
                             const hitboxModel = target.FindFirstAncestorWhichIsA("Model");
@@ -225,19 +232,24 @@ export namespace Hitbox {
                             assert(hitboxPossessor, "could not find hitbox possessor");
 
                             const entityIsBlocking = entityComponent.IsBlocking(hitboxPossessor.GetPivot().Position);
-                            const possessorEntityComponent = Dependency<Components>().getComponent(hitboxPossessor, entityImport.Entity.Combatant);
+                            const possessorEntityComponent = Dependency<CombatService>().GetCombatant(hitboxPossessor);
 
                             if (possessorEntityComponent)
 
                             {
-                                this.Contact.Fire({
+                                const contactData: Contact = {
                                     Attacker: possessorEntityComponent,
                                     Attacked: entityComponent,
 
                                     AttackerIsBlocking: entityIsBlocking,
                                     Region: this.hitbox.hitRegion,
                                     Skill: skill,
-                                });
+                                };
+
+                                this.Contact.Fire(contactData);
+                                for (const listener of ActiveHitbox.onHitListeners)
+
+                                    Promise.try(() => listener.onHit(contactData));
                             }
                             else warn("Attacker model found, but the model does not possess a component?");
 

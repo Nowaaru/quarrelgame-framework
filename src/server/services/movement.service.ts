@@ -40,7 +40,7 @@ export class MovementService implements OnStart, OnInit
 
         ServerFunctions.Jump.setCallback((player) =>
         {
-            return fetchEntityFromPlayer(player).SetState(EntityState.Midair);
+            return fetchEntityFromPlayer(player).Jump();
         });
     }
 }

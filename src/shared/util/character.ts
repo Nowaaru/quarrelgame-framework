@@ -1,78 +1,20 @@
 import type { SchedulerService } from "server/services/scheduler.service";
 import type { Animator } from "shared/components/animator.component";
 import type { Entity } from "server/components/entity.component";
-import { EntityState, HitResult, HitboxRegion } from "shared/util/lib";
+import type { CombatService } from "server/services/combat.service";
+import { Animation } from "shared/util/animation";
+import { EntityState, HitData, HitResult, HitboxRegion } from "shared/util/lib";
 
 import { Input, Motion, MotionInput } from "./input";
 import { Hitbox } from "./hitbox";
 
 import { Dependency } from "@flamework/core";
-import { HttpService, RunService } from "@rbxts/services";
 import { Identifier } from "./identifier";
+import { EntityAttributes } from "shared/components/entity.component";
+import { HttpService, RunService } from "@rbxts/services";
+
 
 type SkillName = string;
-
-export namespace Animation {
-    export interface AnimationData {
-        name: string,
-        assetId: string,
-
-        priority?: Enum.AnimationPriority
-        loop?: boolean,
-    }
-
-    export class AnimationBuilder
-    {
-        private assetId?: string;
-
-        private priority?: Enum.AnimationPriority;
-
-        private name?: string;
-
-        private loop = false;
-
-        public SetName(name: string)
-        {
-            this.name = name;
-
-            return this;
-        }
-
-        public SetLooped(loop: boolean)
-        {
-            this.loop = loop;
-
-            return this;
-        }
-
-        public SetAnimationId(animationId: string): this
-        {
-            this.assetId = animationId;
-
-            return this;
-        }
-
-        public SetPriority(priority: Enum.AnimationPriority = Enum.AnimationPriority.Action)
-        {
-            this.priority = priority;
-
-            return this;
-        }
-
-        public Construct(): Readonly<AnimationData>
-        {
-            assert(this.assetId, "Builder incomplete! Asset Id is unset.");
-            assert(this.name, "Builder incomplete! Name is unset.");
-
-            return {
-                assetId: this.assetId,
-                priority: this.priority,
-                name: this.name,
-                loop: this.loop,
-            } as const;
-        }
-    }
-}
 
 export namespace Character {
     type EaseOfUse = 1 | 2 | 3 | 4 | 5;
@@ -98,7 +40,7 @@ export namespace Character {
 
         easeOfUse: EaseOfUse;
 
-        characterModel: Model;
+        characterModel: Model & { PrimaryPart: BasePart, Humanoid: Humanoid & { Animator?: Animator } };
 
         skills: Set<Skill.Skill>;
 
@@ -121,13 +63,18 @@ export namespace Character {
 
     export class Character
     {
+        public static isCharacter(T: defined): T is Character.Character
+        {
+            return getmetatable(T) === getmetatable(this);
+        }
+
         readonly Name: string;
 
         readonly Description: string;
 
         readonly EaseOfUse: EaseOfUse;
 
-        readonly Model: Model;
+        readonly Model: Model & { PrimaryPart: BasePart, Humanoid: Humanoid & { Animator?: Animator } };
 
         readonly Skills: ReadonlySet<Skill.Skill>;
 
@@ -158,7 +105,7 @@ export namespace Character {
 
         protected easeOfUse?: EaseOfUse
 
-        protected characterModel?: Model;
+        protected characterModel?: CharacterProps["characterModel"];
 
         protected skills: Set<Skill.Skill> = new Set();
 
@@ -189,7 +136,7 @@ export namespace Character {
             return this;
         }
 
-        public SetModel(characterModel: Model)
+        public SetModel(characterModel: CharacterProps["characterModel"])
         {
             this.characterModel = characterModel;
 
@@ -303,7 +250,7 @@ export namespace Skill {
 
     class _FrameData
     {
-        protected AttackSetup({humanoid}: Entity.Combatant<Entity.CombatantAttributes>)
+        protected AttackSetup<I extends Entity.CombatantAttributes>({humanoid}: Entity.Combatant<I>)
         {
             humanoid.Move(Vector3.zero, true);
         }
@@ -373,7 +320,10 @@ export namespace Skill {
             this.Contact = Contact;
         }
 
-        public async Execute(entity: Entity.Combatant<Entity.CombatantAttributes>, skill: Skill.Skill): Promise<boolean>
+        public async Execute<
+            I extends Entity.CombatantAttributes,
+            K extends Entity.Combatant<I>,
+        >(entity: K, skill: Skill.Skill): Promise<HitData<Entity.EntityAttributes,I>>
         {
             const { animator } = entity;
 
@@ -396,38 +346,79 @@ export namespace Skill {
 
             entity.attributes.PreviousSkill = skill.Id;
 
-            return animatorAnimation.Play().then(async () =>
+            return new Promise((res) =>
             {
-                const schedulerService = Dependency<SchedulerService>();
-                if (this.StartupFrames > 0)
+                return animatorAnimation.Play({
+                    FadeTime: 0,
+                    Weight: 10,
+                }).then(async () =>
                 {
-                    entity.SetState(EntityState.Startup);
-                    for (let i = 0; i < this.StartupFrames; i++)
-
-                        await schedulerService.WaitForNextTick();
-                }
-
-                let attackDidLand = HitResult.Whiffed;
-                if (this.ActiveFrames > 0)
-                {
-                    entity.SetState(EntityState.Attack);
-                    const activeHitbox = this.Hitbox.Initialize(entity.GetPrimaryPart(), skill);
-                    activeHitbox.Contact.Connect(({
-                        Attacker,
-                        Attacked,
-
-                        AttackerIsBlocking,
-                        Region
-                    }) =>
+                    const schedulerService = Dependency<SchedulerService>();
+                    if (this.StartupFrames > 0)
                     {
-                        if (AttackerIsBlocking)
+                        entity.SetState(EntityState.Startup);
+                        for (let i = 0; i < this.StartupFrames; i++)
+
+                            await schedulerService.WaitForNextTick();
+                    }
+
+                    let attackDidLand = HitResult.Whiffed;
+
+                    if (this.ActiveFrames > 0)
+                    {
+                        entity.SetState(EntityState.Attack);
+                        const activeHitbox = this.Hitbox.Initialize(entity.GetPrimaryPart(), skill);
+                        activeHitbox.Contact.Connect(({
+                            Attacker,
+                            Attacked,
+
+                            AttackerIsBlocking,
+                            Region
+                        }) =>
                         {
-                            if (Attacked.IsState(EntityState.Crouch))
+                            const setLandState = (result: HitResult.Contact | HitResult.Counter | HitResult.Whiffed): HitResult =>
                             {
-                                if (Region === HitboxRegion.Overhead)
+                                if (result === HitResult.Counter)
                                 {
-                                    attackDidLand = HitResult.Contact;
-                                    Attacker.SetState(EntityState.HitstunCrouching);
+                                    if (!skill.CanCounter)
+
+                                        return HitResult.Contact;
+                                }
+                                else if (result === HitResult.Contact)
+                                {
+                                    if (Attacked.CanCounter())
+
+                                        return setLandState(HitResult.Counter);
+                                }
+
+                                return result;
+                            };
+                            if (AttackerIsBlocking)
+                            {
+                                if (Attacked.IsState(EntityState.Crouch))
+                                {
+                                    if (Region === HitboxRegion.Overhead)
+                                    {
+                                        setLandState(HitResult.Contact);
+                                        Attacker.SetState(EntityState.HitstunCrouching);
+                                    }
+                                    else
+                                    {
+                                        attackDidLand = HitResult.Blocked;
+                                        Attacked.AddBlockStun(skill.FrameData.BlockStunFrames);
+                                    }
+
+                                    return res({
+                                        hitResult: attackDidLand,
+                                        attacker: entity,
+                                        attacked: Attacked,
+                                    });
+                                }
+
+                                if (Region === HitboxRegion.Low)
+                                {
+                                    setLandState(HitResult.Contact);
+                                    Attacker.SetState(EntityState.Hitstun);
                                 }
                                 else
                                 {
@@ -435,79 +426,79 @@ export namespace Skill {
                                     Attacked.AddBlockStun(skill.FrameData.BlockStunFrames);
                                 }
 
-                                return;
+                                return res({
+                                    hitResult: attackDidLand,
+                                    attacker: entity,
+                                    attacked: Attacked,
+                                });
                             }
 
-                            if (Region === HitboxRegion.Low)
-                            {
-                                attackDidLand = HitResult.Contact;
-                                Attacker.SetState(EntityState.Hitstun);
-                            }
+                            if (Attacker.IsState(EntityState.Crouch))
+
+                                Attacker.SetState(EntityState.HitstunCrouching);
+
                             else
-                            {
-                                attackDidLand = HitResult.Blocked;
-                                Attacked.AddBlockStun(skill.FrameData.BlockStunFrames);
-                            }
 
-                            return;
-
-                        }
-
-                        if (Attacker.IsState(EntityState.Crouch))
+                                Attacker.SetState(EntityState.Hitstun);
 
 
-                            Attacker.SetState(EntityState.HitstunCrouching);
+                            setLandState(HitResult.Contact);
+                            if (attackDidLand === HitResult.Counter)
 
-                        else
-                        {
-                            attackDidLand = HitResult.Contact;
-                            Attacker.SetState(EntityState.Hitstun);
-                        }
+                                Attacked.Counter(Attacker);
 
-                        attackDidLand = HitResult.Contact;
-                        if (Attacked.IsState(EntityState.Startup, EntityState.Attack, EntityState.Recovery))
+                            else print("no Attacked");
 
-                            Attacked.Counter(Attacker);
+                            return res({
+                                hitResult: attackDidLand,
+                                attacker: entity,
+                                attacked: Attacked,
+                            });
+                        });
 
-                        else print("no Attacked");
+                        for (let i = 0; i < this.ActiveFrames; i++)
 
+                            await schedulerService.WaitForNextTick();
 
-                    });
+                        activeHitbox.Stop();
+                    }
 
-                    for (let i = 0; i < this.ActiveFrames; i++)
-
-                        await schedulerService.WaitForNextTick();
-
-                    activeHitbox.Stop();
-                }
-
-                if (this.RecoveryFrames > 0)
-                {
-                    if (attackDidLand !== HitResult.Whiffed)
+                    if (this.RecoveryFrames > 0)
                     {
-                        let addedFrames = 0;
-                        if (attackDidLand === HitResult.Blocked)
-
-                            addedFrames += this.BlockStunFrames;
-
                         entity.SetState(EntityState.Recovery);
+                        if (attackDidLand !== HitResult.Whiffed)
+                        {
+                            let addedFrames = 0;
+                            if (attackDidLand === HitResult.Blocked)
+
+                                addedFrames += this.BlockStunFrames;
+
+                            res({
+                                hitResult: attackDidLand,
+                                attacker: entity,
+                            });
+                        }
+                        else print("ouch, you whiffed...");
+
                         for (let i = 0; i < this.RecoveryFrames; i++)
 
                             await schedulerService.WaitForNextTick();
                     }
-                    else entity.SetState(EntityState.Idle);
-                }
 
-                return new Promise<boolean>((res) =>
-                {
+                    entity.SetState(EntityState.Idle);
                     if (animatorAnimation.IsPlaying())
-
                     {
                         return Promise.fromEvent(animatorAnimation.Ended)
-                            .then(() => res(true));
+                            .then(() => res({
+                                attacker: entity,
+                                hitResult: attackDidLand
+                            }));
                     }
 
-                    return res(true);
+                    return res({
+                        attacker: entity,
+                        hitResult: attackDidLand,
+                    });
                 });
             });
         }
@@ -686,7 +677,7 @@ export namespace Skill {
         /**
          * The ID of the skill.
          */
-        public readonly Id = Identifier.GenerateId();
+        public readonly Id = Identifier.Generate();
 
         /**
          * The name of the skill.
@@ -745,7 +736,7 @@ export namespace Skill {
         * The Skills that tkis Skill can cancel
         * into.
        */
-       public readonly GatlingsInto = new Set<Skill>();
+       public readonly GatlingsInto = new Set<SkillId>();
        /**
          * Set the Skills that this Skill can
          * cancel into.
@@ -756,9 +747,9 @@ export namespace Skill {
 
            skills.forEach((skill) =>
            {
-               if (!this.GatlingsInto.has(skill))
+               if (!this.GatlingsInto.has(skill.Id))
 
-                   skill.GatlingsInto.add(skill);
+                   this.GatlingsInto.add(skill.Id);
            });
 
            return this;

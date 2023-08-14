@@ -115,6 +115,11 @@ export class Keyboard implements OnStart, OnInit
         return true;
     }
 
+    public isKeyDown(key: Enum.KeyCode, processFiltering = InputProcessed.Either)
+    {
+        return this.areKeysDown([key], processFiltering);
+    }
+
     public areKeysDown(keys: Enum.KeyCode[], processFiltering = InputProcessed.Either): boolean
     {
 
