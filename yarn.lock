@@ -140,6 +140,11 @@
   resolved "https://registry.yarnpkg.com/@rbxts/flipper/-/flipper-2.0.1.tgz#25bd840441055da419c234a9d045309e40ac3ad2"
   integrity sha512-kxb5AZizP05XSmo3waS/QkcfNMD5b6HX4gGwyHOyBow260R5MIT4L/ZUPLvleXXyb9b67X4NVmHoac1tPXOLNA==
 
+"@rbxts/luau-polyfill-internal@1.2.3-ts.0":
+  version "1.2.3-ts.0"
+  resolved "https://registry.yarnpkg.com/@rbxts/luau-polyfill-internal/-/luau-polyfill-internal-1.2.3-ts.0.tgz#01fec60c39e800d8b786d089648c54b1ecbf9606"
+  integrity sha512-LG1h4uf+MpMxu6RfOLowRe+NOs2SWXzCmYd49WvfR8ZKVUNHvT0BeVIL9rS9q//mTlz8BXDyl5EVIyjnKgsekA==
+
 "@rbxts/maid@^1.0.0-ts.1":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@rbxts/maid/-/maid-1.1.0.tgz#ef4c4ea915d80f2e7baacb7e9ea037f3e2549bd6"
@@ -158,11 +163,12 @@
   resolved "https://registry.yarnpkg.com/@rbxts/object-utils/-/object-utils-1.0.4.tgz#c53d80f89e75c401365446be63fa1396bc2cffe7"
   integrity sha512-dLLhf022ipV+9i910sOE7kl9losKHoon0WgeerHqVMQA5EYsLUsVT2AxhJuhk8MiDn5oJ2GiFofE/LadY9TpJQ==
 
-"@rbxts/pretty-roact-hooks@^3.1.1":
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/@rbxts/pretty-roact-hooks/-/pretty-roact-hooks-3.1.1.tgz#b2729163bfd2c89e1efb91c544d7ddb798054fe0"
-  integrity sha512-eve1L7GWKZVo6ZLgcmk6c95SDvhTRIjWwR8notAz7g+CQ/jdtOoX+5fVHOQLMYE6HbQ79Bth+LO13WOM4T3WKg==
+"@rbxts/pretty-react-hooks@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@rbxts/pretty-react-hooks/-/pretty-react-hooks-0.2.1.tgz#2ab8325855f78a1b95f9bb2098617e88e2fbed9d"
+  integrity sha512-lCBWb1nV2SaeZHOQACco6t9yPxmAt+8Rr4zMgDJQIk+tHDPJ6QVqyCGHodNC4+lQki3lEGxvMHq+RLLcr7YpEQ==
   dependencies:
+    "@rbxts/react-roblox" "^0.1.1"
     "@rbxts/services" "^1.5.1"
     "@rbxts/set-timeout" "^1.1.2"
 
@@ -175,25 +181,76 @@
     "@rbxts/types" "^1.0.537"
     "@rbxts/validate-tree" "^2.0.1"
 
+"@rbxts/promise-forward@^1.0.4":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@rbxts/promise-forward/-/promise-forward-1.0.5.tgz#d7ca6f9617bf5eec20b7102e03ae434eed526312"
+  integrity sha512-FrL3pIQDbRD1hKsUNH1Fwwd5jOuqU0vzKQI4Xo96AqzizYc4fb6vDkUg9Iq+IFki6FVlFvPN+YnvkCxGMjJw4Q==
+
 "@rbxts/raycast-hitbox@^4.0.1-ts.0":
   version "4.0.1-ts.0"
   resolved "https://registry.yarnpkg.com/@rbxts/raycast-hitbox/-/raycast-hitbox-4.0.1-ts.0.tgz#2c0927768f444a0d854ae89eb13e49e504829da0"
   integrity sha512-Pvf/yF2TL+CO/E7jHaIEMzAMYRM2gRQTgIed0esp5mJFu9947tXi2IvmtYxMQuIq/9Ywj7Rv1xQgJ5IFJc+Kjg==
 
-"@rbxts/roact-hooked@^2.6.0":
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/@rbxts/roact-hooked/-/roact-hooked-2.6.0.tgz#cbe3e244e1d52d879083c62b6662c4d082c6d30b"
-  integrity sha512-2lVbmKVregnXjshCDWuU05mv7XphxBPzeqSXDZmGh9cLqR+9DihEzsGGQrorU5VbsoL//4cOhYEAt3lTyo3dAw==
+"@rbxts/react-internal@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@rbxts/react-internal/-/react-internal-0.2.2.tgz#f22dff4725f5d5611553ef396d3138b775206d14"
+  integrity sha512-/34bcOntTzucAwMvo2OtSJT05zfH88kjR0UKyBcADbbZ71KgMKai2Q8ccKKt7IuoPJDzP14dCHd5pXL44M2rkw==
+  dependencies:
+    "@rbxts/luau-polyfill-internal" "1.2.3-ts.0"
+    "@rbxts/shared-internal" "^0.2.1"
 
-"@rbxts/roact@^1.4.4-ts.0":
-  version "1.4.4-ts.0"
-  resolved "https://registry.yarnpkg.com/@rbxts/roact/-/roact-1.4.4-ts.0.tgz#7f297bec03dbea9473bd2d82b148d3ae6e4f6c00"
-  integrity sha512-gn9mBoGG/Clzgv2kyOvLNVd9dh5t6z+jukC3ITv2HnfPqvf/sMbz/VMaBoiB7t5umuiIe0LjW0ctZrkrS+uTOA==
+"@rbxts/react-reconciler-internal@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@rbxts/react-reconciler-internal/-/react-reconciler-internal-0.2.1.tgz#f612f9ad3e6b946a5ecb84145a3ffcaef4ff4d9e"
+  integrity sha512-+1iF6id3YuhChfJguBFqzDtYvruGFhkLz9Wr8T0ekp7RlGe4l7d7KLUg5l8GRPj9FbmjQFc0UufBHWmKkrJ2qQ==
+  dependencies:
+    "@rbxts/luau-polyfill-internal" "1.2.3-ts.0"
+    "@rbxts/promise-forward" "^1.0.4"
+    "@rbxts/react-internal" "^0.2.2"
+    "@rbxts/scheduler-internal" "^0.2.1"
+    "@rbxts/shared-internal" "^0.2.1"
+
+"@rbxts/react-roblox@^0.1.1", "@rbxts/react-roblox@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@rbxts/react-roblox/-/react-roblox-0.1.2.tgz#6dec0c09a6910346c3d04f11b557e80bb51b2af1"
+  integrity sha512-74R0iemEWSgrE8f98JMfdQFSE+VpJTqo91aaZoBbskqHdeWX+kvVxjkiE5nMOkjIfptVHlZvD7P18hOTe2lwog==
+  dependencies:
+    "@rbxts/luau-polyfill-internal" "1.2.3-ts.0"
+    "@rbxts/react-internal" "^0.2.2"
+    "@rbxts/react-reconciler-internal" "^0.2.1"
+    "@rbxts/scheduler-internal" "^0.2.1"
+    "@rbxts/shared-internal" "^0.2.1"
+
+"@rbxts/roact-compat-internal@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@rbxts/roact-compat-internal/-/roact-compat-internal-0.3.1.tgz#0de935a65865eb0d5f329199f799db79d0b42737"
+  integrity sha512-euje2jF3S83VNMtNvrjDgO3XpMibyIYcstCKsvLfIDASfCArtltwQRnjk3ewq20b2hOfy4wneQ8iXu2Di7J8rw==
+  dependencies:
+    "@rbxts/luau-polyfill-internal" "1.2.3-ts.0"
+    "@rbxts/react-internal" "^0.2.2"
+    "@rbxts/react-roblox" "^0.1.2"
+    "@rbxts/shared-internal" "^0.2.1"
+
+"@rbxts/roact@npm:@rbxts/react-ts":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@rbxts/react-ts/-/react-ts-1.0.1.tgz#e659c0be23544242e03d718e6dc5152998adf5fc"
+  integrity sha512-u/QsFkjWwEbr502xRfCNGjtMfOjqRiVGF5gb3Ox9Z94ymHPXniVsopmT582QpTZLuEcfB5TKvsvpFzFSQ14edg==
+  dependencies:
+    "@rbxts/react-internal" "^0.2.2"
+    "@rbxts/roact-compat-internal" "^0.3.1"
 
 "@rbxts/rust-classes@^0.12.0":
   version "0.12.0"
   resolved "https://registry.yarnpkg.com/@rbxts/rust-classes/-/rust-classes-0.12.0.tgz#5d4be4003abd90aa62adbd2f0b2665009bd7df20"
   integrity sha512-Ibk532/9tHswqU9AdJlLGDjb3fD+tisI0WzTvzsbFcndcdRfEmpBqXC0JZ+4+lIfSERJmL4zRXZQNN//nJ4rmw==
+
+"@rbxts/scheduler-internal@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@rbxts/scheduler-internal/-/scheduler-internal-0.2.1.tgz#ca19075d0d66e1b1044287715409a7183e3f2d98"
+  integrity sha512-9CVi2ZJMH+T4blfDd0t7bScBLWi49eD99eJ3Ie/Cv3WxQ5iYsZLSeSxzut5Yzkb83cYGb/alUGM/gzx0B19KQw==
+  dependencies:
+    "@rbxts/luau-polyfill-internal" "1.2.3-ts.0"
+    "@rbxts/shared-internal" "^0.2.1"
 
 "@rbxts/services@^1.1.4", "@rbxts/services@^1.1.5", "@rbxts/services@^1.5.1":
   version "1.5.1"
@@ -206,6 +263,13 @@
   integrity sha512-P/A0IiH9wuZdSJYr4Us0MDFm61nvIFR0acfKFHLkcOsgvIgELC90Up9ugiSsaMEHRIcIcO5UjE39LuS3xTzQHw==
   dependencies:
     "@rbxts/services" "^1.5.1"
+
+"@rbxts/shared-internal@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@rbxts/shared-internal/-/shared-internal-0.2.1.tgz#8a6b277e85d7b8e027cc6be292889f3e8df3ef67"
+  integrity sha512-HWLFesx5u8NTyDMTNXEkskGT6nE5VLaEnnnq852ixiBtdfIdN/sGCgNnkwbHAq9P9cgX52V3EB5GdVeWcwJzkA==
+  dependencies:
+    "@rbxts/luau-polyfill-internal" "1.2.3-ts.0"
 
 "@rbxts/signal@^1.0.3", "@rbxts/signal@^1.1.1":
   version "1.1.1"
