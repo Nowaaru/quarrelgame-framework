@@ -50,6 +50,10 @@ export namespace Character {
 
         characterArchetype: Archetype;
 
+        characterHeader?: string;
+
+        characterSubheader?: string;
+
         attacks: {
             [k in Input]?: Skill.Skill | (() => Skill.Skill);
         },
@@ -76,6 +80,10 @@ export namespace Character {
 
         readonly EaseOfUse: EaseOfUse;
 
+        readonly Header?: string;
+
+        readonly Subheader?: string;
+
         readonly Model: Model & { PrimaryPart: BasePart, Humanoid: Humanoid & { Animator?: Animator } };
 
         readonly Skills: ReadonlySet<Skill.Skill>;
@@ -86,7 +94,18 @@ export namespace Character {
 
         readonly Attacks: Readonly<CharacterProps["attacks"]>;
 
-        constructor({name, description, easeOfUse, characterModel, skills, animations, attacks, characterArchetype: characterArchetype}: CharacterProps)
+        constructor({
+            name,
+            description,
+            easeOfUse,
+            characterModel,
+            skills,
+            animations,
+            attacks,
+            characterHeader,
+            characterSubheader,
+            characterArchetype: characterArchetype
+        }: CharacterProps)
         {
             this.Name = name;
             this.Description = description;
@@ -95,6 +114,8 @@ export namespace Character {
             this.Skills = skills;
             this.Animations = animations;
             this.Archetype = characterArchetype;
+            this.Header = characterHeader;
+            this.Subheader = characterSubheader;
             this.Attacks = attacks;
         }
     }
@@ -117,9 +138,27 @@ export namespace Character {
 
         protected characterArchetype: Archetype = Archetype.WellRounded;
 
+        protected characterHeader?: string;
+
+        protected characterSubheader?: string;
+
         public SetName(name: string)
         {
             this.name = name;
+
+            return this;
+        }
+
+        public SetHeader(header: string)
+        {
+            this.characterHeader = header;
+
+            return this;
+        }
+
+        public SetSubheader(subheader: string)
+        {
+            this.characterSubheader = subheader;
 
             return this;
         }
@@ -166,16 +205,25 @@ export namespace Character {
             return this;
         }
 
-        public Compile()
+        public Compile(): CharacterProps
         {
-            const { name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype: charachterArchetype } = this;
+            const { name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype, characterHeader, characterSubheader } = this;
             assert(characterModel, "Builder incomplete! Character model is unset.");
             assert(name, "Builder incomplete! Name is unset.");
             assert(description, "Builder incomplete! Description is unset.");
             assert(easeOfUse, "Builder incomplete! Ease of use is unset.");
 
             return {
-                name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype: charachterArchetype,
+                name,
+                description,
+                easeOfUse,
+                characterModel,
+                skills,
+                attacks,
+                animations,
+                characterArchetype,
+                characterHeader,
+                characterSubheader,
             };
         }
 
@@ -193,19 +241,6 @@ export namespace Character {
         {
             this.character3D = character;
         }
-
-        public Compile(): CharacterProps2D
-        {
-            const { name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype, character3D } = this;
-            assert(characterModel, "Builder incomplete! Character model is unset.");
-            assert(name, "Builder incomplete! Name is unset.");
-            assert(description, "Builder incomplete! Description is unset.");
-            assert(easeOfUse, "Builder incomplete! Ease of use is unset.");
-
-            return {
-                name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype: characterArchetype
-            };
-        }
     }
 
     export class CharacterBuilder3D extends CharacterBuilder
@@ -215,19 +250,6 @@ export namespace Character {
         public Set2DCharacter(character: Character & { Character2D: Character })
         {
             this.character2D = character;
-        }
-
-        public Compile(): CharacterProps3D
-        {
-            const { name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype, character2D } = this;
-            assert(characterModel, "Builder incomplete! Character model is unset.");
-            assert(name, "Builder incomplete! Name is unset.");
-            assert(description, "Builder incomplete! Description is unset.");
-            assert(easeOfUse, "Builder incomplete! Ease of use is unset.");
-
-            return {
-                name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype: characterArchetype
-            };
         }
     }
 }

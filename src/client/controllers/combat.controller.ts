@@ -78,18 +78,18 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
 
             switch (buttonPressed)
             {
-                case (Enum.KeyCode.R):
-                {
-                    print("respawning");
-                    ClientFunctions.RespawnCharacter.invoke()
-                        .then(() => print("Reloaded character."));
+                // case (Enum.KeyCode.R):
+                // {
+                //     print("respawning");
+                //     ClientFunctions.RespawnCharacter.invoke()
+                //         .then(() => print("Reloaded character."));
 
-                    return InputResult.Success;
-                }
+                //     return InputResult.Success;
+                // }
 
                 case (Enum.KeyCode.LeftAlt):
                 {
-                    this.cameraController.ToggleBattleCameraEnabled().catch((e) =>
+                    this.cameraController.ToggleCameraEnabled().catch((e) =>
                     {
                         warn(e);
                         print(this.cameraController.PlayerModule);

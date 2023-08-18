@@ -7,13 +7,13 @@ import { Animation } from "shared/util/animation";
 
 import Characters from "data/models/character";
 
-const Gio =
-    new Character.CharacterBuilder3D()
-        .SetName("Vannagio")
-        .SetDescription("Test character")
-        .SetSubheader("5K: THE CHARACTER")
-        .SetHeader("CHECK THIS DASH")
-        .SetModel(Characters.jane as never)
+const LEORIO =
+    new Character.CharacterBuilder2D()
+        .SetName("Leorio Sigmastare")
+        .SetSubheader("I DIDN'T PAY TO BLOCK. I PAID TO GRAB.")
+        .SetHeader("DON'T. GET. GRABBED.")
+        .SetDescription("Test character 2")
+        .SetModel(Characters.shedletsky as never)
         .SetEasiness(5)
         .SetAttack(Input.Slash, CloseSlash)
         .SetAttack(Input.Kick, ForwardKick)
@@ -64,4 +64,4 @@ const Gio =
         )
         .Construct();
 
-export = Gio;
+export = LEORIO;

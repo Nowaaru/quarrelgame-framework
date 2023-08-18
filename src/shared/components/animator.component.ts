@@ -68,7 +68,7 @@ export namespace Animator {
 
         private async onStateChanged(newState: AttributeValue)
         {
-            const Gio = Characters.get("Giovanna?")!;
+            const Gio = Characters.get("Vannagio")!;
             if (this.paused)
 
                 return;

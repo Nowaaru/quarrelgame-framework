@@ -7,12 +7,14 @@ import { Animation } from "shared/util/animation";
 
 import Characters from "data/models/character";
 
-const Manbed =
-    new Character.CharacterBuilder3D()
-        .SetName("Manbed?")
-        .SetDescription("Test character 2")
-        .SetModel(Characters.shedletsky as never)
-        .SetEasiness(3)
+const BRISKET =
+    new Character.CharacterBuilder2D()
+        .SetName("BRISKET")
+        .SetSubheader("BALL UP OR BAWL UP")
+        .SetHeader("BACKTHROW INCIDENT")
+        .SetDescription("Test character 3")
+        .SetModel(Characters.roblox as never)
+        .SetEasiness(4)
         .SetAttack(Input.Slash, CloseSlash)
         .SetAttack(Input.Kick, ForwardKick)
         .SetAttack(Input.Heavy, LowHeavy)
@@ -62,4 +64,4 @@ const Manbed =
         )
         .Construct();
 
-export = Manbed;
+export = BRISKET;

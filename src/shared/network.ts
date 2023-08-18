@@ -23,7 +23,7 @@ type InputFunctions = {
 }
 
 interface ServerFunctions extends InputFunctions, GameFunctions, MovementFunctions {
-    RespawnCharacter(): boolean;
+    RespawnCharacter(characterId: string): boolean;
     RequestSprint(sprintState: SprintState): boolean;
 
     KnockbackTest(): boolean;

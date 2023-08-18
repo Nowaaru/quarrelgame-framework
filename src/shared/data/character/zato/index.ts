@@ -7,14 +7,14 @@ import { Animation } from "shared/util/animation";
 
 import Characters from "data/models/character";
 
-const Gio =
-    new Character.CharacterBuilder3D()
-        .SetName("Vannagio")
-        .SetDescription("Test character")
-        .SetSubheader("5K: THE CHARACTER")
-        .SetHeader("CHECK THIS DASH")
-        .SetModel(Characters.jane as never)
-        .SetEasiness(5)
+const ZATO =
+    new Character.CharacterBuilder2D()
+        .SetName("ZATO-R6")
+        .SetSubheader("EDDIE MAKES ME WANT TO ED DIE")
+        .SetHeader("EDDEEZ NUTS GOTTEM")
+        .SetDescription("Test character 4")
+        .SetModel(Characters.dusek as never)
+        .SetEasiness(2)
         .SetAttack(Input.Slash, CloseSlash)
         .SetAttack(Input.Kick, ForwardKick)
         .SetAttack(Input.Heavy, LowHeavy)
@@ -64,4 +64,4 @@ const Gio =
         )
         .Construct();
 
-export = Gio;
+export = ZATO;

@@ -10,6 +10,7 @@ import { EntityState } from "shared/util/lib";
 
 export interface CharacterSelectProps {
     Characters: ReadonlyMap<string, Character.Character>,
+    OnSelect?: (selectedCharacter: Character.Character) => void,
 }
 
 export const ChainsImage = "rbxassetid://137751994";
@@ -18,7 +19,7 @@ export const DotsImage = "rbxassetid://4376776276";
 
 export default function CharacterSelect(characterSelectProps: CharacterSelectProps = {Characters: CharactersList})
 {
-    const { Characters } = characterSelectProps ?? { Characters: CharactersList };
+    const { Characters, OnSelect } = characterSelectProps ?? { Characters: CharactersList };
     const [selectedCharacter, setSelectedCharacter] = useState<Character.Character | undefined>();
 
     const chains = <imagelabel
@@ -72,6 +73,7 @@ export default function CharacterSelect(characterSelectProps: CharacterSelectPro
                 key="SelectedCharacterPortrait"
                 Size={new UDim2(0.5, 0, 0.75, 0)}
                 Position={new UDim2(0.0,0,0.1,0)}
+                BackgroundTransparency={1}
             >
                 <CharacterPortrait3D
                     Character={selectedCharacter}
@@ -145,9 +147,10 @@ export default function CharacterSelect(characterSelectProps: CharacterSelectPro
                                 <CharacterItem
                                     Character={character}
                                     Selected={selectedCharacter === character}
-                                    OnSelected={(selectedCharacter) =>
+                                    OnSelected={(newSelectedCharacter) =>
                                     {
-                                        setSelectedCharacter(selectedCharacter);
+                                        OnSelect?.(newSelectedCharacter);
+                                        setSelectedCharacter(newSelectedCharacter);
                                     }}
                                 />
                             );

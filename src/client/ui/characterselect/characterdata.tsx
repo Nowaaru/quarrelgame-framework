@@ -126,28 +126,44 @@ function CharacterData({
                     </frame>
                 </frame>
             </frame>
-            <textlabel
-                Text={"You won't be laughing when he kills you.".gsub("(%s%w)", (v) => v.upper())[ 0 ].gsub("^(%w)", (v) => v.upper())[ 0 ].gsub("%.$", "")[ 0 ]}
-                AutomaticSize={Enum.AutomaticSize.XY}
+            <frame
+                Size={new UDim2(1,0,1,0)}
+                key={"TextContainerFrame"}
                 BackgroundTransparency={1}
-                Position={new UDim2(0.5,-4,0.35,0)}
+            >
+                <uipadding
+                    PaddingRight={new UDim(0,4)}
+                />
+                <textlabel
+                    Text={ChosenCharacter.Subheader?.upper() === ChosenCharacter.Subheader ? ChosenCharacter.Subheader : ChosenCharacter.Subheader?.gsub("(%s%w)", (v) => v.upper())[ 0 ].gsub("^(%w)", (v) => v.upper())[ 0 ]}
+                    BackgroundTransparency={1}
+                    Position={new UDim2(1,-2,0.35,0)}
 
-                TextXAlignment={Enum.TextXAlignment.Right}
-                TextColor3={new Color3(0.8,0.8,0.8)}
-                TextSize={8}
-                ZIndex={450}
-            />
-            <textlabel
-                Text={"THE PEEPEE POOPOO MAN"}
-                BackgroundTransparency={1}
-                Position={new UDim2(1,-4,0.55,0)}
+                    Font={Enum.Font.GothamBlack}
+                    TextSize={13}
 
-                TextColor3={new Color3(0.8,0.8,0.8)}
-                TextXAlignment={Enum.TextXAlignment.Right}
-                TextSize={16}
-                ZIndex={450}
-            />
+                    TextXAlignment={Enum.TextXAlignment.Right}
+                    TextYAlignment={Enum.TextYAlignment.Top}
+                    TextColor3={new Color3(0.8,0.8,0.8)}
+                    ZIndex={450}
 
+                    key={"Subheader"}
+                />
+                <textlabel
+                    Text={ChosenCharacter.Header?.upper()}
+                    BackgroundTransparency={1}
+                    Position={new UDim2(1,0,0.55,0)}
+
+                    Font={Enum.Font.GothamBlack}
+                    TextSize={28}
+
+                    TextColor3={new Color3(0.8,0.8,0.8)}
+                    TextXAlignment={Enum.TextXAlignment.Right}
+                    ZIndex={450}
+
+                    key={"Header"}
+                />
+            </frame>
             <frame
                 BackgroundColor3={new Color3(0.25,0.25,0.25)}
                 Size={new UDim2(0.125,0,1,0)}

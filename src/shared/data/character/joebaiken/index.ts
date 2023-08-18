@@ -7,14 +7,14 @@ import { Animation } from "shared/util/animation";
 
 import Characters from "data/models/character";
 
-const Gio =
-    new Character.CharacterBuilder3D()
-        .SetName("Vannagio")
-        .SetDescription("Test character")
-        .SetSubheader("5K: THE CHARACTER")
-        .SetHeader("CHECK THIS DASH")
-        .SetModel(Characters.jane as never)
-        .SetEasiness(5)
+const JOEBAIKEN =
+    new Character.CharacterBuilder2D()
+        .SetName("JOE BAIKEN")
+        .SetSubheader("OH GOD SHE'S GETTING CLOSER")
+        .SetHeader("YOU CAN'T RUN")
+        .SetDescription("Test character 4")
+        .SetModel(Characters.brighteyes as never)
+        .SetEasiness(3)
         .SetAttack(Input.Slash, CloseSlash)
         .SetAttack(Input.Kick, ForwardKick)
         .SetAttack(Input.Heavy, LowHeavy)
@@ -64,4 +64,4 @@ const Gio =
         )
         .Construct();
 
-export = Gio;
+export = JOEBAIKEN;

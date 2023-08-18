@@ -101,8 +101,16 @@ export default function CharacterItem({Character, Selected, LockedIn, Locked, Im
     : (
         <CharacterPortrait3D
             Character={Character}
-            OnClick={OnSelected}
+            OnClick={() =>
+            {
+                print("on selected characteritem called");
+                OnSelected?.(Character);
+            }}
         >
+            <uigradient
+                Transparency={new NumberSequence(0,0.5)}
+                Rotation={-90}
+            />
             {_interior}
         </CharacterPortrait3D>
     );
