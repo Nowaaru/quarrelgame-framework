@@ -7,7 +7,7 @@ import Characters from "shared/data/character";
 export = story<CharacterDataProps>({
     component: CharacterData,
     props: {
-        Character: Characters.get("Manbed?")!,
+        Character: Characters.get("Leorio Sigmastare")!,
     },
     target: StarterGui.WaitForChild("TestGui"),
 })
