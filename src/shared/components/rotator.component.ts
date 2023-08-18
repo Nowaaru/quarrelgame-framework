@@ -44,7 +44,7 @@ export class RotatorComponent extends StatefulComponent<RotatorAttributes, Model
     {
         if (!this.rotateTarget && !this.rotateInstance)
 
-            return print("no target or instance.");
+            return;
 
         this.UpdateRotator();
         this.alignOrientation.CFrame = CFrame.lookAt(
