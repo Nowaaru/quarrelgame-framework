@@ -85,7 +85,7 @@ export namespace Animation {
                         return res();
 
                     do
-                        this.AnimationTrack.GetPropertyChangedSignal("Length").Wait();
+                        task.wait();
                     while (this.AnimationTrack.Length === 0);
 
                     if (tickRate)
