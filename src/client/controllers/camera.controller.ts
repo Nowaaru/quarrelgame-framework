@@ -2,8 +2,9 @@ import { Controller, OnInit, OnStart } from "@flamework/core";
 import { Players, Workspace } from "@rbxts/services";
 
 import { BaseCamera, CameraUtils, PlayerModule } from "shared/util/player";
+import { OnRespawn } from "./client.controller";
 
-export abstract class CameraController
+export abstract class CameraController implements OnRespawn
 {
     protected readonly BaseFOV = 72;
 
@@ -28,6 +29,21 @@ export abstract class CameraController
 
         Workspace.CurrentCamera = this.camera;
         this.camera.CameraSubject = this.LocalPlayer.Character?.WaitForChild("Humanoid") as Humanoid;
+    }
+
+    onRespawn(character: Model): void
+    {
+        this.character = character;
+    }
+
+    public IsEnabled()
+    {
+        return this.cameraEnabled;
+    }
+
+    public ToggleCameraEnabled()
+    {
+        return this.SetCameraEnabled(this.cameraEnabled = !this.cameraEnabled);
     }
 
     public abstract SetCameraEnabled(enabled: boolean): Promise<void>
