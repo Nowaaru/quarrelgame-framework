@@ -7,9 +7,9 @@ import { StateAttributes, StatefulComponent } from "shared/components/state.comp
 import { EntityState } from "shared/util/lib";
 import { CameraController } from "./camera.controller";
 
-export interface BattleCamera {
-    onBattleCameraEnabled?(): void;
-    onBattleCameraDisabled?(): void;
+export interface Camera3D {
+    on3DCameraEnabled?(): void;
+    on3DCameraDisabled?(): void;
 }
 
 @Controller({})
@@ -124,14 +124,9 @@ export class CameraController3D extends CameraController implements OnStart, OnI
     public async SetCameraEnabled(enabled: boolean)
     {
         this.cameraEnabled = enabled;
-        for (const listener of this.listeners)
-        {
-            if (enabled)
+        for (const cameraListener of this.listeners)
 
-                Promise.try(() => listener.onBattleCameraEnabled?.());
-
-            else Promise.try(() => listener.onBattleCameraDisabled?.());
-        }
+            Promise.try(() => cameraListener[ `on3DCamera${enabled ? "Enabled" : "Disabled"}` ]?.());
 
         return new Promise<void>((resolve, reject) =>
         {
@@ -238,20 +233,10 @@ export class CameraController3D extends CameraController implements OnStart, OnI
             return;
     }
 
-    public ToggleBattleCameraEnabled()
-    {
-        return this.SetCameraEnabled(this.cameraEnabled = !this.cameraEnabled);
-    }
-
-    public IsBattleCameraEnabled()
-    {
-        return this.cameraEnabled;
-    }
-
     onInit()
     {
-        Modding.onListenerAdded<BattleCamera>((listener) => this.listeners.add(listener));
-        Modding.onListenerRemoved<BattleCamera>((listener) => this.listeners.delete(listener));
+        Modding.onListenerAdded<Camera3D>((listener) => this.listeners.add(listener));
+        Modding.onListenerRemoved<Camera3D>((listener) => this.listeners.delete(listener));
 
         this.bindToCamera(Workspace.CurrentCamera!);
         const BoundKeys = Players.LocalPlayer.WaitForChild("PlayerScripts").WaitForChild("PlayerModule")
@@ -310,5 +295,5 @@ export class CameraController3D extends CameraController implements OnStart, OnI
 
     private entityStateController?: StatefulComponent<StateAttributes, Instance>;
 
-    private listeners: Set<BattleCamera> = new Set();
+    private listeners: Set<Camera3D> = new Set();
 }
