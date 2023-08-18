@@ -48,6 +48,7 @@
     "@rbxts/services": "^1.5.1",
     "@rbxts/signal": "^1.1.1",
     "@rbxts/task-event-emitter": "^1.2.1",
+    "@rbxts/testez": "^0.4.2-ts.0",
     "rbxts-transform-env": "2.1.0-beta.3"
   }
 }
