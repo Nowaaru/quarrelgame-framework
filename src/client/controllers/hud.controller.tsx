@@ -1,5 +1,5 @@
 import { Controller, OnStart, OnInit } from "@flamework/core";
-import { BattleCamera, CameraController3D } from "./camera3d.controller";
+import { Camera3D, CameraController3D } from "./camera3d.controller";
 import { Client } from "./client.controller";
 import Make from "@rbxts/make";
 import { Players, TweenService } from "@rbxts/services";
