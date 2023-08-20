@@ -1,6 +1,6 @@
 import { Service, OnStart, OnInit, Modding } from "@flamework/core";
-import { RunService } from "@rbxts/services";
-import { ServerFunctions } from "shared/network";
+import { Players, RunService } from "@rbxts/services";
+import { ServerEvents, ServerFunctions } from "shared/network";
 
 export interface OnFrame {
     /**
@@ -78,5 +78,14 @@ export class SchedulerService implements OnStart, OnInit
         return this.gameTickRate;
     }
 
+    /*
+    onFrame(frameTime: number)
+    {
+        if (Players.GetPlayers().some((e) => !!e.Character))
+
+            ServerEvents.Tick.broadcast(frameTime, this.gameTickRate);
+
+    }
+    */
     private readonly gameTickRate = 60;
 }
