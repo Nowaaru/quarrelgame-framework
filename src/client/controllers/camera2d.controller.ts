@@ -83,13 +83,8 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
                     continue;
                 }
                 else
-                {
-                    const allNewParticipants = google.set(participant, new Set([...google.get(participant)!, otherParticipant])).get(participant)!;
-                    print(Object.keys(allNewParticipants).map((n) =>
-                    {
-                        return n.Name;
-                    }));
-                }
+
+                    google.set(participant, new Set([...google.get(participant)!, otherParticipant])).get(participant)!;
 
                 const distanceFromOtherParticipant = participant.GetPivot().Position.sub(otherParticipant.GetPivot().Position).Magnitude;
                 if (math.max(distanceFromOtherParticipant, largestSize) > largestSize)
@@ -97,7 +92,6 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
                     largestSize = math.clamp(distanceFromOtherParticipant, this.minDistance, this.maxDistance);
                     radicalParticipants = [participant, otherParticipant];
 
-                    print("new radical participants:", radicalParticipants);
                 }
             }
         }
@@ -118,7 +112,6 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
             //     CFrame:
             // }).Play();
         }
-        else print("radical participants exists/size: ", radicalParticipants?.size());
     }
 
     onRespawn(character: Model): void
