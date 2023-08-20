@@ -459,4 +459,5 @@ export namespace Entity {
         }
     }
 }
-export { SprintState }  from "server/services/movement.service";
+
+export { SprintState } from "server/services/movement.service";
