@@ -3,7 +3,7 @@ import { Keyboard, OnKeyboardInput } from "client/controllers/keyboard.controlle
 import { Gamepad, GamepadButtons, OnGamepadInput } from "client/controllers/gamepad.controller";
 import { Mouse } from "client/controllers/mouse.controller";
 import { InputMode, InputResult } from "shared/util/input";
-import { Controller, OnRender, OnTick } from "@flamework/core";
+import { Controller, OnInit, OnRender, OnTick } from "@flamework/core";
 import { ContextActionService, Players, Workspace } from "@rbxts/services";
 import { OnRespawn } from "./client.controller";
 import Make from "@rbxts/make";
@@ -17,17 +17,7 @@ export abstract class CharacterController implements OnGamepadInput, OnRespawn
     protected alignPos?: AlignPosition;
 
     constructor(private readonly keyboard: Keyboard, private readonly mouse: Mouse, private readonly gamepad: Gamepad)
-    {
-        ContextActionService.BindAction(
-            "Movement",
-            (id, state, {KeyCode}) =>
-            {
-                return Enum.ContextActionResult.Sink;
-            },
-            false,
-            ...Enum.PlayerActions.GetEnumItems()
-        );
-    }
+    {}
 
     abstract readonly keyboardDirectionMap: Map<Enum.KeyCode, Enum.NormalId>;
 
@@ -44,10 +34,9 @@ export abstract class CharacterController implements OnGamepadInput, OnRespawn
             if (this.keyboard.isKeyDown(code))
             {
                 if (relativeTo)
-                {
-                    print(`total vector before adding ${code}`);
+
                     totalVector = totalVector.add( this.GenerateRelativeVectorFromNormalId(relativeTo, normal) );
-                }
+
                 else totalVector = totalVector.add( Vector3.FromNormalId(normal) );
             }
 
@@ -59,6 +48,15 @@ export abstract class CharacterController implements OnGamepadInput, OnRespawn
     onRespawn(character: Model): void
     {
         this.character = character;
+        ContextActionService.BindAction(
+            "Movement",
+            (id, state, {KeyCode}) =>
+            {
+                return Enum.ContextActionResult.Sink;
+            },
+            false,
+            ...Enum.PlayerActions.GetEnumItems()
+        );
     }
 
     abstract onGamepadInput(buttonPressed: GamepadButtons, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult);
