@@ -9,10 +9,10 @@ import Characters from "data/models/character";
 
 const Gio =
     new Character.CharacterBuilder3D()
-        .SetName("Vannagio")
+        .SetName("SOL GOODMAN")
         .SetDescription("Test character")
-        .SetSubheader("5K: THE CHARACTER")
-        .SetHeader("CHECK THIS DASH")
+        .SetSubheader("")
+        .SetHeader("THE ANTITHESIS")
         .SetModel(Characters.jane as never)
         .SetEasiness(5)
         .SetAttack(Input.Slash, CloseSlash)
@@ -36,14 +36,14 @@ const Gio =
         )
         .AddSkill(
             new Skill.SkillBuilder()
-                .SetName("Test Skill")
-                .SetDescription("A test skill.")
+                .SetName("Fafnir")
+                .SetDescription("Fafnir.")
                 .SetFrameData(
                     new Skill.FrameDataBuilder()
                         .SetAnimation(
                             new Animation.AnimationBuilder()
-                                .SetName("Test Skill")
-                                .SetAnimationId("rbxassetid://14280676559")
+                                .SetName("FAFNIR")
+                                .SetAnimationId("rbxassetid://14487899253")
                                 .SetPriority(Enum.AnimationPriority.Action)
                                 .Construct()
                         )
@@ -52,12 +52,12 @@ const Gio =
                         .SetRecovery(-4)
                         .SetHitbox(
                             new Hitbox.HitboxBuilder()
-                                .SetOffset()
-                                .SetSize(new Vector3(7,7,7))
+                                .SetOffset(new Vector3(0, 2.5, 2))
+                                .SetSize(new Vector3(0,2.5,4))
                                 .Construct()
                         )
                 )
-                .SetMotionInput([Motion.Down, Motion.DownForward, Motion.Forward, Input.Slash]) // 236S
+                .SetMotionInput([Motion.Back, Motion.DownBack, Motion.Down, Motion.DownForward, Motion.Forward])
                 .SetGaugeRequired(25)
                 .SetGroundedType(Skill.SkillGroundedType.Ground)
                 .SetReversal(false)

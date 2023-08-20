@@ -2,27 +2,35 @@ import { Character, Skill } from "shared/util/character";
 import { Hitbox } from "shared/util/hitbox";
 import { Input, Motion } from "shared/util/input";
 import { EntityState } from "shared/util/lib";
-import { ForwardKick, CloseSlash, LowHeavy } from "./normals";
+import { ForwardKick, FarSlash, LowHeavy } from "./normals";
 import { Animation } from "shared/util/animation";
 
-import Characters from "data/models/character";
+import Characters, { CharacterRigType } from "data/models/character";
 
-const Gio =
+const Death =
     new Character.CharacterBuilder3D()
-        .SetName("Vannagio")
-        .SetDescription("Test character")
-        .SetSubheader("5K: THE CHARACTER")
-        .SetHeader("CHECK THIS DASH")
-        .SetModel(Characters.jane as never)
+        .SetName("DEATH")
+        .SetDescription("gotsuteki")
+        .SetSubheader("JUST KICK THE DOLPHIN")
+        .SetHeader("GOTSUTEKI")
+        .SetModel(Characters.death, CharacterRigType.Raw)
         .SetEasiness(5)
-        .SetAttack(Input.Slash, CloseSlash)
+        .SetAttack(Input.Slash, FarSlash)
         .SetAttack(Input.Kick, ForwardKick)
         .SetAttack(Input.Heavy, LowHeavy)
         .SetAnimation(EntityState.Idle,
             new Animation.AnimationBuilder()
                 .SetName("Idle")
-                .SetAnimationId("rbxassetid://14280621593")
+                .SetAnimationId("rbxassetid://14487999316")
                 .SetPriority(Enum.AnimationPriority.Idle)
+                .SetLooped(true)
+                .Construct()
+        )
+        .SetAnimation(EntityState.Walk,
+            new Animation.AnimationBuilder()
+                .SetName("Walk")
+                .SetAnimationId("rbxassetid://14488005454")
+                .SetPriority(Enum.AnimationPriority.Movement)
                 .SetLooped(true)
                 .Construct()
         )
@@ -65,4 +73,4 @@ const Gio =
         )
         .Construct();
 
-export = Gio;
+export = Death;
