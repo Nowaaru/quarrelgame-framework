@@ -9,5 +9,4 @@ export = story<CharacterDataProps>({
     props: {
         Character: Characters.get("Leorio Sigmastare")!,
     },
-    target: StarterGui.WaitForChild("TestGui"),
 })
