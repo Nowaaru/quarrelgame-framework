@@ -11,7 +11,7 @@ export class TestService implements OnStart, OnInit
     {
         const janeModel = Character.jane.Clone();
         janeModel.Parent = Workspace;
-        janeModel.PivotTo(new CFrame(0,0,-17));
+        janeModel.PivotTo(new CFrame(Vector3.FromAxis(Enum.Axis.Z).mul(5)));
 
         const janeCombatant = Dependency<Components>().addComponent(janeModel, Entity.Combatant);
         const janeRotator = Dependency<Components>().addComponent(janeModel, Entity.EntityRotator);
