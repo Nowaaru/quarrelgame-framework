@@ -8,7 +8,7 @@ import { EffectsService } from "./effects.service";
 import { Entity } from "server/components/entity.component";
 import { Input, Motion } from "shared/util/input";
 import { ConvertPercentageToNumber, EntityState, HitResult, HitboxRegion, getEnumValues } from "shared/util/lib";
-import { Skill } from "shared/util/character";
+import { Character, Skill } from "shared/util/character";
 import Gio from "shared/data/character/gio";
 import { Hitbox } from "shared/util/hitbox";
 export interface OnHit {
@@ -81,6 +81,35 @@ export class CombatService implements OnStart, OnInit
             return true;
         });
 
+        ServerFunctions.SubmitMotionInput.setCallback(async (player, motionInput) =>
+        {
+            assert(player.Character, "player has not spawned");
+            assert(this.quarrelGame.IsParticipant(player), "player is not a participant");
+            assert(this.GetCombatant(player.Character), "player is not a combatant");
+            const combatantComponent = this.GetCombatant(player.Character)!;
+            const {lastSkillHitResult} = this.lastSkillData.get(combatantComponent)
+                    ?? this.lastSkillData.set(combatantComponent, {}).get(combatantComponent)!;
+
+            for (const skill of Gio.Skills)
+            {
+                const isRecovering = combatantComponent.IsState(EntityState.Recovery);
+                if (skill.MotionInput.every((n,i) => motionInput[ i ] === n))
+                {
+                    if ((isRecovering && lastSkillHitResult !== HitResult.Whiffed) || !combatantComponent.IsNegative())
+                    {
+                        print("skill executed win!");
+                        skill.FrameData.Execute(combatantComponent, skill);
+
+                        return true;
+                    }
+
+                    return false;
+                }
+            }
+
+            return false;
+        });
+
         // read input enums and setup events
         getEnumValues(Input).forEach(([inputName, inputTranslation]) =>
         {
@@ -151,30 +180,14 @@ export class CombatService implements OnStart, OnInit
                             });
 
 
-                            return attackFrameData.Execute(combatantComponent, attackSkill).then(async (hitData) =>
+                            return this.executeFrameData(attackFrameData, combatantComponent, attackSkill, currentLastSkillTime).tap(() =>
                             {
-                                print('hit data received:', hitData);
-                                if (await hitData.hitResult !== HitResult.Whiffed)
-                                {
-                                    print("omg they didnt whiff!");
-                                    const hitstopFrames = Dependency<CombatService>().HitstopFrames;
-                                    hitData.attacker.SetHitstop(hitstopFrames);
-                                    hitData.attacked?.SetHitstop(hitstopFrames);
-                                }
-
-                                this.lastSkillData.set(combatantComponent, {
-                                    lastSkillHitResult: await hitData.hitResult,
-                                    lastSkillTime
-                                });
-
                                 if (currentLastSkillTime === lastSkillTime)
 
                                     combatantComponent.ResetState();
 
                                 else print("state seems to have changed");
-
-                                return true;
-                            }) ?? Promise.resolve(false);
+                            });
                         }
                         else if (!skillDoesGatling)
 
@@ -191,6 +204,30 @@ export class CombatService implements OnStart, OnInit
                 return Promise.resolve(false);
             });
         });
+    }
+
+    private executeFrameData<
+        T extends Entity.CombatantAttributes
+    >(attackFrameData: Skill.FrameData, attackerCombatant: Entity.Combatant<T>, attackSkill: Skill.Skill, lastSkillTime: number)
+    {
+        return attackFrameData.Execute(attackerCombatant, attackSkill).then(async (hitData) =>
+        {
+            print('hit data received:', hitData);
+            if (await hitData.hitResult !== HitResult.Whiffed)
+            {
+                print("omg they didnt whiff!");
+                const hitstopFrames = Dependency<CombatService>().HitstopFrames;
+                hitData.attacker.SetHitstop(hitstopFrames);
+                hitData.attacked?.SetHitstop(hitstopFrames);
+            }
+
+            this.lastSkillData.set(attackerCombatant, {
+                lastSkillHitResult: await hitData.hitResult,
+                lastSkillTime
+            });
+
+            return true;
+        }) ?? Promise.resolve(false);
     }
 
     public GetCombatant<T extends Model>(instance: T)

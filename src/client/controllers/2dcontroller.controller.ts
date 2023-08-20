@@ -3,7 +3,7 @@ import { Controller, Dependency, OnPhysics, OnRender, OnStart, OnTick } from "@f
 
 import { CharacterController } from "./character.controller";
 import { Keyboard } from "client/controllers/keyboard.controller";
-import { InputMode, InputResult } from "shared/util/input";
+import { ConvertMoveDirectionToMotion, InputMode, InputResult, Motion } from "shared/util/input";
 import { Mouse } from "client/controllers/mouse.controller";
 import { Gamepad, GamepadButtons } from "client/controllers/gamepad.controller";
 import { OnRespawn } from "client/controllers/client.controller";
@@ -11,6 +11,7 @@ import { CombatController } from "./combat.controller";
 import Make from "@rbxts/make";
 import { ClientFunctions } from "shared/network";
 import { EntityState } from "shared/util/lib";
+import { MotionInput } from "./motioninput.controller";
 
 interface ChangedSignals {
     [stateName: string]: unknown,
@@ -21,7 +22,10 @@ export class CharacterController2D extends CharacterController implements OnStar
 {
     private axis?: Vector3;
 
-    constructor(private readonly combatController: CombatController)
+    constructor(
+        private readonly combatController: CombatController,
+        private readonly motionInputController: MotionInput.MotionInputController,
+    )
     {
         super(Dependency<Keyboard>(), Dependency<Mouse>(), Dependency<Gamepad>());
     }
@@ -40,6 +44,12 @@ export class CharacterController2D extends CharacterController implements OnStar
         const playerHumanoid = this.character.FindFirstChild("Humanoid") as Humanoid | undefined;
         const axisDirection = CFrame.lookAt(Vector3.zero, this.axis);
         const playerDirection = this.GetMoveDirection(axisDirection);
+
+        const [motion,] = ConvertMoveDirectionToMotion(playerDirection);
+        if (this.lastFrameNormal !== playerDirection)
+
+            this.motionInputController.pushToMotionInput(Motion[ motion ]);
+
 
         const currentLastFrameNormal = this.lastFrameNormal;
         this.lastFrameNormal = playerDirection;

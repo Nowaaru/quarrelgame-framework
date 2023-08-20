@@ -11,6 +11,7 @@ import { CameraController3D } from "./camera3d.controller";
 import { HudController } from "./hud.controller";
 import { EntityState } from "shared/util/lib";
 import { OnKeyboardInput } from "./keyboard.controller";
+import { MotionInput } from "./motioninput.controller";
 
 @Controller({})
 export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardInput
@@ -20,12 +21,11 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
     private character?: Model;
 
     constructor(
+        private readonly motionInputController: MotionInput.MotionInputController,
         private readonly cameraController: CameraController3D,
-        private readonly hudController: HudController
+        private readonly hudController: HudController,
     )
-    {
-
-    }
+    {}
 
     private keybindMap = new Map<Enum.KeyCode, Input>([
         [Enum.KeyCode.F, Input.Slash],
@@ -45,18 +45,28 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
 
             return InputResult.Fail;
 
-
         if (buttonType)
         {
             const characterAnimator = Dependency<Components>().getComponent(this.character, Animator.Animator);
             assert(characterAnimator, `no characterAnimator found in character ${this.character}`);
 
-            if (buttonType in gio.Attacks)
-            {
-                ClientFunctions[ buttonType as Input ].invoke();
+            const lockedMotionInput = this.motionInputController.pushToMotionInput(buttonType)!;
+            const inputMotion = lockedMotionInput.GetInputsFilterNeutral();
+            print("inputMotion", inputMotion);
 
-                return InputResult.Success;
+            if (inputMotion.size() === 1) // this likely means that it's a neutral input
+            {
+                if (buttonType in gio.Attacks)
+                {
+                    ClientFunctions[ buttonType as Input ].invoke();
+
+                    return InputResult.Success;
+                }
             }
+            else
+
+                ClientFunctions.SubmitMotionInput(inputMotion);
+
         }
 
         return InputResult.Fail;
@@ -78,15 +88,6 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
 
             switch (buttonPressed)
             {
-                // case (Enum.KeyCode.R):
-                // {
-                //     print("respawning");
-                //     ClientFunctions.RespawnCharacter.invoke()
-                //         .then(() => print("Reloaded character."));
-
-                //     return InputResult.Success;
-                // }
-
                 case (Enum.KeyCode.LeftAlt):
                 {
                     this.cameraController.ToggleCameraEnabled().catch((e) =>

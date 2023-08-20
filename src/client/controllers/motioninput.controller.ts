@@ -1,20 +1,23 @@
 import { Controller, OnStart, OnInit, OnTick } from "@flamework/core";
 import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
-import { InputMode, InputResult, Motion, Input } from "shared/util/input";
-
+import { InputMode, InputResult } from "shared/util/input";
+import * as input from "shared/util/input";
 
 export type Frames = number;
 
-export namespace GameInput {
+export namespace MotionInput {
+    export import Motion = input.Motion;
+
+    export import Input = input.Input;
     export interface OnMotionInput {
         onMotionInput(motionInput: MotionInput): void;
     }
 
-    interface LockedMotionInput
+    abstract class LockedMotionInput
     {
-        GetInputs(): (Motion | Input)[],
+        abstract GetInputs(): (Motion | Input)[]
 
-        inputs: (Motion | Input)[]
+        abstract GetInputsFilterNeutral(): (Motion | Input)[]
     }
 
     export class MotionInput
@@ -31,72 +34,78 @@ export namespace GameInput {
         {
             const inputs = [...this.inputs, finalInput];
 
-            return {
-                inputs: [],
+            return new class
+            {
+                private inputs = inputs;
 
                 GetInputs()
                 {
                     return inputs;
                 }
-            };
+
+                GetInputsFilterNeutral()
+                {
+                    return inputs.filter((input) => input !== Motion.Neutral);
+                }
+            }();
+        }
+
+        public GetInputs()
+        {
+            return [... this.inputs ];
         }
 
         private inputs: Motion[] = [];
     }
 
     @Controller({})
-    export class MotionInputController implements OnStart, OnInit, OnTick, OnKeyboardInput
+    export class MotionInputController implements OnTick
     {
         private currentMotionInput?: MotionInput;
 
-        private motionInputTimeoutLimit: Frames = 8;
+        private motionInputTimeoutLimit: Frames = 16;
 
         private motionInputTimeout: Frames = -1;
-
-        onKeyboardInput(buttonPressed: Enum.KeyCode, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult)
-        {
-            return false;
-        }
 
         constructor(private readonly keyboard: Keyboard)
         {}
 
-        private pushToMotionInput(input: Motion | Input)
+        public pushToMotionInput(input: Motion | Input): void | LockedMotionInput
         {
-
+            print("pushed motion/input:", input in Input ? Input[ input as never ] : Motion[ input as never ]);
             this.currentMotionInput = this.currentMotionInput ?? new MotionInput();
             if (input in Input)
+            {
+                const finishedInput = this.currentMotionInput.FinishInput(input as Input);
+                this.currentMotionInput = undefined;
 
-                this.currentMotionInput.FinishInput(input as Input);
-
-            if (input in Motion)
+                return finishedInput;
+            }
+            else if (input in Motion)
 
                 this.currentMotionInput.PushDirection(input as Motion);
-
         }
 
         onTick()
         {
             if (this.currentMotionInput)
             {
-                if (this.motionInputTimeout >= this.motionInputTimeoutLimit)
-
-                    this.currentMotionInput = undefined;
-
-                else this.motionInputTimeout += 1;
+                const currentInputList = this.currentMotionInput.GetInputs();
+                if (currentInputList[ currentInputList.size() - 1 ] === Motion.Neutral)
+                {
+                    if (this.motionInputTimeout >= this.motionInputTimeoutLimit)
+                    {
+                        print("motion input timed out");
+                        this.motionInputTimeout = -1;
+                        this.currentMotionInput = undefined;
+                    }
+                    else this.motionInputTimeout += 1;
+                }
 
                 return;
             }
-        }
 
-        onInit()
-        {
-
-        }
-
-        onStart()
-        {
-
+            this.motionInputTimeout = -1;
         }
     }
 }
