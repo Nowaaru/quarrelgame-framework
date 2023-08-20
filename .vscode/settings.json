@@ -10,5 +10,12 @@
 	},
 	"eslint.run": "onType",
 	"eslint.format.enable": true,
-	"typescript.tsdk": "node_modules/typescript/lib"
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"Lua.diagnostics.globals": [
+		"Instance",
+		"game"
+	],
+	"Lua.diagnostics.disable": [
+		"undefined-global"
+	]
 }
