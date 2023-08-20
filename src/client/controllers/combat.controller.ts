@@ -1,7 +1,6 @@
 import { Components } from "@flamework/components";
 import { Controller, OnStart, OnInit, Dependency } from "@flamework/core";
 import { Animator } from "shared/components/animator.component";
-import gio from "shared/data/character/gio";
 import { ClientFunctions } from "shared/network";
 import { Input, InputMode, InputResult } from "shared/util/input";
 import { Client, OnRespawn } from "./client.controller";
@@ -12,10 +11,16 @@ import { HudController } from "./hud.controller";
 import { EntityState } from "shared/util/lib";
 import { OnKeyboardInput } from "./keyboard.controller";
 import { MotionInput } from "./motioninput.controller";
+import { Character } from "shared/util/character";
+
+import Characters from "shared/data/character";
+import { Players } from "@rbxts/services";
 
 @Controller({})
 export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardInput
 {
+    private selectedCharacter?: Character.Character;
+
     private lockOnTarget?: Instance & { Position: Vector3 };
 
     private character?: Model;
@@ -36,6 +41,8 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
     onRespawn(character: Model): void
     {
         this.character = character;
+        this.selectedCharacter = Characters.get(Players.LocalPlayer.GetAttribute("SelectedCharacter") as string);
+        assert(this.selectedCharacter, `no selected character found (${Players.LocalPlayer.GetAttribute("SelectedCharacter")})`);
     }
 
     private handleOffensiveInput(buttonPressed: Enum.KeyCode)
@@ -45,6 +52,11 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
 
             return InputResult.Fail;
 
+        if (!this.selectedCharacter)
+
+            return InputResult.Fail;
+
+        assert(Characters.has(this.selectedCharacter.Name), "selected character does not exist");
         if (buttonType)
         {
             const characterAnimator = Dependency<Components>().getComponent(this.character, Animator.Animator);
@@ -56,7 +68,7 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
 
             if (inputMotion.size() === 1) // this likely means that it's a neutral input
             {
-                if (buttonType in gio.Attacks)
+                if (buttonType in Characters.get(this.selectedCharacter.Name)!.Attacks)
                 {
                     ClientFunctions[ buttonType as Input ].invoke();
 

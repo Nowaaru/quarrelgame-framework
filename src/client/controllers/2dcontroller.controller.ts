@@ -41,6 +41,15 @@ export class CharacterController2D extends CharacterController implements OnStar
 
             return;
 
+        const {X, Y, Z} = this.axis;
+        if (this.alignPos?.Attachment0)
+        {
+            this.alignPos.Position = new Vector3(X, 0, Z);
+            this.alignPos.MaxAxesForce = new Vector3(math.sign(X), 0, math.sign(Z))
+                .Cross(new Vector3(0, 1, 0))
+                .mul(12000);
+        }
+
         const playerHumanoid = this.character.FindFirstChild("Humanoid") as Humanoid | undefined;
         const axisDirection = CFrame.lookAt(Vector3.zero, this.axis);
         const playerDirection = this.GetMoveDirection(axisDirection);
@@ -93,21 +102,16 @@ export class CharacterController2D extends CharacterController implements OnStar
                         ClientFunctions.Jump();
                     }
                 }
-
-                return;
             }
             else if (currentState === EntityState.Crouch)
 
                 ClientFunctions.Crouch(EntityState.Idle);
 
-            playerHumanoid.Move(playerDirection);
-        }
+            if (playerHumanoid.FloorMaterial === Enum.Material.Air && playerHumanoid.GetAttribute("JumpDirection"))
 
-        const {X, Y, Z} = this.axis;
-        if (this.alignPos?.Attachment0)
-        {
-            this.alignPos.Position = new Vector3(X, 0, Z);
-            this.alignPos.MaxAxesForce = new Vector3(math.sign(X), 0, math.sign(Z)).mul(12000);
+                playerHumanoid.Move(playerHumanoid.GetAttribute("JumpDirection") as Vector3);
+
+            else playerHumanoid.Move(playerDirection);
         }
     }
 
@@ -129,7 +133,7 @@ export class CharacterController2D extends CharacterController implements OnStar
 
             Attachment0: rootPart.WaitForChild("RootAttachment") as Attachment,
             ForceLimitMode: Enum.ForceLimitMode.PerAxis,
-            Responsiveness: 100,
+            Responsiveness: 200,
         });
     }
 

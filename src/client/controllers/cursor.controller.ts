@@ -32,7 +32,6 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
 
     onMouseButton(mouseButton: MouseButton, inputMode: InputMode): void
     {
-        print("currently pressed buttons:", this.mouse.GetPressedButtons());
         if (this.mouse.GetPressedButtons().isEmpty())
 
             this.InterpolateSize(undefined, this.baseSize);

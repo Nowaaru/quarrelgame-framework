@@ -9,8 +9,9 @@ import { Entity } from "server/components/entity.component";
 import { Input, Motion } from "shared/util/input";
 import { ConvertPercentageToNumber, EntityState, HitResult, HitboxRegion, getEnumValues } from "shared/util/lib";
 import { Character, Skill } from "shared/util/character";
-import Gio from "shared/data/character/gio";
 import { Hitbox } from "shared/util/hitbox";
+import Characters from "shared/data/character";
+import { Players } from "@rbxts/services";
 export interface OnHit {
     onHit(contactData: Hitbox.Contact): void
 }
@@ -83,14 +84,18 @@ export class CombatService implements OnStart, OnInit
 
         ServerFunctions.SubmitMotionInput.setCallback(async (player, motionInput) =>
         {
+            let combatantComponent;
+            let selectedCharacter;
+
             assert(player.Character, "player has not spawned");
             assert(this.quarrelGame.IsParticipant(player), "player is not a participant");
-            assert(this.GetCombatant(player.Character), "player is not a combatant");
-            const combatantComponent = this.GetCombatant(player.Character)!;
+            assert(combatantComponent = this.GetCombatant(player.Character), "player is not a combatant");
+            assert(selectedCharacter = this.GetSelectedCharacterFromCharacter(this.GetCombatant(player.Character)!), `player ${player.UserId}'s selected character is invalid ${player.GetAttribute("SelectedCharacter")}`);
+
             const {lastSkillHitResult} = this.lastSkillData.get(combatantComponent)
                     ?? this.lastSkillData.set(combatantComponent, {}).get(combatantComponent)!;
 
-            for (const skill of Gio.Skills)
+            for (const skill of selectedCharacter.Skills)
             {
                 const isRecovering = combatantComponent.IsState(EntityState.Recovery);
                 if (skill.MotionInput.every((n,i) => motionInput[ i ] === n))
@@ -125,21 +130,23 @@ export class CombatService implements OnStart, OnInit
                 assert(this.quarrelGame.IsParticipant(player), "player is not a participant");
                 assert(player.Character, "character is not defined");
 
-                const combatantComponent = this.GetCombatant(player.Character);
-                assert(combatantComponent, "entity component not found");
+                let combatantComponent: Entity.Combatant<Entity.CombatantAttributes>;
+                let selectedCharacter: Character.Character;
+                assert(combatantComponent = this.GetCombatant(player.Character) as never, "entity component not found");
+                assert(selectedCharacter = this.GetSelectedCharacterFromCharacter(combatantComponent) as never, "selected character not found");
 
                 const {lastSkillHitResult, lastSkillTime} = this.lastSkillData.get(combatantComponent)
                     ?? this.lastSkillData.set(combatantComponent, {}).get(combatantComponent)!;
 
-                if (Gio.Attacks[ inputTranslation ])
+                if (selectedCharacter.Attacks[ inputTranslation ])
                 {
                     let attackSkill: Skill.Skill | undefined;
 
-                    if (typeIs(Gio.Attacks[ inputTranslation ], "function"))
+                    if (typeIs(selectedCharacter.Attacks[ inputTranslation ], "function"))
 
-                        attackSkill = (Gio.Attacks[ inputTranslation ] as (() => Skill.Skill) | undefined)?.();
+                        attackSkill = (selectedCharacter.Attacks[ inputTranslation ] as (() => Skill.Skill) | undefined)?.();
 
-                    else attackSkill = (Gio.Attacks[ inputTranslation ] as Skill.Skill | undefined);
+                    else attackSkill = (selectedCharacter.Attacks[ inputTranslation ] as Skill.Skill | undefined);
 
 
                     if (attackSkill)
@@ -235,6 +242,27 @@ export class CombatService implements OnStart, OnInit
         const components = Dependency<Components>();
 
         return components.getComponent(instance, Entity.PlayerCombatant) ?? components.getComponent(instance, Entity.Combatant);
+    }
+
+    public GetSelectedCharacterFromCharacter<T extends Entity.CombatantAttributes>(instance: Model | Entity.Combatant<T>)
+    {
+        const characterId = Players.GetPlayers().filter((n) =>
+        {
+            print("1:", n, n.GetAttributes());
+
+            return !!n.GetAttribute("SelectedCharacter");
+        })
+            .find((n) =>
+            {
+                print("2:", n);
+
+                return !!(typeIs(instance, "Instance") ? instance : instance.instance);
+            })
+            ?.GetAttribute("SelectedCharacter");
+
+        assert(characterId, `character ${characterId} is not found`);
+
+        return Characters.get(characterId as string);
     }
 
     public ApplyImpulse(impulseTarget: Model)

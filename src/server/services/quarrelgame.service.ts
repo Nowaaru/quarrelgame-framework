@@ -2,6 +2,7 @@ import { Components } from "@flamework/components";
 import { Service, OnStart, OnInit, Dependency, Modding } from "@flamework/core";
 import Make from "@rbxts/make";
 import { Players, ReplicatedStorage, StarterPlayer, Workspace } from "@rbxts/services";
+import { CharacterRigType } from "data/models/character";
 import { Participant } from "server/components/participant.component";
 import Characters from "shared/data/character";
 
@@ -84,12 +85,8 @@ export class QuarrelGame implements OnStart, OnInit
         ServerFunctions.RespawnCharacter.setCallback((player, characterId) =>
         {
             assert(this.IsParticipant(player), `player ${player.UserId} is not a participant`);
-            assert(Characters.has(characterId), `character ${characterId} not found`);
-            const appliedDescription = Characters.get(characterId)!.Model.Humanoid.GetAppliedDescription();
 
-            player.LoadCharacterWithHumanoidDescription(appliedDescription);
-
-            return true;
+            return this.GetParticipant(player)!.LoadCharacter(characterId);
         });
     }
 

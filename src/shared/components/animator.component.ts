@@ -1,7 +1,7 @@
 import { BaseComponent, Component } from "@flamework/components";
 import { OnStart } from "@flamework/core";
 
-import { HttpService } from "@rbxts/services";
+import { HttpService, Players } from "@rbxts/services";
 import { StateAttributes } from "./state.component";
 import { EntityState, GetTickRate } from "shared/util/lib";
 import { Animation } from "shared/util/animation";
@@ -68,16 +68,18 @@ export namespace Animator {
 
         private async onStateChanged(newState: AttributeValue)
         {
-            const Gio = Characters.get("Vannagio")!;
+            const selectedCharacter = Characters.get(this.instance.GetAttribute("CharacterId") as string);
+            assert(selectedCharacter, `no selected character found on ${this.instance}`);
+
             if (this.paused)
 
                 return;
 
             if (typeIs(newState, "number"))
             {
-                if (newState in Gio.Animations)
+                if (newState in selectedCharacter.Animations)
                 {
-                    const newLoadedAnimation = this.LoadAnimation(Gio.Animations[ newState as keyof typeof Gio.Animations ]!);
+                    const newLoadedAnimation = this.LoadAnimation(selectedCharacter.Animations[ newState as keyof typeof selectedCharacter.Animations ]!);
                     let animationWasInterrupted = false;
                     if (this.currentLoadedAnimation)
                     {

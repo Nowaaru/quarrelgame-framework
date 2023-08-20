@@ -2,7 +2,6 @@ import Roact, { useState } from "@rbxts/roact";
 import { Character } from "shared/util/character";
 import CharactersList from "shared/data/character";
 import CharacterItem from "./characteritem";
-import Gio from "shared/data/character/gio";
 import Object from "@rbxts/object-utils";
 import CharacterData from "./characterdata";
 import CharacterPortrait3D from "./characterportrait";

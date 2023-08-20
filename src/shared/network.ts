@@ -8,6 +8,7 @@ interface ServerEvents {
 
 interface ClientEvents {
     Tick(frameTime: number, tickRate: number): number
+    Jump(character: Model & { Humanoid: Humanoid, PrimaryPart: BasePart } ): void;
 }
 
 interface GameFunctions {

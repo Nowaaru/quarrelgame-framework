@@ -4,8 +4,12 @@ import { Entity } from "./entity.component";
 import { Physics } from "./physics";
 import { HttpService, Workspace } from "@rbxts/services";
 
+import Characters from "shared/data/character";
+import { CharacterRigType } from "data/models/character";
+
 interface ParticipantAttributes {
-    participantId: string,
+    ParticipantId: string,
+    SelectedCharacter?: string,
 }
 
 /**
@@ -13,12 +17,12 @@ interface ParticipantAttributes {
  */
 @Component({
     defaults: {
-    participantId: HttpService.GenerateGUID()
+    ParticipantId: HttpService.GenerateGUID()
     }
     })
-export class Participant extends BaseComponent<ParticipantAttributes, Player> implements OnStart
+export class Participant extends BaseComponent<ParticipantAttributes, Player & { Character: defined }> implements OnStart
 {
-    public readonly id: string = this.attributes.participantId
+    public readonly id: string = this.attributes.ParticipantId
 
     onStart()
     {
@@ -31,6 +35,32 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player> im
             const physicsEntity = components.addComponent(character, Physics.PhysicsEntity);
 
             entityRotator.RotateTowards((Workspace.WaitForChild("jane") as Model).PrimaryPart!);
+        });
+    }
+
+    public async LoadCharacter(characterId: string)
+    {
+        return new Promise<boolean>((res) =>
+        {
+            assert(Characters.has(characterId), `Character of ID ${characterId} does not exist.`);
+
+            const newCharacter = Characters.get(characterId)!;
+            const newCharacterModel = newCharacter.Model.Clone();
+            newCharacterModel.Parent = Workspace;
+            newCharacterModel.SetAttribute("CharacterId", characterId);
+
+            newCharacterModel.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None;
+            newCharacterModel.Humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff;
+
+            if (this.character)
+
+                newCharacterModel.PivotTo(this.character.GetPivot());
+
+            this.instance.SetAttribute("SelectedCharacter", characterId);
+            this.instance.Character = newCharacterModel;
+            this.character = this.instance.Character;
+
+            return res(true);
         });
     }
 

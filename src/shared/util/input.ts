@@ -96,8 +96,6 @@ export function ConvertMoveDirectionToMotion(moveDirection: Vector3): readonly [
         }
     }
 
-    print("defaulted neutral");
-
     return [ Motion[ Motion.Neutral ] as keyof typeof Motion, Vector3.zero.Dot(moveDirection)];
 }
 

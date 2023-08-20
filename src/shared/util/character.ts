@@ -12,6 +12,7 @@ import { Dependency } from "@flamework/core";
 import { Identifier } from "./identifier";
 import { EntityAttributes } from "shared/components/entity.component";
 import { HttpService, RunService } from "@rbxts/services";
+import { CharacterRigType } from "data/models/character";
 
 
 type SkillName = string;
@@ -29,10 +30,8 @@ export namespace Character {
         Special = "Special",
     }
 
-    interface Animations {
-        [EntityState.Idle]?: Animation.AnimationData,
-
-        [EntityState.Crouch]?: Animation.AnimationData,
+    export type Animations = {
+        [K in EntityState]?: Animation.AnimationData;
     }
 
     interface CharacterProps {
@@ -43,6 +42,8 @@ export namespace Character {
         easeOfUse: EaseOfUse;
 
         characterModel: Model & { PrimaryPart: BasePart, Humanoid: Humanoid & { Animator?: Animator } };
+
+        rigType: CharacterRigType;
 
         skills: Set<Skill.Skill>;
 
@@ -94,6 +95,8 @@ export namespace Character {
 
         readonly Attacks: Readonly<CharacterProps["attacks"]>;
 
+        readonly RigType: CharacterRigType;
+
         constructor({
             name,
             description,
@@ -104,6 +107,7 @@ export namespace Character {
             attacks,
             characterHeader,
             characterSubheader,
+            rigType,
             characterArchetype: characterArchetype
         }: CharacterProps)
         {
@@ -117,6 +121,7 @@ export namespace Character {
             this.Header = characterHeader;
             this.Subheader = characterSubheader;
             this.Attacks = attacks;
+            this.RigType = rigType;
         }
     }
 
@@ -133,6 +138,8 @@ export namespace Character {
         protected skills: Set<Skill.Skill> = new Set();
 
         protected animations: Animations = {}
+
+        protected rigType: CharacterRigType = CharacterRigType.HumanoidDescription;
 
         protected attacks: CharacterProps["attacks"] = {}
 
@@ -177,9 +184,10 @@ export namespace Character {
             return this;
         }
 
-        public SetModel(characterModel: CharacterProps["characterModel"])
+        public SetModel(characterModel: CharacterProps["characterModel"], rigType = CharacterRigType.HumanoidDescription)
         {
             this.characterModel = characterModel;
+            this.rigType = rigType;
 
             return this;
         }
@@ -207,7 +215,8 @@ export namespace Character {
 
         public Compile(): CharacterProps
         {
-            const { name, description, easeOfUse, characterModel, skills, attacks, animations, characterArchetype, characterHeader, characterSubheader } = this;
+            // eslint-disable-next-line max-len
+            const { name, description, easeOfUse, characterModel, skills, rigType, attacks, animations, characterArchetype, characterHeader, characterSubheader } = this;
             assert(characterModel, "Builder incomplete! Character model is unset.");
             assert(name, "Builder incomplete! Name is unset.");
             assert(description, "Builder incomplete! Description is unset.");
@@ -224,6 +233,7 @@ export namespace Character {
                 characterArchetype,
                 characterHeader,
                 characterSubheader,
+                rigType
             };
         }
 

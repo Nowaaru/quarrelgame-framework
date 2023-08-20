@@ -60,11 +60,9 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
     onRender(): void
     {
         if (!this.cameraEnabled)
-        {
-            print("camera not enabled.");
 
             return;
-        }
+
 
         let largestSize = -math.huge;
         let radicalParticipants: [Model, Model] | undefined;

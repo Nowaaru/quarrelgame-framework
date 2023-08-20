@@ -10,6 +10,7 @@ export class TestService implements OnStart, OnInit
     onInit()
     {
         const janeModel = Character.jane.Clone();
+        janeModel.SetAttribute("CharacterId", "Vannagio");
         janeModel.Parent = Workspace;
         janeModel.PivotTo(new CFrame(Vector3.FromAxis(Enum.Axis.Z).mul(5)));
 

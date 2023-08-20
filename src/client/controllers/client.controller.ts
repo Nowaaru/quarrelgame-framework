@@ -23,7 +23,7 @@ export interface OnRespawn {
 }
 
 @Controller({})
-export class Client implements OnStart, OnInit, OnMouseButton, OnRespawn
+export class Client implements OnStart, OnInit, OnMouseButton
 {
     private respawnTrackers: Set<OnRespawn> = new Set();
 
@@ -50,33 +50,27 @@ export class Client implements OnStart, OnInit, OnMouseButton, OnRespawn
         Modding.onListenerAdded<OnRespawn>((a) => this.respawnTrackers.add(a));
         Modding.onListenerRemoved<OnRespawn>((a) => this.respawnTrackers.delete(a));
 
-        this.player.CharacterAdded.Connect((char) =>
+        this.player.CharacterAdded.Connect((characterModel) =>
         {
-            this.respawnTrackers.forEach(async (l) =>
+            Promise.all([...this.respawnTrackers].map(async (l) => l.onRespawn(characterModel))).then(() =>
             {
-                l.onRespawn(char);
+                const JaneDummy = Workspace.WaitForChild("jane") as Model;
+                const components = Dependency<Components>();
+
+                this.character = characterModel;
+                characterModel.WaitForChild("Humanoid").WaitForChild("Animator");
+                components.addComponent(characterModel, Animator.Animator);
+                components.addComponent(characterModel, StatefulComponent);
+
+                this.characterController2D.SetAxisTowardsModel(JaneDummy);
+                this.characterController2D.SetEnabled(true);
+
+                print("character model on respawn:", characterModel);
+                this.camera2D.SetParticipants(JaneDummy);
+                this.camera2D.SetCameraEnabled(true);
             });
         });
     }
-
-    onRespawn(characterModel: Model)
-    {
-        const JaneDummy = Workspace.WaitForChild("jane") as Model;
-        const components = Dependency<Components>();
-
-        this.character = characterModel;
-        characterModel.WaitForChild("Humanoid").WaitForChild("Animator");
-        components.addComponent(characterModel, Animator.Animator);
-        components.addComponent(characterModel, StatefulComponent);
-
-        this.characterController2D.SetAxisTowardsModel(JaneDummy);
-        this.characterController2D.SetEnabled(true);
-
-        print("character model on respawn:", characterModel);
-        this.camera2D.SetParticipants(JaneDummy);
-        this.camera2D.SetCameraEnabled(true);
-    }
-
     onMouseButton(mouseButton: MouseButton, inputMode: InputMode): void
     {
         if (inputMode !== InputMode.Down)

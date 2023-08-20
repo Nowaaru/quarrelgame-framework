@@ -4,7 +4,7 @@ import { Dependency, OnPhysics, OnStart, OnTick } from "@flamework/core";
 import { Component, BaseComponent, Components } from "@flamework/components";
 import { RotatorComponent } from "shared/components/rotator.component";
 import { Physics } from "./physics";
-import { RunService } from "@rbxts/services";
+import { Players, RunService } from "@rbxts/services";
 import { OnFrame, SchedulerService } from "server/services/scheduler.service";
 import { Animator } from "shared/components/animator.component";
 import { BlockMode } from "shared/util/lib";
@@ -14,6 +14,7 @@ import * as lib from "shared/util/lib";
 import { QuarrelGame } from "server/services/quarrelgame.service";
 import { Input } from "shared/util/input";
 import * as entityExport from "shared/components/entity.component";
+import { ServerEvents, ServerFunctions } from "shared/network";
 enum RotationMode {
     Unlocked,
     Locked,
@@ -87,10 +88,15 @@ export namespace Entity {
         PreviousSkill?: string,
 
         /**
+         * The character representing this combatant.
+         * Errors if the character is invalid.
+         */
+        CharacterId: string,
+
+        /**
          * The current State the Entity is in.
          */
         State: String<EntityState>,
-
     }
 
     type SkillId = string;
@@ -225,10 +231,7 @@ export namespace Entity {
                 return !this.IsGrounded();
             });
 
-            this.SetStateEffect(EntityState.Midair, () =>
-            {
-                zeroWalkSpeed();
-            });
+            this.SetStateEffect(EntityState.Midair, onNeutral);
 
             this.SetStateEffect(EntityState.Startup, zeroWalkSpeed);
 
@@ -309,9 +312,24 @@ export namespace Entity {
 
         public Jump()
         {
+            if (!this.CanJump())
+
+                return Promise.resolve(false);
+
             this.ClearHitstop();
 
-            return this.instance.Humanoid.Jump = true;
+            return new Promise<boolean>((res) =>
+            {
+                const playerFromCharacter = Players.GetPlayerFromCharacter(this.instance);
+                if (playerFromCharacter)
+
+                    return ServerEvents.Jump(playerFromCharacter, this.instance);
+
+
+                lib.Jump(this.instance);
+
+                return res(true);
+            });
         }
 
         private rotationLocked = RotationMode.Unlocked;
@@ -371,6 +389,11 @@ export namespace Entity {
             const dotProduct = normalizedFacing.Dot(dotArg);
 
             return dotProduct <= this.facingLeniency;
+        }
+
+        public CanJump()
+        {
+            return !this.IsNegative() && this.IsGrounded();
         }
 
         public CanCounter()

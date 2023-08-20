@@ -135,6 +135,7 @@ export default function CharacterPortrait3D({
 
                 return print("no character model parent");
 
+            characterModelClone.SetAttribute("CharacterId", Character.Name);
             if (Animation !== undefined)
             {
                 let animationData: Animation.AnimationData | undefined = undefined;

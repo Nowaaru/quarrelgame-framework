@@ -100,6 +100,7 @@ export const FarSlash =
                     .SetAnimation(
                         new Animation.AnimationBuilder()
                             .SetName("C.S")
+                            .SetLooped(false)
                             .SetAnimationId("rbxassetid://14488052585")
                             .IsAttack()
                             .Construct()

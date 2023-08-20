@@ -27,6 +27,9 @@ export class RotatorComponent extends StatefulComponent<RotatorAttributes, Model
         Mode: Enum.OrientationAlignmentMode.OneAttachment,
         Attachment0: this.targetedAttachment,
         AlignType: Enum.AlignType.Parallel,
+        MaxTorque: 120000,
+        MaxAngularVelocity: 12000,
+        Responsiveness: 150,
     })
 
     public BindToAttachment(attachment: Attachment)
@@ -49,9 +52,13 @@ export class RotatorComponent extends StatefulComponent<RotatorAttributes, Model
         this.UpdateRotator();
         this.alignOrientation.CFrame = CFrame.lookAt(
             this.instance.GetPivot().Position,
-            this.rotateInstance
+            (this.rotateInstance
                 ? this.rotateInstance.Position
-                : this.rotateTarget!
+                : this.rotateTarget!)
+                .mul(new Vector3(1,0,1))
+                .add(new Vector3(0,this.instance.GetPivot().Y * 0.7,0))
+                // Allow the character to tilt slightly downwards for
+                // aesthetics
         );
     }
 

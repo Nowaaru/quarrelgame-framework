@@ -127,6 +127,7 @@ export namespace Animation {
                         return this.Loaded.then(() =>
                         {
                             this.animator.attributes.ActiveAnimation = this.Id;
+                            this.AnimationTrack.Looped = this.AnimationData.loop ?? false;
                             this.AnimationTrack.Play(playOptions?.FadeTime, playOptions?.Weight, playOptions?.Speed ?? 1);
 
                             return res(this);
@@ -134,6 +135,7 @@ export namespace Animation {
                     }
 
                     this.animator.attributes.ActiveAnimation = this.Id;
+                    this.AnimationTrack.Looped = this.AnimationData.loop ?? false;
                     this.AnimationTrack.Play(playOptions?.FadeTime, playOptions?.Weight, playOptions?.Speed ?? 1);
 
                     return res(this);

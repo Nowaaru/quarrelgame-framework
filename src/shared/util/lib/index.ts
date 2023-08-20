@@ -189,5 +189,24 @@ export const GetTickRate = () => (RunService.IsServer()
     ? Dependency<SchedulerService>().GetTickRate()
     : (ClientFunctions.GetGameTickRate().await()[ 1 ] as number | undefined));
 
+export const Jump = (Character: Model & { Humanoid: Humanoid, PrimaryPart: BasePart }) =>
+{
+    const { X, Y, Z } = Character.Humanoid.MoveDirection;
+    const thisImpulse = new Vector3(math.sign(X), 1, math.sign(Z)).mul(Character.PrimaryPart.AssemblyMass * 56);
+    Character.PrimaryPart.ApplyImpulse(thisImpulse);
+    Character.Humanoid.SetAttribute("JumpDirection", Character.Humanoid.MoveDirection);
+
+    const _conn = Character.Humanoid.GetPropertyChangedSignal("FloorMaterial").Connect(() =>
+    {
+        if (Character.Humanoid.FloorMaterial !== Enum.Material.Air)
+        {
+            _conn.Disconnect();
+            Character.Humanoid.SetAttribute("JumpDirection", undefined);
+        }
+    });
+
+    return Promise.resolve();
+};
+
 export { getEnumValues } from "shared/util/lib/other/enum";
 
