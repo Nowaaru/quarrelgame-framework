@@ -1,10 +1,23 @@
 import { Dependency } from "@flamework/core";
-import { Players, RunService } from "@rbxts/services";
+import { Players, ReplicatedStorage, RunService } from "@rbxts/services";
 import { ClientFunctions } from "shared/network";
 
 import type { SchedulerService } from "server/services/scheduler.service";
 import type { Entity } from "server/components/entity.component";
+import type Character from "../character";
 
+interface QuarrelAssets extends Folder {
+    model: Folder & {
+        arena: Folder;
+
+        character: {
+            [key in keyof typeof Character.CharacterModel]: Character.CharacterRig
+        }
+    }
+}
+
+export const quarrelGame = ReplicatedStorage.WaitForChild("QuarrelGame") as Folder;
+export const quarrelAssets = quarrelGame.WaitForChild("QuarrelGame/assets") as QuarrelAssets;
 declare global
 {
     class Error
@@ -209,4 +222,4 @@ export const Jump = (Character: Model & { Humanoid: Humanoid, PrimaryPart: BaseP
 };
 
 export { getEnumValues } from "shared/util/lib/other/enum";
-
+export type ForChild<A extends {}, T extends keyof A = keyof A> = (child: T) => A[ T ] extends Instance ? A[ T ] : never;

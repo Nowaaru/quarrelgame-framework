@@ -1,15 +1,15 @@
 import { Components } from "@flamework/components";
 import { Service, OnStart, OnInit, Dependency } from "@flamework/core";
 import { Players, RunService, Workspace } from "@rbxts/services";
-import Character from "data/models/character";
 import { Entity } from "server/components/entity.component";
+import Character from "shared/util/character";
 
 @Service({})
 export class TestService implements OnStart, OnInit
 {
     onInit()
     {
-        const janeModel = Character.jane.Clone();
+        const janeModel = Character.CharacterModel.jane.Clone();
         janeModel.SetAttribute("CharacterId", "Vannagio");
         janeModel.Parent = Workspace;
         janeModel.PivotTo(new CFrame(Vector3.FromAxis(Enum.Axis.Z).mul(5)));

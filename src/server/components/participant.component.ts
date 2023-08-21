@@ -5,8 +5,6 @@ import { Physics } from "./physics";
 import { HttpService, Workspace } from "@rbxts/services";
 
 import Characters from "shared/data/character";
-import { CharacterRigType } from "data/models/character";
-
 interface ParticipantAttributes {
     ParticipantId: string,
     SelectedCharacter?: string,

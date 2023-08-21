@@ -5,15 +5,13 @@ import { EntityState } from "shared/util/lib";
 import { ForwardKick, FarSlash, LowHeavy } from "./normals";
 import { Animation } from "shared/util/animation";
 
-import Characters, { CharacterRigType } from "data/models/character";
-
 const Death =
     new Character.CharacterBuilder3D()
         .SetName("DEATH")
         .SetDescription("gotsuteki")
         .SetSubheader("JUST KICK THE DOLPHIN")
         .SetHeader("GOTSUTEKI")
-        .SetModel(Characters.death, CharacterRigType.Raw)
+        .SetModel(Character.CharacterModel.death, Character.CharacterRigType.Raw)
         .SetEasiness(5)
         .SetAttack(Input.Slash, FarSlash)
         .SetAttack(Input.Kick, ForwardKick)

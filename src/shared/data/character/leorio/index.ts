@@ -5,7 +5,7 @@ import { EntityState } from "shared/util/lib";
 import { ForwardKick, CloseSlash, LowHeavy } from "./normals";
 import { Animation } from "shared/util/animation";
 
-import Characters from "data/models/character";
+
 
 const LEORIO =
     new Character.CharacterBuilder2D()
@@ -13,7 +13,7 @@ const LEORIO =
         .SetSubheader("I DIDN'T PAY TO BLOCK. I PAID TO GRAB.")
         .SetHeader("DON'T. GET. GRABBED.")
         .SetDescription("Test character 2")
-        .SetModel(Characters.shedletsky as never)
+        .SetModel(Character.CharacterModel.shedletsky as never)
         .SetEasiness(5)
         .SetAttack(Input.Slash, CloseSlash)
         .SetAttack(Input.Kick, ForwardKick)

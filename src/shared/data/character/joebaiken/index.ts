@@ -5,7 +5,7 @@ import { EntityState } from "shared/util/lib";
 import { ForwardKick, CloseSlash, LowHeavy } from "./normals";
 import { Animation } from "shared/util/animation";
 
-import Characters from "data/models/character";
+
 
 const JOEBAIKEN =
     new Character.CharacterBuilder2D()
@@ -13,7 +13,7 @@ const JOEBAIKEN =
         .SetSubheader("OH GOD SHE'S GETTING CLOSER")
         .SetHeader("YOU CAN'T RUN")
         .SetDescription("Test character 4")
-        .SetModel(Characters.brighteyes as never)
+        .SetModel(Character.CharacterModel.brighteyes as never)
         .SetEasiness(3)
         .SetAttack(Input.Slash, CloseSlash)
         .SetAttack(Input.Kick, ForwardKick)

@@ -11,8 +11,9 @@ import { Hitbox } from "./hitbox";
 import { Dependency } from "@flamework/core";
 import { Identifier } from "./identifier";
 import { EntityAttributes } from "shared/components/entity.component";
-import { HttpService, RunService } from "@rbxts/services";
-import { CharacterRigType } from "data/models/character";
+import { HttpService, ReplicatedStorage, RunService } from "@rbxts/services";
+import { CharacterRigR6 as CharacterRigR6_ } from "@rbxts/promise-character";
+
 
 
 type SkillName = string;
@@ -21,6 +22,37 @@ export namespace Character {
     export const MaximumEaseOfUse = 5;
 
     type EaseOfUse = 1 | 2 | 3 | 4 | 5;
+
+    export type CharacterRig = CharacterRigR6_ & { PrimaryPart: BasePart, Humanoid: CharacterRigR6_["Humanoid"] & { Animator: Animator}}
+
+    export enum CharacterRigType {
+        Raw,
+        HumanoidDescription
+    }
+
+    interface CharacterModel {
+        jane: CharacterRig,
+        roblox: CharacterRig,
+        shedletsky: CharacterRig,
+        dusek: CharacterRig,
+        brighteyes: CharacterRig,
+        death: CharacterRig,
+    }
+
+    export const CharacterModel: CharacterModel = table.freeze(setmetatable({}, {__index: (_, index) =>
+    {
+        assert(typeIs(index, "string"), "index is not a string.");
+
+        const quarrelGame = ReplicatedStorage.WaitForChild("QuarrelGame") as Folder;
+        const quarrelAssets = quarrelGame.WaitForChild("QuarrelGame/assets") as Folder;
+        const quarrelModels = quarrelAssets.WaitForChild("model") as Folder;
+        const characterModels = quarrelModels.WaitForChild("character") as Folder;
+
+        assert(characterModels.FindFirstChild(index), `character model of name ${index} does not exist.`);
+
+        return characterModels[ index as never ] as unknown as CharacterRig;
+    },})) as CharacterModel;
+
 
     export enum Archetype {
         WellRounded = "Well-Rounded",
@@ -969,3 +1001,5 @@ export namespace Skill {
         }
     }
 }
+
+export default Character;

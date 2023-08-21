@@ -5,7 +5,7 @@ import { EntityState } from "shared/util/lib";
 import { ForwardKick, CloseSlash, LowHeavy } from "./normals";
 import { Animation } from "shared/util/animation";
 
-import Characters from "data/models/character";
+
 
 const BRISKET =
     new Character.CharacterBuilder2D()
@@ -13,7 +13,7 @@ const BRISKET =
         .SetSubheader("BALL UP OR BAWL UP")
         .SetHeader("BACKTHROW INCIDENT")
         .SetDescription("Test character 3")
-        .SetModel(Characters.roblox as never)
+        .SetModel(Character.CharacterModel.roblox as never)
         .SetEasiness(4)
         .SetAttack(Input.Slash, CloseSlash)
         .SetAttack(Input.Kick, ForwardKick)

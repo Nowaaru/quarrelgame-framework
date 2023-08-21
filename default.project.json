@@ -20,6 +20,10 @@
 			"QuarrelGame": {
 				"$className": "Folder",
 				"$ignoreUnknownInstances": true,
+				"meta": {
+					"$className": "ModuleScript",
+					"$path": "out/meta.lua"
+				},
 				"QuarrelGame/modules": {
 					"$className": "Folder",
 					"$path": "include",
@@ -36,9 +40,9 @@
 						}
 					}
 				},
-				"QuarrelGame/models": {
+				"QuarrelGame/assets": {
 					"$className": "Folder",
-					"$path": "out/data/models"
+					"$path": "out/data/assets"
 				},
 				"QuarrelGame/shared": {
 					"$path": "out/shared"

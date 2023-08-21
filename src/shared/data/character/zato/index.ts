@@ -5,7 +5,7 @@ import { EntityState } from "shared/util/lib";
 import { ForwardKick, CloseSlash, LowHeavy } from "./normals";
 import { Animation } from "shared/util/animation";
 
-import Characters from "data/models/character";
+
 
 const ZATO =
     new Character.CharacterBuilder2D()
@@ -13,7 +13,7 @@ const ZATO =
         .SetSubheader("EDDIE MAKES ME WANT TO ED DIE")
         .SetHeader("EDDEEZ NUTS GOTTEM")
         .SetDescription("Test character 4")
-        .SetModel(Characters.dusek as never)
+        .SetModel(Character.CharacterModel.dusek as never)
         .SetEasiness(2)
         .SetAttack(Input.Slash, CloseSlash)
         .SetAttack(Input.Kick, ForwardKick)

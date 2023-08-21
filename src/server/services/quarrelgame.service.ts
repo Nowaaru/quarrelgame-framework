@@ -2,9 +2,7 @@ import { Components } from "@flamework/components";
 import { Service, OnStart, OnInit, Dependency, Modding } from "@flamework/core";
 import Make from "@rbxts/make";
 import { Players, ReplicatedStorage, StarterPlayer, Workspace } from "@rbxts/services";
-import { CharacterRigType } from "data/models/character";
 import { Participant } from "server/components/participant.component";
-import Characters from "shared/data/character";
 
 import { GlobalFunctions } from "shared/network";
 import { BlockMode } from "shared/util/lib";

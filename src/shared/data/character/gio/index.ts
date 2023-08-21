@@ -5,7 +5,7 @@ import { EntityState } from "shared/util/lib";
 import { ForwardKick, CloseSlash, LowHeavy } from "./normals";
 import { Animation } from "shared/util/animation";
 
-import Characters from "data/models/character";
+
 
 const Gio =
     new Character.CharacterBuilder3D()
@@ -13,7 +13,7 @@ const Gio =
         .SetDescription("Test character")
         .SetSubheader("5K: THE CHARACTER")
         .SetHeader("CHECK THIS DASH")
-        .SetModel(Characters.jane as never)
+        .SetModel(Character.CharacterModel.jane as never)
         .SetEasiness(5)
         .SetAttack(Input.Slash, CloseSlash)
         .SetAttack(Input.Kick, ForwardKick)
