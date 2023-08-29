@@ -4,9 +4,9 @@ import Make from "@rbxts/make";
 import { Players, ReplicatedStorage, StarterPlayer, Workspace } from "@rbxts/services";
 import { Participant } from "server/components/participant.component";
 
-import { GlobalFunctions } from "shared/network";
 import { BlockMode } from "shared/util/lib";
-const { server: ServerFunctions } = GlobalFunctions;
+import { ServerFunctions } from "shared/network"
+import { MatchService } from "./matchservice.service";
 
 export interface OnParticipantAdded
 {
@@ -14,7 +14,7 @@ export interface OnParticipantAdded
 }
 
 @Service({
-    loadOrder: -1,
+    loadOrder: -2,
     })
 export class QuarrelGame implements OnStart, OnInit
 {
@@ -23,6 +23,11 @@ export class QuarrelGame implements OnStart, OnInit
     public readonly CharacterContainer = Make("Folder", {
         Parent: Workspace,
         Name: "CharacterContainer",
+    })
+
+    public readonly MatchContainer = Make("Folder", {
+        Parent: Workspace,
+        Name: "MapContainer",
     })
 
     private readonly participantAddedHandler = new Set<OnParticipantAdded>();
@@ -80,11 +85,30 @@ export class QuarrelGame implements OnStart, OnInit
         });
 
         // setup events
-        ServerFunctions.RespawnCharacter.setCallback((player, characterId) =>
+        ServerFunctions.RespawnCharacter.setCallback((player) =>
+        {
+            assert(this.IsParticipant(player), `player ${player.UserId} is not a participant`);
+            const thisParticipant = this.GetParticipant(player)!;
+            if (thisParticipant.attributes.MatchId)
+            {
+                for (const match of Dependency<MatchService>().GetOngoingMatches())
+
+                    if (match.GetParticipants().has(thisParticipant))
+
+                        return thisParticipant.LoadCombatant({ matchId: match.matchId }).then((entity) => entity.instance);
+
+                warn(`player ${player.UserId} is in a match, but the match was not found`);
+            }
+
+            print("Loading character.");
+            return thisParticipant.LoadCharacter().then((entity) => entity.instance);
+        });
+
+        ServerFunctions.SelectCharacter.setCallback((player, characterId) =>
         {
             assert(this.IsParticipant(player), `player ${player.UserId} is not a participant`);
 
-            return this.GetParticipant(player)!.LoadCharacter(characterId);
+            return this.GetParticipant(player)!.SelectCharacter(characterId);
         });
     }
 

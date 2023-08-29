@@ -2,12 +2,13 @@ import Roact from "@rbxts/roact";
 import Make from "@rbxts/make";
 
 import CharacterSelect from "client/ui/characterselect";
+import Characters from "shared/data/character";
 
 import { Controller, OnStart, OnInit } from "@flamework/core";
 import { Client } from "./client.controller";
-import Characters from "shared/data/character";
 import { Character } from "shared/util/character";
 import { ClientFunctions } from "shared/network";
+
 
 @Controller({})
 export class CharacterSelectController implements OnStart, OnInit
@@ -50,15 +51,16 @@ export class CharacterSelectController implements OnStart, OnInit
                 Characters,
                 OnSelect: (selectedCharacter: Character.Character) =>
                 {
-                    print("eeeeeeeeeeeeeeeeeeeeeee", selectedCharacter, this.currentlySelectedCharacter);
                     if (this.currentlySelectedCharacter && selectedCharacter === this.currentlySelectedCharacter)
                     {
-                        print("Selected Character:", selectedCharacter);
                         ClientFunctions.RespawnCharacter(selectedCharacter.Name);
-                        this.client.player.SetAttribute("SelectedCharacter", selectedCharacter.Name);
                         this.CloseCharacterSelect();
                     }
-                    else this.currentlySelectedCharacter = selectedCharacter;
+                    else
+                    {
+                        this.currentlySelectedCharacter = selectedCharacter;
+                        ClientFunctions.SelectCharacter(selectedCharacter.Name);
+                    }
                 },
             }), this.characterSelectScreenGui, "CharacterSelect");
         }

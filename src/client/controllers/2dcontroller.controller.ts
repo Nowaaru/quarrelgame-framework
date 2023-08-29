@@ -8,10 +8,11 @@ import { Mouse } from "client/controllers/mouse.controller";
 import { Gamepad, GamepadButtons } from "client/controllers/gamepad.controller";
 import { OnRespawn } from "client/controllers/client.controller";
 import { CombatController } from "./combat.controller";
-import Make from "@rbxts/make";
 import { ClientFunctions } from "shared/network";
 import { EntityState } from "shared/util/lib";
 import { MotionInput } from "./motioninput.controller";
+
+import Make from "@rbxts/make";
 
 interface ChangedSignals {
     [stateName: string]: unknown,
@@ -33,6 +34,10 @@ export class CharacterController2D extends CharacterController implements OnStar
     private lastFrameNormal: Vector3 = Vector3.zero;
     onRender()
     {
+        if (!this.enabled)
+
+            return;
+
         if (!this.character)
 
             return;
@@ -127,6 +132,7 @@ export class CharacterController2D extends CharacterController implements OnStar
 
         this.alignPos = Make("AlignPosition", {
             Mode: Enum.PositionAlignmentMode.OneAttachment,
+            Enabled: false,
             ApplyAtCenterOfMass: true,
             MaxAxesForce: Vector3.zero,
             Parent: rootPart,

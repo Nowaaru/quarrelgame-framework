@@ -8,7 +8,7 @@ import type Character from "../character";
 
 interface QuarrelAssets extends Folder {
     model: Folder & {
-        arena: Folder;
+        map: Folder;
 
         character: {
             [key in keyof typeof Character.CharacterModel]: Character.CharacterRig
@@ -18,6 +18,10 @@ interface QuarrelAssets extends Folder {
 
 export const quarrelGame = ReplicatedStorage.WaitForChild("QuarrelGame") as Folder;
 export const quarrelAssets = quarrelGame.WaitForChild("QuarrelGame/assets") as QuarrelAssets;
+export const quarrelModels = quarrelAssets.model;
+export const quarrelCommands = quarrelGame.WaitForChild("QuarrelGame/cmdr") as Folder;
+export const quarrelMaps = quarrelModels.map;
+
 declare global
 {
     class Error

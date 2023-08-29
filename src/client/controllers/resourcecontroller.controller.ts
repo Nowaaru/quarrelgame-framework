@@ -36,7 +36,7 @@ export class ResourceController implements OnAssetLoad
         this.preloadQueue.delete(assetId);
     }
 
-    private assetLoadedHandler(assetId: string, assetFetchStatus: Enum.AssetFetchStatus): Enum.AssetFetchStatus | void
+    private assetLoadedHandler(assetId: string, assetFetchStatus: Enum.AssetFetchStatus, instance?: Instance): Enum.AssetFetchStatus | void
     {
         switch (assetFetchStatus)
         {
@@ -48,6 +48,9 @@ export class ResourceController implements OnAssetLoad
 
             case Enum.AssetFetchStatus.Success:
                 this.assetLoadListeners.forEach((object) => object.onAssetLoaded?.(assetId));
+                if (instance)
+
+                    this.loadedInstanceMap.set(assetId, this.loadedInstanceMap.get(assetId)?.add(instance) ?? new Set([ instance ]));
 
                 return assetFetchStatus;
 
@@ -64,22 +67,32 @@ export class ResourceController implements OnAssetLoad
             default:
                 break;
         }
+
+
     }
 
-    public requestPreloadInstance<T extends Instance>(instance: T): T extends {
-        [K: `${string}Id`]: string;
-    } ? Promise<void> : never
+    public requestPreloadInstance<T extends Instance>(instance: T): Promise<void>
     {
         return new Promise((res, rej) =>
         {
             ContentProvider.PreloadAsync([ instance ], (contentId, fetchStatus) =>
             {
-                const loadedResult = this.assetLoadedHandler(contentId, fetchStatus);
-                if (loadedResult && loadedResult !== Enum.AssetFetchStatus.Failure)
-
-                    this.loadedInstanceMap.set(contentId, this.loadedInstanceMap.get(contentId)?.add(instance) ?? new Set([ instance ]));
-
             });
+        }) as never;
+    }
+
+    public requestPreloadInstances<T extends Instance>(instances: T[]): Promise<void>
+    {
+        
+        
+        return new Promise<void>((res, rej) =>
+        {
+            ContentProvider.PreloadAsync(instances, (contentId, fetchStatus) => 
+            {
+                this.assetLoadedHandler(contentId, fetchStatus);
+            });
+
+            res();
         }) as never;
     }
 
@@ -103,7 +116,7 @@ export class ResourceController implements OnAssetLoad
         });
     }
 
-    public requestBatchPreloadAsset(assetIds: string[])
+    public requestBatchPreloadAssets(assetIds: string[])
     {
         return new Promise<void>((res, rej) =>
         {

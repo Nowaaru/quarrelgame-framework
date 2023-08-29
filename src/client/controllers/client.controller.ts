@@ -1,8 +1,8 @@
 import { Controller, OnStart, OnInit, Dependency, Modding } from "@flamework/core";
 import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
 import { InputMode, InputResult } from "shared/util/input";
-import { Players, Workspace } from "@rbxts/services";
-import { GlobalFunctions } from "shared/network";
+import { Players, StarterGui, Workspace } from "@rbxts/services";
+import { ClientEvents, GlobalFunctions } from "shared/network";
 import { Mouse, MouseButton, OnMouseButton } from "./mouse.controller";
 import { HudController } from "./hud.controller";
 
@@ -43,6 +43,8 @@ export class Client implements OnStart, OnInit, OnMouseButton
     {
         Players.LocalPlayer.CameraMinZoomDistance = 8;
         Players.LocalPlayer.CameraMaxZoomDistance = Players.LocalPlayer.CameraMinZoomDistance;
+
+        StarterGui.SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
     }
 
     onStart()
@@ -50,24 +52,33 @@ export class Client implements OnStart, OnInit, OnMouseButton
         Modding.onListenerAdded<OnRespawn>((a) => this.respawnTrackers.add(a));
         Modding.onListenerRemoved<OnRespawn>((a) => this.respawnTrackers.delete(a));
 
-        this.player.CharacterAdded.Connect((characterModel) =>
+        ClientEvents.MatchParticipantRespawned.connect((characterModel) =>
         {
-            Promise.all([...this.respawnTrackers].map(async (l) => l.onRespawn(characterModel))).then(() =>
+            Promise.all([...this.respawnTrackers].map(async (l) => l.onRespawn(characterModel))).then(async () =>
             {
-                const JaneDummy = Workspace.WaitForChild("jane") as Model;
-                const components = Dependency<Components>();
+                const currentMatch = await ClientFunctions.GetCurrentMatch();
+                if (currentMatch?.Arena)
+                {
+                    const components = Dependency<Components>();
 
-                this.character = characterModel;
-                characterModel.WaitForChild("Humanoid").WaitForChild("Animator");
-                components.addComponent(characterModel, Animator.Animator);
-                components.addComponent(characterModel, StatefulComponent);
+                    this.character = characterModel;
+                    characterModel.WaitForChild("Humanoid").WaitForChild("Animator");
+                    components.addComponent(characterModel, Animator.Animator);
+                    components.addComponent(characterModel, StatefulComponent);
 
-                this.characterController2D.SetAxisTowardsModel(JaneDummy);
-                this.characterController2D.SetEnabled(true);
+                    this.characterController2D.SetAxis(currentMatch.Arena.config.Axis.Value)
+                    this.characterController2D.SetEnabled(true);
 
-                print("character model on respawn:", characterModel);
-                this.camera2D.SetParticipants(JaneDummy);
-                this.camera2D.SetCameraEnabled(true);
+                    print("character model on respawn:", characterModel);
+                    
+                    Workspace.CurrentCamera!.CameraSubject = characterModel.FindFirstChildWhichIsA("Humanoid") as Humanoid;
+                    this.camera2D.SetParticipants(...currentMatch.Participants.mapFiltered(({ ParticipantId }) =>
+                        {
+                           return Players.GetPlayers().find((player) => player.GetAttribute("ParticipantId") === ParticipantId)?.Character
+                        }));
+
+                    this.camera2D.SetCameraEnabled(true);
+                }
             });
         });
     }

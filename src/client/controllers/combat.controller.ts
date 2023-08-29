@@ -1,7 +1,7 @@
 import { Components } from "@flamework/components";
 import { Controller, OnStart, OnInit, Dependency } from "@flamework/core";
 import { Animator } from "shared/components/animator.component";
-import { ClientFunctions } from "shared/network";
+import { ClientEvents, ClientFunctions, Client as ClientNamespace, ServerEvents, ServerFunctions } from "shared/network";
 import { Input, InputMode, InputResult } from "shared/util/input";
 import { Client, OnRespawn } from "./client.controller";
 import { CharacterController2D } from "./2dcontroller.controller";
@@ -15,6 +15,7 @@ import { Character } from "shared/util/character";
 
 import Characters from "shared/data/character";
 import { Players } from "@rbxts/services";
+import { CameraController2D } from "./camera2d.controller";
 
 @Controller({})
 export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardInput
@@ -27,7 +28,8 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
 
     constructor(
         private readonly motionInputController: MotionInput.MotionInputController,
-        private readonly cameraController: CameraController3D,
+        private readonly cameraController3D: CameraController3D,
+        private readonly cameraController2D: CameraController2D,
         private readonly hudController: HudController,
     )
     {}
@@ -41,8 +43,12 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
     onRespawn(character: Model): void
     {
         this.character = character;
-        this.selectedCharacter = Characters.get(Players.LocalPlayer.GetAttribute("SelectedCharacter") as string);
-        assert(this.selectedCharacter, `no selected character found (${Players.LocalPlayer.GetAttribute("SelectedCharacter")})`);
+
+        if (Players.LocalPlayer.GetAttribute("MatchId"))
+        {
+            this.selectedCharacter = Characters.get(Players.LocalPlayer.GetAttribute("SelectedCharacter") as string);
+            assert(this.selectedCharacter, `no selected character found (${Players.LocalPlayer.GetAttribute("SelectedCharacter")})`);
+        } else this.selectedCharacter = undefined;
     }
 
     private handleOffensiveInput(buttonPressed: Enum.KeyCode)
@@ -102,10 +108,10 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
             {
                 case (Enum.KeyCode.LeftAlt):
                 {
-                    this.cameraController.ToggleCameraEnabled().catch((e) =>
+                    this.cameraController3D.ToggleCameraEnabled().catch((e) =>
                     {
                         warn(e);
-                        print(this.cameraController.PlayerModule);
+                        print(this.cameraController3D.PlayerModule);
                     });
 
                     return InputResult.Success;
@@ -143,7 +149,7 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
             {
                 this.hudController.SetLockOnTarget(target);
                 this.hudController.SetLockOnEffectEnabled(doFX);
-                this.cameraController.SetLockOnTarget(this.lockOnTarget);
+                this.cameraController3D.SetLockOnTarget(this.lockOnTarget);
 
                 this.lockOnTracker = primaryPart.Destroying.Once(() =>
                 {
@@ -156,14 +162,28 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
             }
         }
 
-        this.cameraController.SetLockOnTarget(undefined);
+        this.cameraController3D.SetLockOnTarget(undefined);
         this.hudController.SetLockOnTarget(undefined);
         this.hudController.SetLockOnEffectEnabled(false);
     }
 
     onInit()
     {
+        ClientEvents.SetCombatMode.connect(async (combatMode) =>
+        {
+            if (combatMode === ClientNamespace.CombatMode.TwoDimensional)
+            {
+                const thisMatch = (await ClientFunctions.GetCurrentMatch());
+                assert(thisMatch, "no match found");
 
+                this.cameraController2D.SetCameraEnabled(true);
+                this.cameraController2D.SetParticipants(...[...thisMatch.Participants.mapFiltered(({ ParticipantId }) =>
+                {
+                    return Players.GetPlayers().find((p) => p.GetAttribute("ParticipantId") === ParticipantId)?.Character;
+                }), /* ... entity model support here ... */])
+            }
+            else this.cameraController2D.SetCameraEnabled(false);
+        })
     }
 
     onStart()

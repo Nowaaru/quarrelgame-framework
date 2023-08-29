@@ -44,6 +44,10 @@
 					"$className": "Folder",
 					"$path": "out/data/assets"
 				},
+				"QuarrelGame/cmdr": {
+					"$className": "Folder",
+					"$path": "out/data/cmd"
+				},
 				"QuarrelGame/shared": {
 					"$path": "out/shared"
 				}

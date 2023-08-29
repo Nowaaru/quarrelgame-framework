@@ -45,18 +45,46 @@ export abstract class CharacterController implements OnGamepadInput, OnRespawn
         return totalVector !== Vector3.zero ? totalVector.Unit: totalVector;
     }
 
-    onRespawn(character: Model): void
+    private thisMovementAction?: BoundActionInfo
+    public DisableMovement()
     {
-        this.character = character;
-        ContextActionService.BindAction(
-            "Movement",
+        const movementAction = ContextActionService.GetBoundActionInfo("Movement");
+        this.thisMovementAction = movementAction;
+
+        assert(movementAction, "movement action not found");
+        ContextActionService.BindActionAtPriority(
+            "NullifyMovement",
             (id, state, {KeyCode}) =>
             {
                 return Enum.ContextActionResult.Sink;
             },
             false,
-            ...Enum.PlayerActions.GetEnumItems()
+            movementAction.priorityLevel + 1,
+            ...movementAction.inputTypes.filter((n) => !typeIs(n, "string")) as Array<Enum.KeyCode | Enum.PlayerActions> | Array<Enum.UserInputType>
         );
+    }
+
+    public EnableMovement()
+    {
+        ContextActionService.UnbindAction("NullifyMovement");
+        delete this.thisMovementAction;
+    }
+
+    public ToggleMovement()
+    {
+        if (this.thisMovementAction)
+
+            this.EnableMovement();
+
+        else this.DisableMovement();
+    }
+
+    onRespawn(character: Model): void
+    {
+        this.character = character;
+        if (this.thisMovementAction)
+
+            this.EnableMovement();
     }
 
     abstract onGamepadInput(buttonPressed: GamepadButtons, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult);

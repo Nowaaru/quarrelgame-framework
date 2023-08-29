@@ -94,9 +94,15 @@ export namespace Entity {
         CharacterId: string,
 
         /**
+         * The match possessing this combatant.
+         * Errors if the match is invalid.
+         */
+        MatchId: string,
+
+        /**
          * The current State the Entity is in.
          */
-        State: String<EntityState>,
+        State: EntityState | String<EntityState>,
     }
 
     type SkillId = string;
@@ -119,7 +125,7 @@ export namespace Entity {
         EntityId: "generate",
         State: EntityState.Idle,
         }
-        })
+    })
     export class Combatant<A extends CombatantAttributes> extends Entity<A> implements OnStart, OnFrame
     {
         public readonly animator: Animator.Animator;
@@ -293,23 +299,6 @@ export namespace Entity {
             this.attributes.BlockStun = -1;
         }
 
-        /**
-         * Clears the entity's hitstop.
-         */
-        public ClearHitstop()
-        {
-            this.stateAnimator.Unpause();
-            this.attributes.HitStop = -1;
-            this.instance.PrimaryPart.Anchored = false;
-
-            this.animator.GetPlayingAnimations().forEach((animation) =>
-            {
-                if (animation.AnimationData.isAttackAnimation && animation.IsPaused())
-
-                    animation.Resume();
-            });
-        }
-
         public Jump()
         {
             if (!this.CanJump())
@@ -317,19 +306,7 @@ export namespace Entity {
                 return Promise.resolve(false);
 
             this.ClearHitstop();
-
-            return new Promise<boolean>((res) =>
-            {
-                const playerFromCharacter = Players.GetPlayerFromCharacter(this.instance);
-                if (playerFromCharacter)
-
-                    return ServerEvents.Jump(playerFromCharacter, this.instance);
-
-
-                lib.Jump(this.instance);
-
-                return res(true);
-            });
+            return super.Jump();
         }
 
         private rotationLocked = RotationMode.Unlocked;

@@ -1,8 +1,14 @@
 import { Component } from "@flamework/components";
-import { HttpService, Workspace } from "@rbxts/services";
+import { HttpService, Players, Workspace } from "@rbxts/services";
 import { Identifier } from "shared/util/identifier";
 import { EntityState } from "shared/util/lib";
 import { StatefulComponent, StateAttributes } from "./state.component";
+import { ServerEvents } from "shared/network";
+
+import { Entity as EntityNamespace } from "shared/components/entity.component";
+
+import * as lib from "shared/util/lib";
+import Signal from "@rbxts/signal";
 
 
 export interface EntityAttributes extends StateAttributes
@@ -47,6 +53,8 @@ export class Entity<I extends EntityAttributes = EntityAttributes> extends State
 {
         private readonly id = Identifier.GenerateComponentId(this, "EntityId");
 
+        public readonly Died = new Signal<(killer: Entity) => void>();
+
         constructor()
         {
             super();
@@ -56,6 +64,15 @@ export class Entity<I extends EntityAttributes = EntityAttributes> extends State
 
                     this.attributes.EntityId = this.id;
             });
+
+            this.onAttributeChanged("Health", (newHealth, oldHealth) =>
+            {
+                if (newHealth !== oldHealth)
+
+                    if (newHealth <= 0)
+
+                        this.Died.Fire(undefined as never); // TODO: add killer dogtags
+            })
         }
 
         private tickDowns: Set<defined> = new Set();
@@ -90,6 +107,26 @@ export class Entity<I extends EntityAttributes = EntityAttributes> extends State
         public SetHitstop(hitstop: number)
         {
             this.attributes.HitStop = hitstop;
+        }
+
+        public ClearHitstop()
+        {
+            this.attributes.HitStop = -1;
+        }
+
+        public Jump()
+        {
+            return new Promise<boolean>((res) =>
+            {
+                const playerFromCharacter = Players.GetPlayerFromCharacter(this.instance);
+                if (playerFromCharacter)
+
+                    return ServerEvents.Jump(playerFromCharacter, this.instance);
+
+                lib.Jump(this.instance);
+
+                return res(true);
+            });
         }
 
         public IsGrounded()

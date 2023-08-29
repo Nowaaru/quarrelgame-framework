@@ -27,14 +27,8 @@ export class MovementService implements OnStart, OnInit
             return participantPlayer.entity;
         };
 
-        ServerFunctions.RequestSprint.setCallback((player, sprintState) =>
-        {
-            return true;
-        });
-
         ServerFunctions.Crouch.setCallback((player, crouchState) =>
         {
-
             return fetchEntityFromPlayer(player).SetState(crouchState);
         });
 
