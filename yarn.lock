@@ -125,6 +125,11 @@
     "@rbxts/services" "^1.5.1"
     "@rbxts/trove" "^1.3.0"
 
+"@rbxts/cmdr@^1.9.0-ts.0":
+  version "1.9.0-ts.0"
+  resolved "https://registry.yarnpkg.com/@rbxts/cmdr/-/cmdr-1.9.0-ts.0.tgz#34f3b65693b6a24176bfd5a77adc6df9bd648477"
+  integrity sha512-PnxnbB5HnunRKcB+kCHYmknyF74LUFAz9Ne+zXw364YN5TC2jTlRdag8Qj15g1o5Nih5N8oMHKeTGZzLbFUIjw==
+
 "@rbxts/compiler-types@^1.2.3-types.1":
   version "1.2.3-types.1"
   resolved "https://registry.yarnpkg.com/@rbxts/compiler-types/-/compiler-types-1.2.3-types.1.tgz#d7945531c917d62bafadd2b5aa6c2f2e88a2036a"

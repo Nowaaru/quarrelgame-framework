@@ -1,0 +1,56 @@
+{
+    "New Command Handler": {
+        "prefix": ["newcommand", "command"],
+        "description": "Create a new Cmdr command",
+        "scope": "typescript",
+        "body": [
+            "import { Cmdr, CommandContext } from \"@rbxts/cmdr\";",
+            "",
+
+            "export = function(context: CommandContext, ...args: unknown[])",
+            "{",
+            "\t$0",
+            "};"
+        ]
+    },
+    "New Command Definition": {
+        "prefix": ["newcommanddef", "cmddef"],
+        "description": "Create a new Cmdr command definition",
+        "scope": "typescript",
+        "body": [
+            "import type { CommandDefinition } from \"@rbxts/cmdr\";",
+            "",
+            "export = {",
+                "\tName: \"${1:command}\"",
+                "\tDescription: \"${2:command description}\"",
+                "\tAliases: [\"${3:alias1}\", \"${4:alias2}\"]",
+                "\tArgs: [",
+                    "\t\t{",
+                        "\t\t\tName: \"${5:arg1}\"",
+                        "\t\t\tType: \"${6:string}\"",
+                        "\t\t\tOptional: ${7:false}",
+                    "\t\t},",
+                    "\t\t{",
+                        "\t\t\tName: \"${8:arg2}\"",
+                        "\t\t\tType: \"${9:number}\"",
+                        "\t\t\tOptional: ${10:true}",
+                    "\t\t}",
+                "\t]",
+            "} satisfies CommandDefinition;"
+        ]
+    },
+    "New Plain Command Definition": {
+        "prefix": ["newcommanddefplain", "cmddefp"],
+        "description": "Create a new Plain Cmdr command definition",
+        "scope": "typescript",
+        "body": [
+            "import type { CommandDefinition } from \"@rbxts/cmdr\";",
+            "",
+            "export = {",
+                "\tName: \"${1:command}\"",
+                "\tDescription: \"${2:command description}\"",
+                "\tAliases: [\"${3:alias1}\", \"${4:alias2}\"]",
+            "} satisfies CommandDefinition;"
+        ]
+    }
+}

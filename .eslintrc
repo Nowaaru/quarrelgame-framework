@@ -31,14 +31,19 @@
         "plugin:@typescript-eslint/recommended",
         "plugin:roblox-ts/recommended"
         // "plugin:prettier/recommended"
-    ],
+    ], 
     "parser": "@typescript-eslint/parser",
     "rules": {
         "padding-line-between-statements": [
             "error",
             {
                 "blankLine": "always",
-                "prev": "*",
+                "prev": "block-like",
+                "next": "return"
+            },
+            {
+                "blankLine": "never",
+                "prev": "var",
                 "next": "return"
             }
         ],
@@ -47,7 +52,9 @@
         "no-whitespace-before-property": "warn",
         "computed-property-spacing": [
             "warn",
-            "always"
+            {
+            
+            }
         ],
         "no-mixed-spaces-and-tabs": "error",
         "roblox-ts/lua-truthiness": "off",
