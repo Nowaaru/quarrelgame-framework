@@ -2,7 +2,6 @@ import { Networking } from "@flamework/networking";
 import { Input, Motion, MotionInput } from "./util/input";
 
 import type { EntityState } from "./util/lib";
-import type { SprintState } from "server/services/movement.service";
 import type { MatchSettings, MatchPhase, MatchState } from "server/services/matchservice.service";
 
 import type MapNamespace from "server/components/map.component";

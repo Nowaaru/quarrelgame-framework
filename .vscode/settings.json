@@ -1,7 +1,7 @@
 {
 	"files.eol": "\n",
 	"[typescript]": {
-		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
+		"editor.defaultFormatter": "trunk.io",
 		"editor.formatOnSave": true
 	},
 	"[typescriptreact]": {

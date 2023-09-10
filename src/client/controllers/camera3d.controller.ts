@@ -60,7 +60,6 @@ export class CameraController3D extends CameraController implements OnStart, OnI
             this.lockOnTarget = undefined;
             RunService.UnbindFromRenderStep("LockOn");
         }
-
     }
 
     public GetLockOnTarget()

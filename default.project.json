@@ -50,6 +50,10 @@
 				},
 				"QuarrelGame/shared": {
 					"$path": "out/shared"
+				},
+				"QuarrelGame/task": {
+					"$className": "Folder",
+					"$path": "out/data/task"
 				}
 			}
 		},
@@ -57,11 +61,11 @@
 			"$className": "StarterPlayer",
 			"StarterPlayerScripts": {
 				"$className": "StarterPlayerScripts",
-				"QuarrelGame": { 
+				"QuarrelGame": {
 					"$className": "Folder",
 					"QuarrelGame/client": {
 						"$path": "out/client"
-					} 
+					}
 				}
 			},
 			"StarterCharacterScripts": {

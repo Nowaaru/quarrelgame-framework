@@ -72,10 +72,12 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
     }: CombatantLoader)
     {
         assert(characterId, "no character ID was provided, nor does the participant have a selected character.")
-        if ([...Dependency<MatchService>().GetOngoingMatches()].some((match) => match.matchId === matchId))
+        const thisMatch = [...Dependency<MatchService>().GetOngoingMatches()].find((match) => match.matchId === matchId);
+        if (thisMatch)
 
             this.instance.SetAttribute("MatchId", matchId);
 
+        else error(`match of ID ${matchId} does not exist.`);
         return new Promise<Entity.PlayerCombatant<A>>((res) =>
         {
             assert(Characters.has(characterId), `character of ID ${characterId} does not exist.`);

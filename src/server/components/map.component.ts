@@ -1,8 +1,9 @@
-import { OnStart } from "@flamework/core";
-import { Component, BaseComponent } from "@flamework/components";
+import { Dependency, OnStart } from "@flamework/core";
+import { Component, BaseComponent, Components } from "@flamework/components";
 import { quarrelMaps } from "shared/util/lib";
 import { Identifier } from "shared/util/identifier";
 import { Entity } from "../../shared/components/entity.component";
+import { Entity as ServerEntity } from "./entity.component";
 import { Model } from "shared/util/model";
 import Make from "@rbxts/make";
 
@@ -98,17 +99,17 @@ namespace _Map {
     type ArenaScript = ModuleScript
 
     export type ConfigurationToValue<T extends ArenaConfiguration = ArenaConfiguration, CR = Required<T>> = Configuration & {
-        [K in keyof CR]?: 
-            CR[K] extends CFrame ? CFrameValue :
-            CR[K] extends Vector3 ? Vector3Value :
-            CR[K] extends number ? NumberValue :
-            CR[K] extends string ? StringValue :
-            CR[K] extends boolean ? BoolValue :
-            CR[K] extends Instance ? ObjectValue :
-            CR[K] extends Color3 ? Color3Value :
-            K
+        [K in keyof CR]?:
+        CR[K] extends CFrame ? CFrameValue :
+        CR[K] extends Vector3 ? Vector3Value :
+        CR[K] extends number ? NumberValue :
+        CR[K] extends string ? StringValue :
+        CR[K] extends boolean ? BoolValue :
+        CR[K] extends Instance ? ObjectValue :
+        CR[K] extends Color3 ? Color3Value :
+        K
     };
-    
+
 
     export type Arena<T extends ArenaLike | (Model & { PrimaryPart: BasePart }) = ArenaLike, CR = Required<ArenaConfiguration>> = T extends ArenaLike ? Model & {
         /**
@@ -125,7 +126,7 @@ namespace _Map {
             [key: string]: ArenaScript
         }
         model: Folder,
-    } : Arena<ArenaLike & {model: T}>
+    } : Arena<ArenaLike & { model: T }>
 
     /**
      * An Interface that describes the general structure
@@ -167,37 +168,33 @@ namespace _Map {
     }
 
     @Component({})
-    export class MapComponent extends BaseComponent<MapAttributes, Folder & { CharacterContainer: Folder }> implements OnStart
-    {
+    export class MapComponent extends BaseComponent<MapAttributes, Folder & { CharacterContainer: Folder }> implements OnStart {
         private currentMap!: MapInstance;
 
         private readonly entityLocations = new Map<Entity, { arenaType: ArenaType, arenaIndex: number }>();
 
         private readonly id = Identifier.GenerateComponentId(this, "id");
 
-        public GetArenaFromIndex(arenaType: ArenaType, arenaIndex: number): Arena | undefined
-        {
-            return this.currentMap.model.arena[ arenaType ].GetChildren().mapFiltered(({ Name: arenaName }) =>
-            {
+        public GetArenaFromIndex(arenaType: ArenaType, arenaIndex: number): Arena | undefined {
+            return this.currentMap.model.arena[arenaType].GetChildren().mapFiltered(({ Name: arenaName }) => {
                 if (tonumber(arenaIndex) === tonumber(arenaName))
 
-                    return this.currentMap.model.arena[ arenaType ][ arenaName as never ] as Arena;
+                    return this.currentMap.model.arena[arenaType][arenaName as never] as Arena;
 
-            })[ 0 ];
+            })[0];
         }
 
-        public MoveEntityToArena(arenaType: ArenaType, arenaIndex: number, entity: Entity)
-        {
+        public MoveEntityToArena(arenaType: ArenaType, arenaIndex: number, entity: Entity) {
             const arena = this.GetArenaFromIndex(arenaType, arenaIndex);
             assert(arena, `arena of index ${arenaIndex} does not exist.`);
 
             const arenaConfig = this.GetArenaConfig(arenaType, arenaIndex);
             const arenaOrigin = (arenaConfig.FindFirstChild("Origin") as CFrameValue | undefined)?.Value ?? arena.GetPivot();
+            const arenaAxis = (arenaConfig.FindFirstChild("Axis") as Vector3Value | undefined)?.Value ?? arena.GetPivot().RightVector.mul(-1);
 
             this.entityLocations.set(entity, { arenaType, arenaIndex })
-            if (arenaType === ArenaType[ "2D" ])
-            {
-                entity.GetPrimaryPart().PivotTo(arenaOrigin);
+            if (arenaType === ArenaType["2D"]) {
+                entity.GetPrimaryPart().PivotTo(CFrame.lookAt(arenaOrigin.Position, arenaOrigin.add(arenaAxis).Position).add(new Vector3(0, 2)));
 
                 return;
             }
@@ -208,41 +205,35 @@ namespace _Map {
             entity.GetPrimaryPart().PivotTo(
                 CFrame.lookAt(
                     teleportationLocation
-                        .mul(new Vector3(1,0,1))
-                        .add(new Vector3(0,arenaOrigin.Y, 0)), 
+                        .mul(new Vector3(1, 0, 1))
+                        .add(new Vector3(0, arenaOrigin.Y, 0)),
                     arenaOrigin.Position
                 ).add(new Vector3(0, 2))
             );
         }
 
-        public GetEntityLocation(entity: Entity): { arenaType: ArenaType, arenaIndex: number } | undefined
-        {
+        public GetEntityLocation(entity: Entity): { arenaType: ArenaType, arenaIndex: number } | undefined {
             print(this.entityLocations, entity, this.entityLocations.get(entity));
             return this.entityLocations.get(entity);
         }
 
-        public GetEntityLocations(): Map<Entity, { arenaType: ArenaType, arenaIndex: number }>
-        {
+        public GetEntityLocations(): Map<Entity, { arenaType: ArenaType, arenaIndex: number }> {
             return new Map([...this.entityLocations]);
         }
 
-        public GetArenaConfig(arenaType: ArenaType, arenaIndex: number): Arena<ArenaLike>["config"]
-        {
+        public GetArenaConfig(arenaType: ArenaType, arenaIndex: number): Arena<ArenaLike>["config"] {
             const arena = this.GetArenaFromIndex(arenaType, arenaIndex);
             assert(arena, `arena of index ${arenaIndex} in type ${arenaType} does not exist.`)
 
             return arena.config;
         }
 
-        onStart()
-        {
+        onStart() {
             this.currentMap = Model.LoadMap(this.attributes.MapId, this.instance);
             assert(this.currentMap, `map of ID ${this.attributes.MapId} does not exist.`);
 
-            this.currentMap.model.arena.GetChildren().forEach((arenaType) =>
-            {
-                (arenaType.GetChildren() as Model[]).forEach((arena) =>
-                {
+            this.currentMap.model.arena.GetChildren().forEach((arenaType) => {
+                (arenaType.GetChildren() as Model[]).forEach((arena) => {
                     const defaultValues = [
                         Make("CFrameValue", {
                             Name: "Origin",
@@ -251,7 +242,7 @@ namespace _Map {
 
                         Make("Vector3Value", {
                             Name: "Axis",
-                            Value: arena.GetPivot().LookVector
+                            Value: arena.GetPivot().RightVector.mul(-1)
                         }),
 
                         Make("NumberValue", {
@@ -260,19 +251,17 @@ namespace _Map {
                         })
                     ];
 
-                    if (arena.FindFirstChild("config"))
-                    {
+                    if (arena.FindFirstChild("config")) {
                         print("arena config found");
                         const arenaConfig = (arena as Arena).config;
-                        defaultValues.filter((defaultValue) =>
-                        {
+                        defaultValues.filter((defaultValue) => {
                             for (const child of arenaConfig.GetChildren())
-                            {
+
                                 if (child.Name === defaultValue.Name)
-                                
+
                                     return false;
-                                
-                            }
+
+
 
                             return true;
                         }).forEach((configElement) => configElement.Parent = arenaConfig)
@@ -284,6 +273,8 @@ namespace _Map {
                             Children: defaultValues
                         })
                     }
+
+                    Dependency<Components>().addComponent(new Instance("Folder", arena), ServerEntity.EntityContainer).instance.Name = `EntityContainer-${arena.Name}`;
                 })
             })
         }

@@ -63,14 +63,14 @@ export class QuarrelGame implements OnStart, OnInit
 
             player.CharacterAdded.Connect((character) =>
             {
-
                 if (!character.Parent)
                     character.AncestryChanged.Once(() => reparentCharacter(character));
                 else reparentCharacter(character);
 
-                Make("Animator", {
-                    Parent: character.WaitForChild("Humanoid"),
-                });
+                if (!character.FindFirstChild("Humanoid")?.FindFirstChild("Animator"))
+                    Make("Animator", {
+                        Parent: character.WaitForChild("Humanoid"),
+                    });
             });
         });
 
@@ -130,6 +130,11 @@ export class QuarrelGame implements OnStart, OnInit
     public GetParticipantFromId(id: string)
     {
         return this.participants.find((n) => n.id === id);
+    }
+
+    public GetAllParticipants()
+    {
+        return [... this.participants];
     }
 
     public GetParticipantFromCharacter(item: Instance | undefined): Participant | undefined

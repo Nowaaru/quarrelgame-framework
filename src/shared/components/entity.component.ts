@@ -10,7 +10,6 @@ import { Entity as EntityNamespace } from "shared/components/entity.component";
 import * as lib from "shared/util/lib";
 import Signal from "@rbxts/signal";
 
-
 export interface EntityAttributes extends StateAttributes
     {
         /**

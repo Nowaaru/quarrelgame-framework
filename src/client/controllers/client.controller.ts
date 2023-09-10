@@ -82,6 +82,7 @@ export class Client implements OnStart, OnInit, OnMouseButton
             });
         });
     }
+
     onMouseButton(mouseButton: MouseButton, inputMode: InputMode): void
     {
         if (inputMode !== InputMode.Down)

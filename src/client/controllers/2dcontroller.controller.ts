@@ -170,5 +170,10 @@ export class CharacterController2D extends CharacterController implements OnStar
     SetEnabled(enabled: boolean)
     {
         this.enabled = true;
+        if (enabled)
+
+            this.DisableRobloxMovement();
+
+        else this.EnableRobloxMovement();
     }
 }

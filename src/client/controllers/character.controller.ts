@@ -7,6 +7,7 @@ import { Controller, OnInit, OnRender, OnTick } from "@flamework/core";
 import { ContextActionService, Players, Workspace } from "@rbxts/services";
 import { OnRespawn } from "./client.controller";
 import Make from "@rbxts/make";
+import Object from "@rbxts/object-utils";
 
 export abstract class CharacterController implements OnGamepadInput, OnRespawn
 {
@@ -45,13 +46,12 @@ export abstract class CharacterController implements OnGamepadInput, OnRespawn
         return totalVector !== Vector3.zero ? totalVector.Unit: totalVector;
     }
 
-    private thisMovementAction?: BoundActionInfo
-    public DisableMovement()
+    private theseMovementActions?: BoundActionInfo[]
+    public DisableRobloxMovement()
     {
-        const movementAction = ContextActionService.GetBoundActionInfo("Movement");
-        this.thisMovementAction = movementAction;
-
-        assert(movementAction, "movement action not found");
+        this.theseMovementActions = [...ContextActionService.GetAllBoundActionInfo()].filter(([k, n]) => !!k.match("move(.*)Action")[0]).map(([k, n]) => n);
+        const actionPriority = this.theseMovementActions.map((n) => n.priorityLevel ?? Enum.ContextActionPriority.High).reduce((a, b) => math.max(a, b));
+        assert(this.theseMovementActions, "movement actions not found");
         ContextActionService.BindActionAtPriority(
             "NullifyMovement",
             (id, state, {KeyCode}) =>
@@ -59,32 +59,32 @@ export abstract class CharacterController implements OnGamepadInput, OnRespawn
                 return Enum.ContextActionResult.Sink;
             },
             false,
-            movementAction.priorityLevel + 1,
-            ...movementAction.inputTypes.filter((n) => !typeIs(n, "string")) as Array<Enum.KeyCode | Enum.PlayerActions> | Array<Enum.UserInputType>
+            actionPriority + 1,
+            ...this.theseMovementActions.reduce((a, b) => [...a, ...b.inputTypes] as never, []),
         );
     }
 
-    public EnableMovement()
+    public EnableRobloxMovement()
     {
         ContextActionService.UnbindAction("NullifyMovement");
-        delete this.thisMovementAction;
+        delete this.theseMovementActions;
     }
 
-    public ToggleMovement()
+    public ToggleRobloxMovement()
     {
-        if (this.thisMovementAction)
+        if (this.theseMovementActions)
 
-            this.EnableMovement();
+            this.EnableRobloxMovement();
 
-        else this.DisableMovement();
+        else this.DisableRobloxMovement();
     }
 
     onRespawn(character: Model): void
     {
         this.character = character;
-        if (this.thisMovementAction)
+        if (this.theseMovementActions)
 
-            this.EnableMovement();
+            this.EnableRobloxMovement();
     }
 
     abstract onGamepadInput(buttonPressed: GamepadButtons, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult);

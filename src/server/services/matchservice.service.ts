@@ -303,16 +303,28 @@ export class Match
             && [...this.participants].find((n) => n === player || n.instance === player) !== undefined; 
     }
 
+    /**
+     * Get the host that first created the match.
+     * @returns The original host of the match.
+     */
     public GetOriginalHost()
     {
         return this.originalMatchHost;
     }
 
+    /**
+     * Get the host of the match.
+     * @returns The current host of the match.
+     */
     public GetHost()
     {
         return this.matchHost;
     }
     
+    /**
+     * Get the match settings.
+     * @returns The match settings.
+     */
     public GetMatchSettings()
     {
         return { ...this.matchSettings };
@@ -330,6 +342,10 @@ export class Match
         this.matchSettings = matchSettings;
     }
 
+    /**
+     * Requests all participants to load the map.
+     * @returns A promise that resolves when all participants have loaded the map.
+     */
     private RequestParticipantsLoadMap(): Promise<Participant["id"][]>
     {
         return Promise.all< (Promise<Participant["id"]>[]) >([...this.participants].map((participant) =>
@@ -346,6 +362,10 @@ export class Match
         }));
     }
 
+    /**
+     * Start a new match.
+     * @param matchHost The participant that is hosting the match.
+     */
     public StartMatch(matchHost: Participant)
     {
         this.matchPhase = MatchPhase.Starting;
@@ -415,18 +435,30 @@ export class Match
         return mapComponent;
     }
 
+    /**
+     * Retrieve the participants in the match.
+     * @returns The participants in the match.
+     */
     public GetParticipants(): Set<Participant>
     {
         return new Set([... this.participants])
     }
 
+    /**
+     * 
+     * @param participant The participant to respawn.
+     * @param arenaType The type of arena to respawn the participant in.
+     * @param arenaIndex The index of the arena to respawn the participant in.
+     * @param combatMode The combat mode to set the participant to.
+     */
     public RespawnParticipant(participant: Participant, arenaType: MapNamespace.ArenaType = MapNamespace.ArenaType["2D"], arenaIndex = 0, combatMode: Client.CombatMode = Client.CombatMode.TwoDimensional)
     {
         const map = this.GetMap();
-        const arena = map.GetArenaFromIndex(arenaType, arenaIndex)!;
-
         participant.LoadCombatant({ characterId: participant.attributes.SelectedCharacter, matchId: this.matchId }).then((combatant) =>
         {
+            print("roblox is hot dogwater so we're waiting 0.5s");
+            task.wait(2);
+
             map.MoveEntityToArena(
                 arenaType,
                 arenaIndex,
@@ -436,9 +468,7 @@ export class Match
             ServerEvents.MatchParticipantRespawned.fire(participant.instance, combatant.instance);
             ServerEvents.SetCombatMode.fire(participant.instance, combatMode);
         });
-
     }
-
 
     public GetMatchPhase()
     {

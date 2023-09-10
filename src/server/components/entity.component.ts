@@ -28,6 +28,38 @@ export namespace Entity {
 
     export import Entity = entityExport.Entity;
 
+    @Component({})
+    export class EntityContainer extends BaseComponent<{}, Folder> implements OnStart {
+        onStart(): void {
+            
+        }
+
+        public addEntity<T extends Entity = Entity>(entity: T)
+        {
+            entity.instance.Parent = this.instance;
+        }
+
+        public removeEntity<T extends Entity = Entity>(entity: T)
+        {
+            entity.instance.Parent = undefined;
+        }
+
+        public getEntities<T extends Entity = Entity>()
+        {
+            return this.instance.GetChildren().map((instance) => Dependency<Components>().getComponent<T>(instance)!);
+        }
+
+        public getEntity<T extends Entity = Entity>(entityId: string)
+        {
+            return this.getEntities<T>().find((entity) => entity.entityId === entityId);
+        }
+
+        public getEntityByInstance<T extends Entity = Entity>(instance: Instance)
+        {
+            return this.getEntities<T>().find((entity) => entity.instance === instance);
+        }
+    }
+
     export import EntityAttributes = entityExport.EntityAttributes;
     export interface CombatantAttributes extends EntityAttributes {
         /**

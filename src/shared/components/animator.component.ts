@@ -15,7 +15,7 @@ export namespace Animator {
     }
 
     @Component({})
-    export class Animator<I extends AnimatorProps = AnimatorProps> extends BaseComponent<I, Model & { Humanoid: Humanoid & { Parent: Model, Animator: Instances["Animator"] & { Parent: Humanoid } }}>
+    export class Animator<I extends AnimatorProps = AnimatorProps> extends BaseComponent<I, Model & { Humanoid: Humanoid & { Animator: Instances["Animator"]  }}>
     {
         protected loadedAnimations: Animation.Animation[] = [];
 

@@ -56,7 +56,7 @@ export class TestService implements OnStart, OnInit
         this.testParticipant.then((participant) =>        
         {
             const match = matchService.CreateMatch({
-                Participants: [ participant ],
+                Participants: quarrelGame.GetAllParticipants(),
                 Settings: {
                     Map: "happyhome",
                     ArenaType: ArenaTypeFlags.ALLOW_2D
