@@ -59,7 +59,7 @@ namespace _Map
         readonly config?: ArenaConfiguration;
     }
 
-    interface ArenaConfiguration
+    export interface ArenaConfiguration
     {
         /**
          * The location that the battle revolves around
@@ -94,6 +94,21 @@ namespace _Map
          * 📝 Defaults to the Arena model's LookVector.
          */
         Axis: Vector3;
+
+        /**
+         * The maximum size of the arena.
+         * If the arena is a 3D arena, then
+         * this will be a number representing
+         * the radius of the arena.
+         *
+         * If the arena is a 2D arena, then
+         * this will be a Vector2 representing the size
+         * of the arena in the X and Z axes.
+         *
+         * 📝 Defaults to `100` if the arena is a 3D arena.
+         * 📝 Defaults to `Vector2.new(100, 100)` if the arena is a 2D arena.
+         */
+        Size: number | Vector2;
     }
 
     /**
@@ -112,6 +127,7 @@ namespace _Map
         & {
             [K in keyof CR]?: CR[K] extends CFrame ? CFrameValue
                 : CR[K] extends Vector3 ? Vector3Value
+                : CR[K] extends Vector2 ? Vector3Value
                 : CR[K] extends number ? NumberValue
                 : CR[K] extends string ? StringValue
                 : CR[K] extends boolean ? BoolValue
@@ -199,17 +215,17 @@ namespace _Map
             arenaIndex: number,
         ): Arena | undefined
         {
-            return this.currentMap.model.arena[arenaType]
+            return this.currentMap.model.arena[ arenaType ]
                 .GetChildren()
                 .mapFiltered(({ Name: arenaName }) =>
                 {
                     if (tonumber(arenaIndex) === tonumber(arenaName))
                     {
-                        return this.currentMap.model.arena[arenaType][
+                        return this.currentMap.model.arena[ arenaType ][
                             arenaName as never
                         ] as Arena;
                     }
-                })[0];
+                })[ 0 ];
         }
 
         public MoveEntityToArena(
@@ -229,7 +245,7 @@ namespace _Map
                 ?.Value ?? arena.GetPivot().RightVector.mul(-1);
 
             this.entityLocations.set(entity, { arenaType, arenaIndex });
-            if (arenaType === ArenaType["2D"])
+            if (arenaType === ArenaType[ "2D" ])
             {
                 entity
                     .GetPrimaryPart()
@@ -291,7 +307,7 @@ namespace _Map
             { arenaType: ArenaType; arenaIndex: number; }
         >
         {
-            return new Map([...this.entityLocations]);
+            return new Map([ ...this.entityLocations ]);
         }
 
         public GetArenaConfig(
@@ -335,6 +351,16 @@ namespace _Map
                             Name: "CombatantSpacing",
                             Value: 5,
                         }),
+
+                        arena.Parent!.Name.match("2")[ 0 ]
+                            ? Make("Vector3Value", {
+                                Name: "Size",
+                                Value: new Vector3(100, 100, 0),
+                            })
+                            : Make("NumberValue", {
+                                Name: "Size",
+                                Value: 100,
+                            }),
                     ];
 
                     if (arena.FindFirstChild("config"))
@@ -347,9 +373,7 @@ namespace _Map
                                 for (const child of arenaConfig.GetChildren())
                                 {
                                     if (child.Name === defaultValue.Name)
-                                    {
                                         return false;
-                                    }
                                 }
 
                                 return true;
@@ -358,7 +382,7 @@ namespace _Map
                     }
                     else
                     {
-                        print("arena config not found");
+                        warn("arena config not found");
                         Make("Configuration", {
                             Name: "config",
                             Parent: arena,
