@@ -14,7 +14,7 @@ import { MotionInput } from "./motioninput.controller";
 
 import Make from "@rbxts/make";
 import type _Map from "server/components/map.component";
-import { MatchController } from "./match.controller";
+import { MatchController, OnArenaChange } from "./match.controller";
 
 interface ChangedSignals
 {
@@ -22,9 +22,11 @@ interface ChangedSignals
 }
 
 @Controller({})
-export class CharacterController2D extends CharacterController implements OnStart, OnRespawn, OnRender
+export class CharacterController2D extends CharacterController implements OnStart, OnRespawn, OnRender, OnArenaChange
 {
     private axis?: Vector3;
+
+    private _arena?: _Map.Arena;
 
     constructor(
         private readonly combatController: CombatController,
@@ -32,6 +34,22 @@ export class CharacterController2D extends CharacterController implements OnStar
     )
     {
         super(Dependency<MatchController>(), Dependency<Keyboard>(), Dependency<Mouse>(), Dependency<Gamepad>());
+    }
+
+    onArenaChanged(
+        _: string,
+        arenaInstance: Model & {
+            config: Required<_Map.ConfigurationToValue<_Map.ArenaConfiguration, Required<_Map.ArenaConfiguration>>>;
+            script?: (Actor & { [key: string]: ModuleScript; }) | undefined;
+            model: Folder;
+        },
+    ): void
+    {
+        // TODO: use attachment movers like AlignPosition to keep the player inside of the bounds of the
+        // of the arena instead of just disabling movement because people can jump and end up using the momentum
+        // to get out of the arena
+
+        this._arena = arenaInstance;
     }
 
     private lastFrameNormal: Vector3 = Vector3.zero;
@@ -113,9 +131,9 @@ export class CharacterController2D extends CharacterController implements OnStar
                 }
             }
             else if (currentState === EntityState.Crouch)
-
+            {
                 ClientFunctions.Crouch(EntityState.Idle);
-
+            }
 
             if (playerHumanoid.FloorMaterial === Enum.Material.Air && playerHumanoid.GetAttribute("JumpDirection"))
                 playerHumanoid.Move(playerHumanoid.GetAttribute("JumpDirection") as Vector3);
