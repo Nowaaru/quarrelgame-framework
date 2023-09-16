@@ -1,21 +1,21 @@
 {
-	"files.eol": "\n",
-	"[typescript]": {
-		"editor.defaultFormatter": "trunk.io",
-		"editor.formatOnSave": true
-	},
-	"[typescriptreact]": {
-		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
-		"editor.formatOnSave": true
-	},
-	"eslint.run": "onType",
-	"eslint.format.enable": true,
-	"typescript.tsdk": "node_modules/typescript/lib",
-	"Lua.diagnostics.globals": [
-		"Instance",
-		"game"
-	],
-	"Lua.diagnostics.disable": [
-		"undefined-global"
-	]
+  "files.eol": "\n",
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true
+  },
+  "eslint.run": "onType",
+  "eslint.format.enable": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "Lua.diagnostics.globals": ["Instance", "game"],
+  "Lua.diagnostics.disable": [
+    "undefined-global"
+  ],
+  "trunk.trunkGrayOutNonBlockingIssues": false,
+  "trunk.numJobs": 3,
+  "editor.defaultFormatter": "trunk.io"
 }
