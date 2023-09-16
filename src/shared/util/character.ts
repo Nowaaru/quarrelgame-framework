@@ -1,60 +1,63 @@
-import type { SchedulerService } from "server/services/scheduler.service";
-import type { Animator } from "shared/components/animator.component";
 import type { Entity } from "server/components/entity.component";
 import type { CombatService } from "server/services/combat.service";
+import type { SchedulerService } from "server/services/scheduler.service";
+import type { Animator } from "shared/components/animator.component";
 import { Animation } from "shared/util/animation";
-import { EntityState, HitData, HitResult, HitboxRegion } from "shared/util/lib";
+import { EntityState, HitboxRegion, HitData, HitResult } from "shared/util/lib";
 
-import { Input, Motion, MotionInput } from "./input";
 import { Hitbox } from "./hitbox";
+import { Input, Motion, MotionInput } from "./input";
 
 import { Dependency } from "@flamework/core";
-import { Identifier } from "./identifier";
-import { EntityAttributes } from "shared/components/entity.component";
-import { HttpService, ReplicatedStorage, RunService } from "@rbxts/services";
 import { CharacterRigR6 as CharacterRigR6_ } from "@rbxts/promise-character";
-
-
+import { HttpService, ReplicatedStorage, RunService } from "@rbxts/services";
+import { EntityAttributes } from "shared/components/entity.component";
+import { Identifier } from "./identifier";
 
 type SkillName = string;
 
-export namespace Character {
+export namespace Character
+{
     export const MaximumEaseOfUse = 5;
 
     type EaseOfUse = 1 | 2 | 3 | 4 | 5;
 
-    export type CharacterRig = CharacterRigR6_ & { PrimaryPart: BasePart, Humanoid: CharacterRigR6_["Humanoid"] & { Animator: Animator}}
+    export type CharacterRig = CharacterRigR6_ & { PrimaryPart: BasePart; Humanoid: CharacterRigR6_["Humanoid"] & { Animator: Animator; }; };
 
-    export enum CharacterRigType {
-        Raw,
-        HumanoidDescription
-    }
-
-    interface CharacterModel {
-        jane: CharacterRig,
-        roblox: CharacterRig,
-        shedletsky: CharacterRig,
-        dusek: CharacterRig,
-        brighteyes: CharacterRig,
-        death: CharacterRig,
-    }
-
-    export const CharacterModel: CharacterModel = table.freeze(setmetatable({}, {__index: (_, index) =>
+    export enum CharacterRigType
     {
-        assert(typeIs(index, "string"), "index is not a string.");
+        Raw,
+        HumanoidDescription,
+    }
 
-        const quarrelGame = ReplicatedStorage.WaitForChild("QuarrelGame") as Folder;
-        const quarrelAssets = quarrelGame.WaitForChild("QuarrelGame/assets") as Folder;
-        const quarrelModels = quarrelAssets.WaitForChild("model") as Folder;
-        const characterModels = quarrelModels.WaitForChild("character") as Folder;
+    interface CharacterModel
+    {
+        jane: CharacterRig;
+        roblox: CharacterRig;
+        shedletsky: CharacterRig;
+        dusek: CharacterRig;
+        brighteyes: CharacterRig;
+        death: CharacterRig;
+    }
 
-        assert(characterModels.FindFirstChild(index), `character model of name ${index} does not exist.`);
+    export const CharacterModel: CharacterModel = table.freeze(setmetatable({}, {
+        __index: (_, index) =>
+        {
+            assert(typeIs(index, "string"), "index is not a string.");
 
-        return characterModels[ index as never ] as unknown as CharacterRig;
-    },})) as CharacterModel;
+            const quarrelGame = ReplicatedStorage.WaitForChild("QuarrelGame") as Folder;
+            const quarrelAssets = quarrelGame.WaitForChild("QuarrelGame/assets") as Folder;
+            const quarrelModels = quarrelAssets.WaitForChild("model") as Folder;
+            const characterModels = quarrelModels.WaitForChild("character") as Folder;
 
+            assert(characterModels.FindFirstChild(index), `character model of name ${index} does not exist.`);
 
-    export enum Archetype {
+            return characterModels[index as never] as unknown as CharacterRig;
+        },
+    })) as CharacterModel;
+
+    export enum Archetype
+    {
         WellRounded = "Well-Rounded",
         Technical = "Technical",
         Rushdown = "Rushdown",
@@ -64,16 +67,17 @@ export namespace Character {
 
     export type Animations = {
         [K in EntityState]?: Animation.AnimationData;
-    }
+    };
 
-    interface CharacterProps {
+    interface CharacterProps
+    {
         name: string;
 
         description: string;
 
         easeOfUse: EaseOfUse;
 
-        characterModel: Model & { PrimaryPart: BasePart, Humanoid: Humanoid & { Animator?: Animator } };
+        characterModel: Model & { PrimaryPart: BasePart; Humanoid: Humanoid & { Animator?: Animator; }; };
 
         rigType: CharacterRigType;
 
@@ -89,15 +93,17 @@ export namespace Character {
 
         attacks: {
             [k in Input]?: Skill.Skill | (() => Skill.Skill);
-        },
+        };
     }
 
-    interface CharacterProps2D extends CharacterProps {
-        character3D?: CharacterProps3D,
+    interface CharacterProps2D extends CharacterProps
+    {
+        character3D?: CharacterProps3D;
     }
 
-    interface CharacterProps3D extends CharacterProps {
-        character2D?: CharacterBuilder2D
+    interface CharacterProps3D extends CharacterProps
+    {
+        character2D?: CharacterBuilder2D;
     }
 
     export class Character
@@ -117,7 +123,7 @@ export namespace Character {
 
         readonly Subheader?: string;
 
-        readonly Model: Model & { PrimaryPart: BasePart, Humanoid: Humanoid & { Animator?: Animator } };
+        readonly Model: Model & { PrimaryPart: BasePart; Humanoid: Humanoid & { Animator?: Animator; }; };
 
         readonly Skills: ReadonlySet<Skill.Skill>;
 
@@ -140,7 +146,7 @@ export namespace Character {
             characterHeader,
             characterSubheader,
             rigType,
-            characterArchetype: characterArchetype
+            characterArchetype: characterArchetype,
         }: CharacterProps)
         {
             this.Name = name;
@@ -163,17 +169,17 @@ export namespace Character {
 
         protected description?: string;
 
-        protected easeOfUse?: EaseOfUse
+        protected easeOfUse?: EaseOfUse;
 
         protected characterModel?: CharacterProps["characterModel"];
 
         protected skills: Set<Skill.Skill> = new Set();
 
-        protected animations: Animations = {}
+        protected animations: Animations = {};
 
         protected rigType: CharacterRigType = CharacterRigType.HumanoidDescription;
 
-        protected attacks: CharacterProps["attacks"] = {}
+        protected attacks: CharacterProps["attacks"] = {};
 
         protected characterArchetype: Archetype = Archetype.WellRounded;
 
@@ -233,14 +239,14 @@ export namespace Character {
 
         public SetAttack(animationId: keyof typeof this.attacks, skill: Skill.Skill)
         {
-            this.attacks[ animationId ] = skill;
+            this.attacks[animationId] = skill;
 
             return this;
         }
 
         public SetAnimation(animationId: keyof typeof this.animations, animationData: Animation.AnimationData)
         {
-            this.animations[ animationId ] = animationData;
+            this.animations[animationId] = animationData;
 
             return this;
         }
@@ -248,7 +254,8 @@ export namespace Character {
         public Compile(): CharacterProps
         {
             // eslint-disable-next-line max-len
-            const { name, description, easeOfUse, characterModel, skills, rigType, attacks, animations, characterArchetype, characterHeader, characterSubheader } = this;
+            const { name, description, easeOfUse, characterModel, skills, rigType, attacks, animations, characterArchetype, characterHeader, characterSubheader } =
+                this;
             assert(characterModel, "Builder incomplete! Character model is unset.");
             assert(name, "Builder incomplete! Name is unset.");
             assert(description, "Builder incomplete! Description is unset.");
@@ -265,7 +272,7 @@ export namespace Character {
                 characterArchetype,
                 characterHeader,
                 characterSubheader,
-                rigType
+                rigType,
             };
         }
 
@@ -277,9 +284,9 @@ export namespace Character {
 
     export class CharacterBuilder2D extends CharacterBuilder
     {
-        private character3D?: Character & { Character2D: Character }
+        private character3D?: Character & { Character2D: Character; };
 
-        public Set3DCharacter(character: Character & { Character2D: Character })
+        public Set3DCharacter(character: Character & { Character2D: Character; })
         {
             this.character3D = character;
         }
@@ -287,18 +294,19 @@ export namespace Character {
 
     export class CharacterBuilder3D extends CharacterBuilder
     {
-        private character2D?: Character & { Character2D: Character }
+        private character2D?: Character & { Character2D: Character; };
 
-        public Set2DCharacter(character: Character & { Character2D: Character })
+        public Set2DCharacter(character: Character & { Character2D: Character; })
         {
             this.character2D = character;
         }
     }
 }
 
-export namespace Skill {
-
-    interface FrameDataClassProps {
+export namespace Skill
+{
+    interface FrameDataClassProps
+    {
         Startup: number;
 
         Active: number;
@@ -316,7 +324,7 @@ export namespace Skill {
 
     class _FrameData
     {
-        protected AttackSetup<I extends Entity.CombatantAttributes>({humanoid}: Entity.Combatant<I>)
+        protected AttackSetup<I extends Entity.CombatantAttributes>({ humanoid }: Entity.Combatant<I>)
         {
             humanoid.Move(Vector3.zero, true);
         }
@@ -327,13 +335,13 @@ export namespace Skill {
         /**
          * How many frames it takes for
          * the attack to become active.
-        */
+         */
         public readonly StartupFrames;
 
         /**
          * How many frames the hitbox
          * will be enabled for.
-        */
+         */
         public readonly ActiveFrames;
 
         /**
@@ -342,7 +350,7 @@ export namespace Skill {
          * the active frames.
          *
          * Is subtracted by the {@link FrameData.Contact Contact Frames}.
-        */
+         */
         public readonly RecoveryFrames;
 
         /**
@@ -350,7 +358,7 @@ export namespace Skill {
          * that gets hit by this move
          * while blocking will be put
          * in a block-stun state.
-        */
+         */
         public readonly BlockStunFrames;
 
         /**
@@ -360,20 +368,20 @@ export namespace Skill {
          * blocking.
          *
          * Subtracts from the {@link FrameData.RecoveryFrames Recovery Frames}.
-        */
+         */
         public readonly Contact;
 
         /**
          * The Animation of the Frame Data.
-        */
+         */
         public readonly Animation;
 
         /**
          * The Hitbox of the Frame Data.
-        */
+         */
         public readonly Hitbox;
 
-        constructor({Startup, Recovery, BlockStun, Active, Animation, Hitbox, Contact}: FrameDataClassProps)
+        constructor({ Startup, Recovery, BlockStun, Active, Animation, Hitbox, Contact }: FrameDataClassProps)
         {
             super();
 
@@ -389,7 +397,7 @@ export namespace Skill {
         public async Execute<
             I extends Entity.CombatantAttributes,
             K extends Entity.Combatant<I>,
-        >(entity: K, skill: Skill.Skill): Promise<HitData<Entity.EntityAttributes,I>>
+        >(entity: K, skill: Skill.Skill): Promise<HitData<Entity.EntityAttributes, I>>
         {
             const { animator } = entity;
 
@@ -407,7 +415,9 @@ export namespace Skill {
                     .find((t) => t.Animation?.AnimationId === cachedPreviousSkill.FrameData.Animation.assetId);
 
                 if (lastSkillAnimation)
+                {
                     lastSkillAnimation.Stop(0);
+                }
             }
 
             entity.attributes.PreviousSkill = skill.Id;
@@ -424,8 +434,9 @@ export namespace Skill {
                     {
                         entity.SetState(EntityState.Startup);
                         for (let i = 0; i < this.StartupFrames; i++)
-
+                        {
                             await schedulerService.WaitForNextTick();
+                        }
                     }
 
                     let attackDidLand = HitResult.Whiffed;
@@ -439,7 +450,7 @@ export namespace Skill {
                             Attacked,
 
                             AttackerIsBlocking,
-                            Region
+                            Region,
                         }) =>
                         {
                             const setLandState = (result: HitResult.Contact | HitResult.Counter | HitResult.Whiffed): HitResult =>
@@ -447,14 +458,16 @@ export namespace Skill {
                                 if (result === HitResult.Counter)
                                 {
                                     if (!skill.CanCounter)
-
+                                    {
                                         return HitResult.Contact;
+                                    }
                                 }
                                 else if (result === HitResult.Contact)
                                 {
                                     if (Attacked.CanCounter())
-
+                                    {
                                         return setLandState(HitResult.Counter);
+                                    }
                                 }
 
                                 return result;
@@ -500,20 +513,23 @@ export namespace Skill {
                             }
 
                             if (Attacker.IsState(EntityState.Crouch))
-
+                            {
                                 Attacker.SetState(EntityState.HitstunCrouching);
-
+                            }
                             else
-
+                            {
                                 Attacker.SetState(EntityState.Hitstun);
-
+                            }
 
                             setLandState(HitResult.Contact);
                             if (attackDidLand === HitResult.Counter)
-
+                            {
                                 Attacked.Counter(Attacker);
-
-                            else print("no Attacked");
+                            }
+                            else
+                            {
+                                print("no Attacked");
+                            }
 
                             return res({
                                 hitResult: attackDidLand,
@@ -523,8 +539,9 @@ export namespace Skill {
                         });
 
                         for (let i = 0; i < this.ActiveFrames; i++)
-
+                        {
                             await schedulerService.WaitForNextTick();
+                        }
 
                         activeHitbox.Stop();
                     }
@@ -536,29 +553,36 @@ export namespace Skill {
                         {
                             let addedFrames = 0;
                             if (attackDidLand === HitResult.Blocked)
-
+                            {
                                 addedFrames += this.BlockStunFrames;
+                            }
 
                             res({
                                 hitResult: attackDidLand,
                                 attacker: entity,
                             });
                         }
-                        else print("ouch, you whiffed...");
+                        else
+                        {
+                            print("ouch, you whiffed...");
+                        }
 
                         for (let i = 0; i < this.RecoveryFrames; i++)
-
+                        {
                             await schedulerService.WaitForNextTick();
+                        }
                     }
 
                     entity.SetState(EntityState.Idle);
                     if (animatorAnimation.IsPlaying())
                     {
                         return Promise.fromEvent(animatorAnimation.Ended)
-                            .then(() => res({
-                                attacker: entity,
-                                hitResult: attackDidLand
-                            }));
+                            .then(() =>
+                                res({
+                                    attacker: entity,
+                                    hitResult: attackDidLand,
+                                })
+                            );
                     }
 
                     return res({
@@ -666,7 +690,6 @@ export namespace Skill {
         }
 
         /**
-         *
          * Turn this FrameBuilder instance into a readonly FrameData instance.
          * @returns {FrameData} The new readonly FrameData instance.
          */
@@ -696,26 +719,27 @@ export namespace Skill {
         return allCachedSkills.get(skillId);
     }
 
-    interface SkillClassProps {
-        name: string,
+    interface SkillClassProps
+    {
+        name: string;
 
-        description: string,
+        description: string;
 
-        frameData: FrameData,
+        frameData: FrameData;
 
-        groundedType: SkillGroundedType,
+        groundedType: SkillGroundedType;
 
-        motionInput: MotionInput,
+        motionInput: MotionInput;
 
-        isReversal: boolean,
+        isReversal: boolean;
 
-        canCounterHit: boolean,
+        canCounterHit: boolean;
 
-        gaugeRequired: number,
+        gaugeRequired: number;
 
-        gatlings: Set<(Skill.Skill | SkillName)>,
+        gatlings: Set<(Skill.Skill | SkillName)>;
 
-        skillType: SkillType
+        skillType: SkillType;
     }
 
     /**
@@ -724,7 +748,7 @@ export namespace Skill {
     export class Skill
     {
         constructor(
-            { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired, skillType}: SkillClassProps
+            { name, description, frameData, groundedType, motionInput, isReversal, canCounterHit, gaugeRequired, skillType }: SkillClassProps,
         )
         {
             this.Name = name;
@@ -764,71 +788,74 @@ export namespace Skill {
          * The frame data of the skill.
          * Determines how fast or slow the attacker
          * or defender can act out of an attack.
-        */
-       public readonly FrameData: FrameData;
+         */
+        public readonly FrameData: FrameData;
 
-       /**
-        * The motion input of the skill.
-       */
-       public readonly MotionInput: MotionInput
+        /**
+         * The motion input of the skill.
+         */
+        public readonly MotionInput: MotionInput;
 
-       /**
-        * Whether the skill is invulnerable
-        * after frame 1. Disabling this on super moves
-        * can allow for vulnerable supers.
-       */
-       public readonly IsReversal: boolean;
+        /**
+         * Whether the skill is invulnerable
+         * after frame 1. Disabling this on super moves
+         * can allow for vulnerable supers.
+         */
+        public readonly IsReversal: boolean;
 
-       /**
-        * Whether this move can put an Entity
-        * in the Counter state under the
-        * right conditions.
-       */
-       public readonly CanCounter: boolean;
+        /**
+         * Whether this move can put an Entity
+         * in the Counter state under the
+         * right conditions.
+         */
+        public readonly CanCounter: boolean;
 
-       /**
-        * An Enum that determines whether the skill
-        * can only be done {@link SkillGroundedType.Ground grounded}, {@link SkillGroundedType.AirOnly in the air only},
-        * {@link SkillGroundedType.AirOk or both in the air and on the ground}.
-        */
-       public readonly GroundedType: SkillGroundedType;
+        /**
+         * An Enum that determines whether the skill
+         * can only be done {@link SkillGroundedType.Ground grounded}, {@link SkillGroundedType.AirOnly in the air only},
+         * {@link SkillGroundedType.AirOk or both in the air and on the ground}.
+         */
+        public readonly GroundedType: SkillGroundedType;
 
-       /**
-        * How much gauge this skill requires to activate.
-       */
-       public readonly GaugeRequired: number;
+        /**
+         * How much gauge this skill requires to activate.
+         */
+        public readonly GaugeRequired: number;
 
-       /**
-        * The Skills that tkis Skill can cancel
-        * into.
-       */
-       public readonly GatlingsInto = new Set<SkillId>();
-       /**
+        /**
+         * The Skills that tkis Skill can cancel
+         * into.
+         */
+        public readonly GatlingsInto = new Set<SkillId>();
+        /**
          * Set the Skills that this Skill can
          * cancel into.
          */
-       public AddGatling<NormalSkill extends Skill.Skill>(...skills: NormalSkill[])
-       {
-           assert(skills.every(({Type}) => Type === SkillType.Normal), "skill is not a Normal skill");
+        public AddGatling<NormalSkill extends Skill.Skill>(...skills: NormalSkill[])
+        {
+            assert(skills.every(({ Type }) => Type === SkillType.Normal), "skill is not a Normal skill");
 
-           skills.forEach((skill) =>
-           {
-               if (!this.GatlingsInto.has(skill.Id))
+            skills.forEach((skill) =>
+            {
+                if (!this.GatlingsInto.has(skill.Id))
+                {
+                    this.GatlingsInto.add(skill.Id);
+                }
+            });
 
-                   this.GatlingsInto.add(skill.Id);
-           });
-
-           return this;
-       }
+            return this;
+        }
     }
 
-    export enum SkillGroundedType {
+    export enum SkillGroundedType
+    {
         Ground,
         AirOk,
         AirOnly,
     }
 
-    export enum SkillType {
+    export enum SkillType
+    {
         Normal,
         CommandNormal,
 
@@ -886,19 +913,22 @@ export namespace Skill {
          * Set the frame data of the skill using a {@link FrameData} instance.
          * @param frameData A {@link FrameData} instance.
          */
-        public SetFrameData(frameData: FrameData): this
+        public SetFrameData(frameData: FrameData): this;
         /**
          * Set the frame data of the skill using a {@link FrameDataBuilder FrameDataBuilder} instance.
          * @param frameData A {@link FrameDataBuilder} instance.
          */
-        public SetFrameData(frameData: FrameDataBuilder): this
+        public SetFrameData(frameData: FrameDataBuilder): this;
         public SetFrameData(frameData: FrameData | FrameDataBuilder)
         {
             if ("SetStartup" in frameData)
-
+            {
                 this.frameData = frameData.Construct();
-
-            else this.frameData = frameData;
+            }
+            else
+            {
+                this.frameData = frameData;
+            }
 
             return this;
         }
@@ -922,8 +952,9 @@ export namespace Skill {
         public SetFollowUp(input: Input, skill: Skill.Skill)
         {
             if (this.followUps.has(input))
-
+            {
                 warn(`Skill ${this.name} already has a follow up input (${input}). Overwriting.`);
+            }
 
             this.followUps.set(input, skill);
 

@@ -12,7 +12,7 @@ export abstract class CameraController implements OnRespawn
 
     protected readonly cameraUtils = CameraUtils() as CameraModule.CameraUtils;
 
-    protected camera: Camera & { CameraSubject: Humanoid } = Workspace.CurrentCamera as Camera & { CameraSubject: Humanoid };
+    protected camera: Camera & { CameraSubject: Humanoid; } = Workspace.CurrentCamera as Camera & { CameraSubject: Humanoid; };
 
     protected cameraEnabled = false;
 
@@ -24,7 +24,7 @@ export abstract class CameraController implements OnRespawn
 
     public bindToCamera(targetCamera: Camera)
     {
-        this.camera = targetCamera as Camera & { CameraSubject: Humanoid };
+        this.camera = targetCamera as Camera & { CameraSubject: Humanoid; };
         this.camera.CameraType = Enum.CameraType.Scriptable;
 
         Workspace.CurrentCamera = this.camera;
@@ -46,5 +46,5 @@ export abstract class CameraController implements OnRespawn
         return this.SetCameraEnabled(this.cameraEnabled = !this.cameraEnabled);
     }
 
-    public abstract SetCameraEnabled(enabled: boolean): Promise<void>
+    public abstract SetCameraEnabled(enabled: boolean): Promise<void>;
 }

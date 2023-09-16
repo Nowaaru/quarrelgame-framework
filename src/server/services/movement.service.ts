@@ -1,8 +1,8 @@
-import { Service, OnStart, OnInit, Dependency } from "@flamework/core";
-import { ServerFunctions } from "shared/network";
-import { QuarrelGame } from "./quarrelgame.service";
 import { Components } from "@flamework/components";
+import { Dependency, OnInit, OnStart, Service } from "@flamework/core";
+import { ServerFunctions } from "shared/network";
 import { EntityState } from "shared/util/lib";
+import { QuarrelGame } from "./quarrelgame.service";
 
 @Service({})
 export class MovementService implements OnStart, OnInit

@@ -1,9 +1,13 @@
 import { Workspace } from "@rbxts/services";
-import { quarrelMaps } from "./lib";
 import type Map from "server/components/map.component";
+import { quarrelMaps } from "./lib";
 
-export namespace Model {
-    export function LoadModel(targetModel: Model | Folder, parent: Instance = Workspace): typeof targetModel
+export namespace Model
+{
+    export function LoadModel(
+        targetModel: Model | Folder,
+        parent: Instance = Workspace,
+    ): typeof targetModel
     {
         const newModel = targetModel.Clone();
         newModel.Parent = parent;
@@ -15,10 +19,12 @@ export namespace Model {
     {
         const mapModel = quarrelMaps.FindFirstChild(mapId) as Map.MapInstance;
         for (const descendant of mapModel.GetDescendants())
-        
+        {
             if (descendant.IsA("SpawnLocation"))
-
+            {
                 descendant.Enabled = false;
+            }
+        }
 
         assert(mapModel, `map ${mapId} does not exist.`);
         return LoadModel(mapModel, parent) as Map.MapInstance;

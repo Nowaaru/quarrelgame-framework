@@ -8,8 +8,9 @@ export = (registry: Registry) =>
         if (commandContext.Group !== "Debug")
         {
             if (RunService.IsStudio())
-
+            {
                 return "You are not allowed to execute debug commands in production releases.";
+            }
         }
     });
-}
+};

@@ -1,18 +1,20 @@
+import { BaseComponent, Component } from "@flamework/components";
 import { OnStart } from "@flamework/core";
-import { Component, BaseComponent } from "@flamework/components";
 import { EntityState } from "shared/util/lib";
 
 import Signal from "@rbxts/signal";
 
-interface StateGuard {
-
+interface StateGuard
+{
 }
-export interface StateAttributes {
+export interface StateAttributes
+{
     /**
      * The current State.
      */
-    State: AttributeValue,
+    State: AttributeValue;
 }
+
 @Component({})
 export class StatefulComponent<A extends StateAttributes, I extends Instance> extends BaseComponent<A, I> implements OnStart
 {
@@ -37,8 +39,9 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
     public SetStateEffect(state: EntityState, effect: (oldState: EntityState) => void)
     {
         if (this.stateEffects.has(state))
-
+        {
             warn(`StateEffect for state ${state} already exists (${effect}). Overwriting.`);
+        }
 
         this.stateEffects.set(state, effect);
     }
@@ -46,8 +49,9 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
     public SetStateGuard(state: EntityState, guard: () => boolean | void)
     {
         if (this.stateGuards.has(state))
-
+        {
             warn(`StateGuard for state ${state} already exists (${guard}). Overwriting.`);
+        }
 
         this.stateGuards.set(state, guard);
     }
@@ -65,7 +69,7 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
             {
                 if (!this.stateGuards.get(state)?.())
                 {
-                    print(`State guard failed: ${EntityState[ state ]}`);
+                    print(`State guard failed: ${EntityState[state]}`);
 
                     return false;
                 }
@@ -99,8 +103,8 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
     public ResetState()
     {
         if (this.defaultState !== undefined)
-
+        {
             this.SetState(this.defaultState);
+        }
     }
-
 }

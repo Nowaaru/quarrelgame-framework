@@ -5,22 +5,23 @@ import { HttpService, RunService, Workspace } from "@rbxts/services";
 import { $env } from "rbxts-transform-env";
 import { Skill } from "shared/util/character";
 
-import type { QuarrelGame } from "server/services/quarrelgame.service";
-import type { CombatService } from "server/services/combat.service";
 import Make from "@rbxts/make";
 import Signal from "@rbxts/signal";
+import type { CombatService } from "server/services/combat.service";
+import type { QuarrelGame } from "server/services/quarrelgame.service";
 
 import type { Entity } from "server/components/entity.component";
 import type { OnHit } from "server/services/combat.service";
 import * as lib from "shared/util/lib";
 
 type Frames = number;
-export namespace Hitbox {
+export namespace Hitbox
+{
     export import HitResult = lib.HitResult;
 
     export class HitboxBuilder
     {
-        private readonly defaultSize = new Vector3(4,4,4);
+        private readonly defaultSize = new Vector3(4, 4, 4);
 
         private readonly hitboxId = HttpService.GenerateGUID(false);
 
@@ -81,7 +82,7 @@ export namespace Hitbox {
                 disjointOffset,
                 frameDuration,
                 size,
-                hitRegion
+                hitRegion,
             };
         }
 
@@ -91,8 +92,9 @@ export namespace Hitbox {
         }
     }
 
-    export import HitboxRegion =  lib.HitboxRegion;
-    interface HitboxProps {
+    export import HitboxRegion = lib.HitboxRegion;
+    interface HitboxProps
+    {
         size: Vector3;
         disjointOffset: Vector3;
         frameDuration?: number;
@@ -117,7 +119,7 @@ export namespace Hitbox {
             size,
             disjointOffset,
             hitboxId,
-            hitRegion
+            hitRegion,
         }: HitboxProps)
         {
             this.disjointOffset = disjointOffset;
@@ -132,7 +134,8 @@ export namespace Hitbox {
         }
     }
 
-    export interface Contact<A1 extends Entity.CombatantAttributes = Entity.CombatantAttributes, A2 extends Entity.Combatant<A1> = Entity.Combatant<A1>> {
+    export interface Contact<A1 extends Entity.CombatantAttributes = Entity.CombatantAttributes, A2 extends Entity.Combatant<A1> = Entity.Combatant<A1>>
+    {
         Attacker: A2;
         Attacked: A2;
 
@@ -161,7 +164,7 @@ export namespace Hitbox {
         {
             this.hitbox = hitbox;
 
-            const targetCFrame = target.CFrame.add(target.CFrame.VectorToWorldSpace(this.hitbox.disjointOffset.mul(new Vector3(1,1,-1))));
+            const targetCFrame = target.CFrame.add(target.CFrame.VectorToWorldSpace(this.hitbox.disjointOffset.mul(new Vector3(1, 1, -1))));
             const preferredHitboxVisualizer = this.hitboxVisualizer = Make("Part", {
                 Parent: Workspace,
                 CFrame: targetCFrame,
@@ -172,17 +175,16 @@ export namespace Hitbox {
                 CanCollide: false,
                 CanTouch: false,
                 Transparency: 0.7,
-                Color: new Color3(1,0,0)
+                Color: new Color3(1, 0, 0),
             });
-
 
             Make("Highlight", {
                 Adornee: preferredHitboxVisualizer,
                 Parent: preferredHitboxVisualizer,
                 FillTransparency: 0.8,
                 OutlineTransparency: 0.9,
-                OutlineColor: new Color3(1,0,0),
-                FillColor: new Color3(1,0,0),
+                OutlineColor: new Color3(1, 0, 0),
+                FillColor: new Color3(1, 0, 0),
             });
 
             task.delay(0.5, () =>
@@ -200,13 +202,14 @@ export namespace Hitbox {
                 const nonCachedModels = instancesInHitbox.mapFiltered((i) => i.FindFirstAncestorWhichIsA("Model")).filter((j) => !this.contactedModels.has(j));
 
                 if (nonCachedModels.isEmpty())
-
+                {
                     return;
+                }
 
                 nonCachedModels.map((m) => [m, m.FindFirstChildWhichIsA("Humanoid")] as const)
-                    .filter((n) => !!n[ 1 ])
+                    .filter((n) => !!n[1])
                     .filter(([o], p, q) => q.findIndex(([r]) => r === o) === p) // remove duplicates
-                    .forEach(async([hitModel, hitHumanoid]) =>
+                    .forEach(async ([hitModel, hitHumanoid]) =>
                     {
                         this.contactedModels.add(hitModel);
 
@@ -226,8 +229,8 @@ export namespace Hitbox {
                             assert(hitboxModel, "hitbox does not belong to a model");
 
                             const hitboxPossessor = hitboxModel?.GetAttribute("ParticipantOwner")
-                                    ? Dependency<QuarrelGame>().GetParticipantFromId((target.GetAttribute("ParticipantOwner") as string)!)?.character
-                                    : hitboxModel;
+                                ? Dependency<QuarrelGame>().GetParticipantFromId((target.GetAttribute("ParticipantOwner") as string)!)?.character
+                                : hitboxModel;
 
                             assert(hitboxPossessor, "could not find hitbox possessor");
 
@@ -235,7 +238,6 @@ export namespace Hitbox {
                             const possessorEntityComponent = Dependency<CombatService>().GetCombatant(hitboxPossessor);
 
                             if (possessorEntityComponent)
-
                             {
                                 const contactData: Contact = {
                                     Attacker: possessorEntityComponent,
@@ -248,11 +250,14 @@ export namespace Hitbox {
 
                                 this.Contact.Fire(contactData);
                                 for (const listener of ActiveHitbox.onHitListeners)
-
+                                {
                                     Promise.try(() => listener.onHit(contactData));
+                                }
                             }
-                            else warn("Attacker model found, but the model does not possess a component?");
-
+                            else
+                            {
+                                warn("Attacker model found, but the model does not possess a component?");
+                            }
                         }
                     });
             });
@@ -261,8 +266,9 @@ export namespace Hitbox {
         public Stop()
         {
             if (!this.active)
-
+            {
                 return;
+            }
 
             this.active = false;
             this.contactedModels.clear();

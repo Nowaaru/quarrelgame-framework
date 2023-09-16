@@ -2,24 +2,33 @@ import { BaseComponent, Component } from "@flamework/components";
 import { OnStart } from "@flamework/core";
 
 import { HttpService, Players } from "@rbxts/services";
-import { StateAttributes } from "./state.component";
-import { EntityState, GetTickRate } from "shared/util/lib";
 import { Animation } from "shared/util/animation";
+import { EntityState, GetTickRate } from "shared/util/lib";
+import { StateAttributes } from "./state.component";
 
 import Make from "@rbxts/make";
 import Signal from "@rbxts/signal";
 import Characters from "shared/data/character";
-export namespace Animator {
-    interface AnimatorProps {
-        ActiveAnimation?: string
+export namespace Animator
+{
+    interface AnimatorProps
+    {
+        ActiveAnimation?: string;
     }
 
     @Component({})
-    export class Animator<I extends AnimatorProps = AnimatorProps> extends BaseComponent<I, Model & { Humanoid: Humanoid & { Animator: Instances["Animator"]  }}>
+    export class Animator<
+        I extends AnimatorProps = AnimatorProps,
+    > extends BaseComponent<
+        I,
+        Model & { Humanoid: Humanoid & { Animator: Instances["Animator"]; }; }
+    >
     {
         protected loadedAnimations: Animation.Animation[] = [];
 
-        public LoadAnimation(animation: Animation.AnimationData): Animation.Animation
+        public LoadAnimation(
+            animation: Animation.AnimationData,
+        ): Animation.Animation
         {
             const loadedAnimation = new Animation.Animation(this, animation);
             this.loadedAnimations.push(loadedAnimation);
@@ -31,7 +40,9 @@ export namespace Animator {
         {
             return this.Animator.GetPlayingAnimationTracks().mapFiltered((n) =>
             {
-                return this.loadedAnimations.find((x) => x.AnimationId === n.Animation?.AnimationId);
+                return this.loadedAnimations.find(
+                    (x) => x.AnimationId === n.Animation?.AnimationId,
+                );
             });
         }
 
@@ -40,23 +51,29 @@ export namespace Animator {
             return this.Animator;
         }
 
-        private readonly Animator = this.instance.Humanoid.Animator as unknown as Instances["Animator"] & { Parent: Humanoid & { Animator: Instances["Animator"] & { Parent: Humanoid }, Parent: Model } };
+        private readonly Animator = this.instance.Humanoid
+            .Animator as unknown as Instances["Animator"] & {
+                Parent: Humanoid & {
+                    Animator: Instances["Animator"] & { Parent: Humanoid; };
+                    Parent: Model;
+                };
+            };
     }
 
-    interface StateAnimatorProps extends AnimatorProps, StateAttributes {
-
-    }
+    interface StateAnimatorProps extends AnimatorProps, StateAttributes
+    {}
 
     @Component({})
     export class StateAnimator extends Animator<StateAnimatorProps> implements OnStart
     {
-        private currentLoadedAnimation?: Animation.Animation
+        private currentLoadedAnimation?: Animation.Animation;
 
         onStart(): void
         {
             while (!this.instance.Parent)
-
+            {
                 task.wait();
+            }
 
             this.GetAnimator()
                 .GetPlayingAnimationTracks()
@@ -68,40 +85,56 @@ export namespace Animator {
 
         private async onStateChanged(newState: AttributeValue)
         {
-            const selectedCharacter = Characters.get(this.instance.GetAttribute("CharacterId") as string);
-            assert(selectedCharacter, `no selected character found on ${this.instance}`);
+            const selectedCharacter = Characters.get(
+                this.instance.GetAttribute("CharacterId") as string,
+            );
+            assert(
+                selectedCharacter,
+                `no selected character found on ${this.instance}`,
+            );
 
             if (this.paused)
-
+            {
                 return;
+            }
 
             if (typeIs(newState, "number"))
             {
                 if (newState in selectedCharacter.Animations)
                 {
-                    const newLoadedAnimation = this.LoadAnimation(selectedCharacter.Animations[ newState as keyof typeof selectedCharacter.Animations ]!);
+                    const newLoadedAnimation = this.LoadAnimation(
+                        selectedCharacter.Animations[
+                            newState as keyof typeof selectedCharacter.Animations
+                        ]!,
+                    );
                     let animationWasInterrupted = false;
                     if (this.currentLoadedAnimation)
                     {
-                        if (newLoadedAnimation.Priority.Value >= this.currentLoadedAnimation.Priority.Value)
+                        if (
+                            newLoadedAnimation.Priority.Value >= this.currentLoadedAnimation.Priority.Value
+                        )
                         {
-                            if (newLoadedAnimation.AnimationId !== this.currentLoadedAnimation.AnimationId)
+                            if (
+                                newLoadedAnimation.AnimationId !== this.currentLoadedAnimation.AnimationId
+                            )
                             {
                                 animationWasInterrupted = true;
-                                this.currentLoadedAnimation.Stop({fadeTime: 0});
+                                this.currentLoadedAnimation.Stop({ fadeTime: 0 });
                             }
                         }
 
                         if (
-                            newLoadedAnimation.Priority === Enum.AnimationPriority.Idle
-                                && this.currentLoadedAnimation.Priority === Enum.AnimationPriority.Movement)
+                            newLoadedAnimation.Priority === Enum.AnimationPriority.Idle && this.currentLoadedAnimation.Priority === Enum.AnimationPriority.Movement
+                        )
                         {
                             animationWasInterrupted = true;
-                            this.currentLoadedAnimation.Stop({fadeTime: 0.25});
+                            this.currentLoadedAnimation.Stop({ fadeTime: 0.25 });
                         }
                     }
 
-                    if (newLoadedAnimation.AnimationId !== this.currentLoadedAnimation?.AnimationId)
+                    if (
+                        newLoadedAnimation.AnimationId !== this.currentLoadedAnimation?.AnimationId
+                    )
                     {
                         this.currentLoadedAnimation = newLoadedAnimation;
                         this.currentLoadedAnimation.Play({
@@ -109,7 +142,6 @@ export namespace Animator {
                         });
                     }
                 }
-
             }
         }
 
@@ -120,12 +152,14 @@ export namespace Animator {
             {
                 this.Unpaused.Fire();
                 if (this.currentLoadedAnimation?.IsPaused())
-
+                {
                     this.currentLoadedAnimation?.Resume();
+                }
 
                 if (this.attributes.State !== this.pausedState)
-
+                {
                     this.onStateChanged(this.attributes.State);
+                }
             }
             else
             {

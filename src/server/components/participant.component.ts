@@ -1,22 +1,24 @@
+import { BaseComponent, Component, Components } from "@flamework/components";
 import { Dependency, OnStart } from "@flamework/core";
-import { Component, BaseComponent, Components } from "@flamework/components";
+import { HttpService, Workspace } from "@rbxts/services";
 import { Entity } from "./entity.component";
 import { Physics } from "./physics";
-import { HttpService, Workspace } from "@rbxts/services";
 
-import Characters from "shared/data/character";
 import { MatchService } from "server/services/matchservice.service";
+import Characters from "shared/data/character";
 import { ClientEvents, ServerEvents, ServerFunctions } from "shared/network";
 
-export interface ParticipantAttributes {
-    ParticipantId: string,
-    SelectedCharacter?: string,
-    MatchId?: string,
+export interface ParticipantAttributes
+{
+    ParticipantId: string;
+    SelectedCharacter?: string;
+    MatchId?: string;
 }
 
-interface CombatantLoader {
-    characterId?: string,
-    matchId: string,
+interface CombatantLoader
+{
+    characterId?: string;
+    matchId: string;
 }
 
 /**
@@ -24,23 +26,25 @@ interface CombatantLoader {
  */
 @Component({
     defaults: {
-        ParticipantId: HttpService.GenerateGUID(), 
+        ParticipantId: HttpService.GenerateGUID(),
         MatchId: undefined,
-    }
+    },
 })
-export class Participant extends BaseComponent<ParticipantAttributes, Player & { Character: defined }>
+export class Participant extends BaseComponent<ParticipantAttributes, Player & { Character: defined; }>
 {
-    public readonly id: string = this.attributes.ParticipantId
+    public readonly id: string = this.attributes.ParticipantId;
 
     private onEntityDied()
     {
         if (this.attributes.MatchId)
         {
             for (const match of Dependency<MatchService>().GetOngoingMatches())
-
+            {
                 if (match.GetParticipants().has(this))
-
+                {
                     return match.RespawnParticipant(this);
+                }
+            }
         }
 
         return;
@@ -53,7 +57,10 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
 
     public async SelectCharacter(characterId: string): Promise<boolean>
     {
-        assert(Characters.has(characterId), `Character of ID ${characterId} does not exist.`);
+        assert(
+            Characters.has(characterId),
+            `Character of ID ${characterId} does not exist.`,
+        );
         this.instance.SetAttribute("SelectedCharacter", characterId);
 
         return true;
@@ -62,7 +69,7 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
     /**
      * Loads the Participant's combatant.
      * 📝 This is generally used for battles.
-     * 
+     *
      * @param characterId The ID of the character that the Participant will spawn as.
      * @returns A promise that resolves when the character has been loaded.
      */
@@ -71,37 +78,67 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
         matchId = this.instance.GetAttribute("MatchId") as string,
     }: CombatantLoader)
     {
-        assert(characterId, "no character ID was provided, nor does the participant have a selected character.")
-        const thisMatch = [...Dependency<MatchService>().GetOngoingMatches()].find((match) => match.matchId === matchId);
+        assert(
+            characterId,
+            "no character ID was provided, nor does the participant have a selected character.",
+        );
+        const thisMatch = [...Dependency<MatchService>().GetOngoingMatches()].find(
+            (match) => match.matchId === matchId,
+        );
         if (thisMatch)
-
+        {
             this.instance.SetAttribute("MatchId", matchId);
-
-        else error(`match of ID ${matchId} does not exist.`);
+        }
+        else
+        {
+            error(`match of ID ${matchId} does not exist.`);
+        }
         return new Promise<Entity.PlayerCombatant<A>>((res) =>
         {
-            assert(Characters.has(characterId), `character of ID ${characterId} does not exist.`);
+            assert(
+                Characters.has(characterId),
+                `character of ID ${characterId} does not exist.`,
+            );
 
             const newCharacter = Characters.get(characterId)!;
             const newCharacterModel = newCharacter.Model.Clone();
             newCharacterModel.Parent = Workspace;
+            print("character id:", characterId);
             newCharacterModel.SetAttribute("CharacterId", characterId);
             newCharacterModel.SetAttribute("MatchId", matchId);
 
             newCharacterModel.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None;
             newCharacterModel.Humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff;
 
-            if (this.character)
+            let _conn: RBXScriptConnection | void = this.instance.CharacterAdded.Connect((character) =>
+            {
+                if (character !== newCharacterModel)
+                {
+                    return print(character, "!==", newCharacterModel);
+                }
 
-                newCharacterModel.PivotTo(this.character.GetPivot());
+                print(`character ${character.Name} is now the participant's character.`);
+                _conn = _conn?.Disconnect();
+
+                res(this.entity as never);
+            });
+
+            this.entity = Dependency<Components>().addComponent(
+                newCharacterModel,
+                Entity.PlayerCombatant,
+            );
 
             this.instance.Character = newCharacterModel;
             this.character = this.instance.Character;
 
-            this.entity = Dependency<Components>().addComponent(this.character, Entity.PlayerCombatant);
-            this.setupDiedHandler()
-
-            return res(this.entity as never);
+            this.setupDiedHandler();
+            task.delay(2.5, () =>
+            {
+                if (_conn)
+                {
+                    return _conn = _conn.Disconnect();
+                }
+            });
         });
     }
 
@@ -119,8 +156,11 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
             this.instance.CharacterAppearanceLoaded.Once((char) =>
             {
                 this.character = char;
-                this.entity = Dependency<Components>().addComponent(this.character, Entity.Entity);
-                this.setupDiedHandler()
+                this.entity = Dependency<Components>().addComponent(
+                    this.character,
+                    Entity.Entity,
+                );
+                this.setupDiedHandler();
 
                 return res(this.entity);
             });
@@ -129,5 +169,7 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
 
     public character = this.instance.Character;
 
-    public entity?: Entity.Entity | Entity.PlayerCombatant<Entity.PlayerCombatantAttributes>;
+    public entity?:
+        | Entity.Entity
+        | Entity.PlayerCombatant<Entity.PlayerCombatantAttributes>;
 }

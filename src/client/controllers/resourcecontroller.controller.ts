@@ -1,7 +1,8 @@
 import { Controller, Modding } from "@flamework/core";
 import { ContentProvider } from "@rbxts/services";
 
-interface OnAssetLoad {
+interface OnAssetLoad
+{
     onAssetLoadFailed?(assetId: string, errorMessage: string): void;
     onAssetLoading?(assetId: string): void;
     onAssetLoaded?(assetId: string): void;
@@ -9,7 +10,7 @@ interface OnAssetLoad {
 
 @Controller({
     loadOrder: 1,
-    })
+})
 export class ResourceController implements OnAssetLoad
 {
     private readonly assetLoadListeners = new Set<OnAssetLoad>();
@@ -41,7 +42,6 @@ export class ResourceController implements OnAssetLoad
         switch (assetFetchStatus)
         {
             case Enum.AssetFetchStatus.Failure:
-
                 this.assetLoadListeners.forEach((object) => object.onAssetLoadFailed?.(assetId, "Asset fetch failed."));
 
                 return assetFetchStatus;
@@ -49,8 +49,9 @@ export class ResourceController implements OnAssetLoad
             case Enum.AssetFetchStatus.Success:
                 this.assetLoadListeners.forEach((object) => object.onAssetLoaded?.(assetId));
                 if (instance)
-
-                    this.loadedInstanceMap.set(assetId, this.loadedInstanceMap.get(assetId)?.add(instance) ?? new Set([ instance ]));
+                {
+                    this.loadedInstanceMap.set(assetId, this.loadedInstanceMap.get(assetId)?.add(instance) ?? new Set([instance]));
+                }
 
                 return assetFetchStatus;
 
@@ -67,15 +68,13 @@ export class ResourceController implements OnAssetLoad
             default:
                 break;
         }
-
-
     }
 
     public requestPreloadInstance<T extends Instance>(instance: T): Promise<void>
     {
         return new Promise((res, rej) =>
         {
-            ContentProvider.PreloadAsync([ instance ], (contentId, fetchStatus) =>
+            ContentProvider.PreloadAsync([instance], (contentId, fetchStatus) =>
             {
             });
         }) as never;
@@ -83,11 +82,9 @@ export class ResourceController implements OnAssetLoad
 
     public requestPreloadInstances<T extends Instance>(instances: T[]): Promise<void>
     {
-        
-        
         return new Promise<void>((res, rej) =>
         {
-            ContentProvider.PreloadAsync(instances, (contentId, fetchStatus) => 
+            ContentProvider.PreloadAsync(instances, (contentId, fetchStatus) =>
             {
                 this.assetLoadedHandler(contentId, fetchStatus);
             });
@@ -99,8 +96,9 @@ export class ResourceController implements OnAssetLoad
     public requestPreloadAsset(assetId: string)
     {
         if (this.preloadQueue.has(assetId))
-
+        {
             return Promise.resolve();
+        }
 
         return new Promise((res, rej) =>
         {
@@ -110,8 +108,9 @@ export class ResourceController implements OnAssetLoad
             {
                 const assetLoadResult = this.assetLoadedHandler(assetId, assetFetchStatus);
                 if (assetLoadResult !== undefined)
-
+                {
                     fetchLoadedSignal.Disconnect();
+                }
             });
         });
     }

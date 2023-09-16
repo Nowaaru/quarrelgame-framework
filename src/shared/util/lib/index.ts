@@ -2,18 +2,19 @@ import { Dependency } from "@flamework/core";
 import { Players, ReplicatedStorage, RunService } from "@rbxts/services";
 import { ClientFunctions } from "shared/network";
 
-import type { SchedulerService } from "server/services/scheduler.service";
 import type { Entity } from "server/components/entity.component";
+import type { SchedulerService } from "server/services/scheduler.service";
 import type Character from "../character";
 
-interface QuarrelAssets extends Folder {
+interface QuarrelAssets extends Folder
+{
     model: Folder & {
         map: Folder;
 
         character: {
-            [key in keyof typeof Character.CharacterModel]: Character.CharacterRig
-        }
-    }
+            [key in keyof typeof Character.CharacterModel]: Character.CharacterRig;
+        };
+    };
 }
 
 export const quarrelGame = ReplicatedStorage.WaitForChild("QuarrelGame") as Folder;
@@ -28,7 +29,7 @@ declare global
     {
         public readonly why: string;
 
-        public ToString(): string
+        public ToString(): string;
     }
 
     interface ErrorKind
@@ -37,9 +38,10 @@ declare global
     }
 }
 
-export enum SprintState {
+export enum SprintState
+{
     Walking,
-    Sprinting
+    Sprinting,
 }
 
 /**
@@ -47,7 +49,8 @@ export enum SprintState {
  * the possible states an
  * Entity can be in.
  */
-export enum EntityState {
+export enum EntityState
+{
     /**
      * A state where the Entity is
      * in their most neutral state.
@@ -140,7 +143,8 @@ export enum EntityState {
  * The result of a skill making
  * contact with an Entity.
  */
-export enum HitResult {
+export enum HitResult
+{
     /**
      * If the attack missed.
      */
@@ -159,17 +163,19 @@ export enum HitResult {
     Counter,
 }
 
-export interface HitData<Attacked extends Entity.EntityAttributes, Attacker extends Entity.CombatantAttributes> {
-    hitResult: HitResult | Promise<HitResult>,
-    attacked?: Entity.Entity<Attacked>,
-    attacker: Entity.Combatant<Attacker>
+export interface HitData<Attacked extends Entity.EntityAttributes, Attacker extends Entity.CombatantAttributes>
+{
+    hitResult: HitResult | Promise<HitResult>;
+    attacked?: Entity.Entity<Attacked>;
+    attacker: Entity.Combatant<Attacker>;
 }
 
 /**
  * The region where the Hitbox
  * will hit.
  */
-export enum HitboxRegion {
+export enum HitboxRegion
+{
     /**
      * The attack can be blocked by
      * crouch-blocking entities only.
@@ -185,10 +191,11 @@ export enum HitboxRegion {
      * The attack can be blocked by
      * standing-blocking entities only.
      */
-    Overhead
+    Overhead,
 }
 
-export enum BlockMode {
+export enum BlockMode
+{
     /**
      * Attacks are blocked relative to the MoveDirection
      * of the character.
@@ -201,12 +208,11 @@ export enum BlockMode {
     Orientation,
 }
 
-export const ConvertPercentageToNumber = (percentage: string) => tonumber(percentage.match("(%d+)%%$")[ 0 ]);
-export const GetTickRate = () => (RunService.IsServer()
-    ? Dependency<SchedulerService>().GetTickRate()
-    : (ClientFunctions.GetGameTickRate().await()[ 1 ] as number | undefined));
+export const ConvertPercentageToNumber = (percentage: string) => tonumber(percentage.match("(%d+)%%$")[0]);
+export const GetTickRate =
+    () => (RunService.IsServer() ? Dependency<SchedulerService>().GetTickRate() : (ClientFunctions.GetGameTickRate().await()[1] as number | undefined));
 
-export const Jump = (Character: Model & { Humanoid: Humanoid, PrimaryPart: BasePart }) =>
+export const Jump = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BasePart; }) =>
 {
     const { X, Y, Z } = Character.Humanoid.MoveDirection;
     const thisImpulse = new Vector3(math.sign(X), 1, math.sign(Z)).mul(Character.PrimaryPart.AssemblyMass * 56);
@@ -226,4 +232,4 @@ export const Jump = (Character: Model & { Humanoid: Humanoid, PrimaryPart: BaseP
 };
 
 export { getEnumValues } from "shared/util/lib/other/enum";
-export type ForChild<A extends {}, T extends keyof A = keyof A> = (child: T) => A[ T ] extends Instance ? A[ T ] : never;
+export type ForChild<A extends {}, T extends keyof A = keyof A> = (child: T) => A[T] extends Instance ? A[T] : never;

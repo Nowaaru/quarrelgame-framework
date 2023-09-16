@@ -1,66 +1,56 @@
-import Roact from "@rbxts/roact";
 import Make from "@rbxts/make";
+import Roact from "@rbxts/roact";
 
 import { useEffect, useRef, useState } from "@rbxts/roact";
 import { RunService } from "@rbxts/services";
+import { Animation } from "shared/util/animation";
 import { Character } from "shared/util/character";
 import { EntityState } from "shared/util/lib";
-import { Animation } from "shared/util/animation";
 import CharacterPortrait3D from "./characterportrait";
 
-export interface CharacterItemProps {
+export interface CharacterItemProps
+{
     /**
      * The character.
      */
-    Character: Character.Character,
+    Character: Character.Character;
     /**
      * Whether the character is selected
      * or not.
      */
-    Selected?: boolean
-    /**
-     * Whether the character has
-     * been selected and locked in
-     * or not.
-    */,
-    LockedIn?: boolean,
+    Selected?: boolean;
+    LockedIn?: boolean;
     /**
      * Whether the character can
      * be locked in or not.
      */
-    Locked?: boolean,
+    Locked?: boolean;
     /**
      * The image of the character
      * if the 3D portrait is not
      * used.
      */
-    Image?: string
+    Image?: string;
     /**
      * What happens when the character
      * portrait is selected.
      */
-    OnSelected?: (character: Character.Character) => void,
+    OnSelected?: (character: Character.Character) => void;
 }
 
-export default function CharacterItem({Character, Selected, LockedIn, Locked, Image, OnSelected}: CharacterItemProps)
+export default function CharacterItem({ Character, Selected, LockedIn, Locked, Image, OnSelected }: CharacterItemProps)
 {
     const strokeRef = useRef<UIStroke>();
 
     const _interior = (
         <>
             <uicorner
-                CornerRadius={new UDim(0.1,0)}
+                CornerRadius={new UDim(0.1, 0)}
             />
             <uistroke
                 ref={strokeRef}
                 ApplyStrokeMode={Enum.ApplyStrokeMode.Contextual}
-                Color={
-                    LockedIn
-                        ? new Color3(0,1,0.3)
-                        : Selected
-                            ? new Color3(1,0.2,0.3)
-                            : new Color3(0.1,0.1,0.1)
-                }
+                Color={LockedIn ? new Color3(0, 1, 0.3) : Selected ? new Color3(1, 0.2, 0.3) : new Color3(0.1, 0.1, 0.1)}
                 Transparency={0.7}
             />
         </>
@@ -80,38 +70,36 @@ export default function CharacterItem({Character, Selected, LockedIn, Locked, Im
 
             return () => runserviceEvent.Disconnect();
         }
-
-
     }, [strokeRef.current, LockedIn, Selected]);
 
     return Image
-    ? (
-        <imagebutton
-            BackgroundTransparency={0.2}
-            BackgroundColor3={ new Color3(0.1,0.1,0.1)}
-            ZIndex={100}
-            Image={Image}
-            Event={{
-                MouseButton1Down: (async () => OnSelected?.(Character))
-            }}
-        >
-            {_interior}
-        </imagebutton>
-    )
-    : (
-        <CharacterPortrait3D
-            Character={Character}
-            OnClick={() =>
-            {
-                print("on selected characteritem called");
-                OnSelected?.(Character);
-            }}
-        >
-            <uigradient
-                Transparency={new NumberSequence(0,0.5)}
-                Rotation={-90}
-            />
-            {_interior}
-        </CharacterPortrait3D>
-    );
+        ? (
+            <imagebutton
+                BackgroundTransparency={0.2}
+                BackgroundColor3={new Color3(0.1, 0.1, 0.1)}
+                ZIndex={100}
+                Image={Image}
+                Event={{
+                    MouseButton1Down: (async () => OnSelected?.(Character)),
+                }}
+            >
+                {_interior}
+            </imagebutton>
+        )
+        : (
+            <CharacterPortrait3D
+                Character={Character}
+                OnClick={() =>
+                {
+                    print("on selected characteritem called");
+                    OnSelected?.(Character);
+                }}
+            >
+                <uigradient
+                    Transparency={new NumberSequence(0, 0.5)}
+                    Rotation={-90}
+                />
+                {_interior}
+            </CharacterPortrait3D>
+        );
 }

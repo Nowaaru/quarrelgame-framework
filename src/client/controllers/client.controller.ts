@@ -1,25 +1,26 @@
-import { Controller, OnStart, OnInit, Dependency, Modding } from "@flamework/core";
-import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
-import { InputMode, InputResult } from "shared/util/input";
+import { Controller, Dependency, Modding, OnInit, OnStart } from "@flamework/core";
 import { Players, StarterGui, Workspace } from "@rbxts/services";
 import { ClientEvents, GlobalFunctions } from "shared/network";
-import { Mouse, MouseButton, OnMouseButton } from "./mouse.controller";
+import { InputMode, InputResult } from "shared/util/input";
 import { HudController } from "./hud.controller";
+import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
+import { Mouse, MouseButton, OnMouseButton } from "./mouse.controller";
 
-import { EntityState, SprintState } from "shared/util/lib";
 import { Components } from "@flamework/components";
-import { Animator } from "../../shared/components/animator.component";
 import { StatefulComponent } from "shared/components/state.component";
-import { CombatController } from "./combat.controller";
+import { EntityState, SprintState } from "shared/util/lib";
+import { Animator } from "../../shared/components/animator.component";
 import { CharacterController2D } from "./2dcontroller.controller";
 import { CharacterController3D } from "./3dcontroller.controller";
+import { CombatController } from "./combat.controller";
 
-import { Camera3D, CameraController3D } from "./camera3d.controller";
 import { Camera2D, CameraController2D } from "./camera2d.controller";
+import { Camera3D, CameraController3D } from "./camera3d.controller";
 
 const { client: ClientFunctions } = GlobalFunctions;
-export interface OnRespawn {
-    onRespawn(character: Model): void,
+export interface OnRespawn
+{
+    onRespawn(character: Model): void;
 }
 
 @Controller({})
@@ -44,7 +45,7 @@ export class Client implements OnStart, OnInit, OnMouseButton
         Players.LocalPlayer.CameraMinZoomDistance = 8;
         Players.LocalPlayer.CameraMaxZoomDistance = Players.LocalPlayer.CameraMinZoomDistance;
 
-        StarterGui.SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
+        StarterGui.SetCoreGuiEnabled(Enum.CoreGuiType.All, false);
     }
 
     onStart()
@@ -66,16 +67,16 @@ export class Client implements OnStart, OnInit, OnMouseButton
                     components.addComponent(characterModel, Animator.Animator);
                     components.addComponent(characterModel, StatefulComponent);
 
-                    this.characterController2D.SetAxis(currentMatch.Arena.config.Axis.Value)
+                    this.characterController2D.SetAxis(currentMatch.Arena.config.Axis.Value);
                     this.characterController2D.SetEnabled(true);
 
                     print("character model on respawn:", characterModel);
-                    
+
                     Workspace.CurrentCamera!.CameraSubject = characterModel.FindFirstChildWhichIsA("Humanoid") as Humanoid;
                     this.camera2D.SetParticipants(...currentMatch.Participants.mapFiltered(({ ParticipantId }) =>
-                        {
-                           return Players.GetPlayers().find((player) => player.GetAttribute("ParticipantId") === ParticipantId)?.Character
-                        }));
+                    {
+                        return Players.GetPlayers().find((player) => player.GetAttribute("ParticipantId") === ParticipantId)?.Character;
+                    }));
 
                     this.camera2D.SetCameraEnabled(true);
                 }
@@ -86,14 +87,16 @@ export class Client implements OnStart, OnInit, OnMouseButton
     onMouseButton(mouseButton: MouseButton, inputMode: InputMode): void
     {
         if (inputMode !== InputMode.Down)
-
+        {
             return;
+        }
 
         if (!this.player.Character)
-
+        {
             return;
+        }
 
-        switch ( mouseButton )
+        switch (mouseButton)
         {
             case MouseButton.Middle:
             {
@@ -131,7 +134,7 @@ export class Client implements OnStart, OnInit, OnMouseButton
     }
 
     public readonly player = Players.LocalPlayer as Player & {
-        PlayerGui: PlayerGui,
+        PlayerGui: PlayerGui;
     };
 
     public character = this.player.Character;

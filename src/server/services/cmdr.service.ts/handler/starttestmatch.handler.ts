@@ -6,8 +6,9 @@ export = function(context: CommandContext, ...args: unknown[])
 {
     const newMatch = Dependency<TestService>().tryMatchTest();
     if (newMatch)
-
+    {
         return "Test match started.";
+    }
 
-    else return "No test match started.";
+    return "No test match started.";
 };

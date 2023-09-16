@@ -2,5 +2,5 @@ import CharacterItem, { CharacterItemProps } from "client/ui/characterselect/cha
 import { story } from "shared/util/story";
 
 export = story<CharacterItemProps>({
-    component: CharacterItem
-})
+    component: CharacterItem,
+});

@@ -1,21 +1,24 @@
 import { Components } from "@flamework/components";
 import { Controller, Dependency, OnPhysics, OnRender, OnStart, OnTick } from "@flamework/core";
 
-import { CharacterController } from "./character.controller";
-import { Keyboard } from "client/controllers/keyboard.controller";
-import { ConvertMoveDirectionToMotion, InputMode, InputResult, Motion } from "shared/util/input";
-import { Mouse } from "client/controllers/mouse.controller";
-import { Gamepad, GamepadButtons } from "client/controllers/gamepad.controller";
 import { OnRespawn } from "client/controllers/client.controller";
-import { CombatController } from "./combat.controller";
+import { Gamepad, GamepadButtons } from "client/controllers/gamepad.controller";
+import { Keyboard } from "client/controllers/keyboard.controller";
+import { Mouse } from "client/controllers/mouse.controller";
 import { ClientFunctions } from "shared/network";
+import { ConvertMoveDirectionToMotion, InputMode, InputResult, Motion } from "shared/util/input";
 import { EntityState } from "shared/util/lib";
+import { CharacterController } from "./character.controller";
+import { CombatController } from "./combat.controller";
 import { MotionInput } from "./motioninput.controller";
 
 import Make from "@rbxts/make";
+import type _Map from "server/components/map.component";
+import { MatchController } from "./match.controller";
 
-interface ChangedSignals {
-    [stateName: string]: unknown,
+interface ChangedSignals
+{
+    [stateName: string]: unknown;
 }
 
 @Controller({})
@@ -28,25 +31,22 @@ export class CharacterController2D extends CharacterController implements OnStar
         private readonly motionInputController: MotionInput.MotionInputController,
     )
     {
-        super(Dependency<Keyboard>(), Dependency<Mouse>(), Dependency<Gamepad>());
+        super(Dependency<MatchController>(), Dependency<Keyboard>(), Dependency<Mouse>(), Dependency<Gamepad>());
     }
 
     private lastFrameNormal: Vector3 = Vector3.zero;
     onRender()
     {
         if (!this.enabled)
-
             return;
 
         if (!this.character)
-
             return;
 
         if (!this.axis)
-
             return;
 
-        const {X, Y, Z} = this.axis;
+        const { X, Y, Z } = this.axis;
         if (this.alignPos?.Attachment0)
         {
             this.alignPos.Position = new Vector3(X, 0, Z);
@@ -55,25 +55,30 @@ export class CharacterController2D extends CharacterController implements OnStar
                 .mul(12000);
         }
 
-        const playerHumanoid = this.character.FindFirstChild("Humanoid") as Humanoid | undefined;
+        const playerHumanoid = this.character.FindFirstChild("Humanoid") as
+            | Humanoid
+            | undefined;
         const axisDirection = CFrame.lookAt(Vector3.zero, this.axis);
         const playerDirection = this.GetMoveDirection(axisDirection);
 
-        const [motion,] = ConvertMoveDirectionToMotion(playerDirection);
+        const [ motion ] = ConvertMoveDirectionToMotion(playerDirection);
         if (this.lastFrameNormal !== playerDirection)
-
             this.motionInputController.pushToMotionInput(Motion[ motion ]);
-
 
         const currentLastFrameNormal = this.lastFrameNormal;
         this.lastFrameNormal = playerDirection;
         if (playerHumanoid)
         {
             playerHumanoid.AutoRotate = false;
-            const bottomNormal = this.GenerateRelativeVectorFromNormalId(axisDirection, Enum.NormalId.Bottom);
-            const topNormal = this.GenerateRelativeVectorFromNormalId(axisDirection, Enum.NormalId.Top);
+            const bottomNormal = this.GenerateRelativeVectorFromNormalId(
+                axisDirection,
+                Enum.NormalId.Bottom,
+            );
+            const topNormal = this.GenerateRelativeVectorFromNormalId(
+                axisDirection,
+                Enum.NormalId.Top,
+            );
             const eqLeniency = 0.5;
-
 
             const currentState = this.character.GetAttribute("State");
             if (playerDirection.Dot(bottomNormal) > eqLeniency)
@@ -84,18 +89,14 @@ export class CharacterController2D extends CharacterController implements OnStar
                     if (lastFrameDot <= eqLeniency)
                     {
                         if (currentState === EntityState.Idle)
-
                             ClientFunctions.Crouch(EntityState.Crouch);
-
                         else if (currentState === EntityState.Crouch)
-
                             ClientFunctions.Crouch(EntityState.Idle);
                     }
                 }
 
                 return;
             }
-
             else if (playerDirection.Dot(topNormal) > eqLeniency)
             {
                 const lastFrameDot = currentLastFrameNormal.Dot(topNormal);
@@ -103,7 +104,10 @@ export class CharacterController2D extends CharacterController implements OnStar
                 {
                     if (playerHumanoid.FloorMaterial !== Enum.Material.Air)
                     {
-                        print(`🚀 ~ file: 2dcontroller.controller.ts:65 ~ lastFrameDot:`, lastFrameDot);
+                        print(
+                            `🚀 ~ file: 2dcontroller.controller.ts:65 ~ lastFrameDot:`,
+                            lastFrameDot,
+                        );
                         ClientFunctions.Jump();
                     }
                 }
@@ -112,11 +116,11 @@ export class CharacterController2D extends CharacterController implements OnStar
 
                 ClientFunctions.Crouch(EntityState.Idle);
 
+
             if (playerHumanoid.FloorMaterial === Enum.Material.Air && playerHumanoid.GetAttribute("JumpDirection"))
-
                 playerHumanoid.Move(playerHumanoid.GetAttribute("JumpDirection") as Vector3);
-
-            else playerHumanoid.Move(playerDirection);
+            else
+                playerHumanoid.Move(playerDirection);
         }
     }
 
@@ -144,13 +148,16 @@ export class CharacterController2D extends CharacterController implements OnStar
     }
 
     public readonly keyboardDirectionMap: Map<Enum.KeyCode, Enum.NormalId> = new Map([
-        [Enum.KeyCode.W, Enum.NormalId.Top],
-        [Enum.KeyCode.A, Enum.NormalId.Back],
-        [Enum.KeyCode.S, Enum.NormalId.Bottom],
-        [Enum.KeyCode.D, Enum.NormalId.Front]
-    ] as [Enum.KeyCode, Enum.NormalId][])
+        [ Enum.KeyCode.W, Enum.NormalId.Top ],
+        [ Enum.KeyCode.A, Enum.NormalId.Back ],
+        [ Enum.KeyCode.S, Enum.NormalId.Bottom ],
+        [ Enum.KeyCode.D, Enum.NormalId.Front ],
+    ] as [Enum.KeyCode, Enum.NormalId][]);
 
-    onGamepadInput(buttonPressed: GamepadButtons, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult)
+    onGamepadInput(
+        buttonPressed: GamepadButtons,
+        inputMode: InputMode,
+    ): boolean | InputResult | (() => boolean | InputResult)
     {
         return false;
     }
@@ -158,7 +165,9 @@ export class CharacterController2D extends CharacterController implements OnStar
     SetAxisTowardsModel(towards: Model)
     {
         assert(this.character, "character is not defined");
-        this.axis = towards.GetPivot().Position.sub(this.character?.GetPivot().Position).Unit;
+        this.axis = towards
+            .GetPivot()
+            .Position.sub(this.character?.GetPivot().Position).Unit;
     }
 
     SetAxis(axis: Enum.NormalId | Vector3)
@@ -171,9 +180,8 @@ export class CharacterController2D extends CharacterController implements OnStar
     {
         this.enabled = true;
         if (enabled)
-
             this.DisableRobloxMovement();
-
-        else this.EnableRobloxMovement();
+        else
+            this.EnableRobloxMovement();
     }
 }

@@ -9,4 +9,4 @@ export = story<CharacterDataProps>({
     props: {
         Character: Characters.get("Leorio Sigmastare")!,
     },
-})
+});

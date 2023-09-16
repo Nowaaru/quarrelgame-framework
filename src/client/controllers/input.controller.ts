@@ -1,21 +1,22 @@
 import { Components } from "@flamework/components";
-import { Controller, OnStart, OnInit, Dependency, Modding } from "@flamework/core";
-import { Prefer, Clack, Gamepad as ClackGamepad } from "@rbxts/clack";
+import { Controller, Dependency, Modding, OnInit, OnStart } from "@flamework/core";
+import { Clack, Gamepad as ClackGamepad, Prefer } from "@rbxts/clack";
 import { Players } from "@rbxts/services";
 
+import { Signal, SignalCallback, SignalParams, SignalWait } from "@rbxts/beacon";
+import EventEmitter from "@rbxts/task-event-emitter";
+import { Gamepad, type GamepadButtons, OnGamepadInput } from "client/controllers/gamepad.controller";
 import { Keyboard, OnKeyboardInput } from "client/controllers/keyboard.controller";
 import { Mouse } from "client/controllers/mouse.controller";
-import { Gamepad, OnGamepadInput, type GamepadButtons } from "client/controllers/gamepad.controller";
-import EventEmitter from "@rbxts/task-event-emitter";
-import { Signal, SignalCallback, SignalParams, SignalWait } from "@rbxts/beacon";
 
-import { InputType, InputMode, InputResult } from "shared/util/input";
+import { InputMode, InputResult, InputType } from "shared/util/input";
 
-export interface OnInputTypeChange {
+export interface OnInputTypeChange
+{
     onInputTypeChange(newInputType: InputType): void;
 }
 
-export { OnGamepadInput, GamepadButtons } from "client/controllers/gamepad.controller";
+export { GamepadButtons, OnGamepadInput } from "client/controllers/gamepad.controller";
 export { OnKeyboardInput } from "client/controllers/keyboard.controller";
 
 /**
@@ -24,16 +25,15 @@ export { OnKeyboardInput } from "client/controllers/keyboard.controller";
  */
 @Controller({
     loadOrder: 2,
-    })
+})
 export class Input implements OnStart, OnInit, OnGamepadInput
 {
-
     private inputChangedListeners = new Set<OnInputTypeChange>();
 
     constructor(
         public readonly keyboard: Keyboard,
         public readonly mouse: Mouse,
-        public readonly gamepad: Gamepad
+        public readonly gamepad: Gamepad,
     )
     {}
 
@@ -43,7 +43,7 @@ export class Input implements OnStart, OnInit, OnGamepadInput
         this.prefer = new Prefer();
     }
 
-    onGamepadInput(buttonPressed: GamepadButtons, inputMode: InputMode): (InputResult | boolean | (() => boolean | InputResult))
+    onGamepadInput(buttonPressed: GamepadButtons, inputMode: InputMode): InputResult | boolean | (() => boolean | InputResult)
     {
         return () => true;
     }
@@ -52,7 +52,7 @@ export class Input implements OnStart, OnInit, OnGamepadInput
     {
         this.prefer.observePreferredInput((newInputType) =>
         {
-            switch ( newInputType )
+            switch (newInputType)
             {
                 case Clack.InputType.Gamepad:
                     this.InputTypeChanged.emit(InputType.Gamepad);
@@ -63,7 +63,6 @@ export class Input implements OnStart, OnInit, OnGamepadInput
                 case Clack.InputType.MouseKeyboard:
                     this.InputTypeChanged.emit(InputType.MouseKeyboard);
                     break;
-
             }
         });
 
@@ -73,8 +72,9 @@ export class Input implements OnStart, OnInit, OnGamepadInput
         this.InputTypeChanged.subscribe((newInputType) =>
         {
             for (const inputChangedListener of this.inputChangedListeners)
-
+            {
                 inputChangedListener.onInputTypeChange(newInputType);
+            }
         });
     }
 

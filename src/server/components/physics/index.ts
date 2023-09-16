@@ -1,11 +1,13 @@
+import { BaseComponent, Component } from "@flamework/components";
 import { OnStart } from "@flamework/core";
-import { Component, BaseComponent } from "@flamework/components";
-import { CombatService } from "server/services/combat.service";
 import { RunService, TweenService, Workspace } from "@rbxts/services";
 import Signal from "@rbxts/signal";
+import { CombatService } from "server/services/combat.service";
 import { EffectsService } from "server/services/effects.service";
-export namespace Physics {
-    export namespace Impulse {
+export namespace Physics
+{
+    export namespace Impulse
+    {
         export class ConstantImpulse
         {
             private static Impulses = new Set<ConstantImpulse>();
@@ -17,7 +19,7 @@ export namespace Physics {
              * @param velocity The speed of the impulse.
              */
             constructor(
-                private readonly target: PhysicsEntity<PhysicsAttributes, Model & { PrimaryPart: BasePart }>,
+                private readonly target: PhysicsEntity<PhysicsAttributes, Model & { PrimaryPart: BasePart; }>,
                 private readonly direction: Vector3,
                 private velocity: number,
             )
@@ -77,7 +79,7 @@ export namespace Physics {
              * Immutable.
              */
             constructor(
-                private readonly target: PhysicsEntity<PhysicsAttributes, Model & { PrimaryPart: BasePart }>,
+                private readonly target: PhysicsEntity<PhysicsAttributes, Model & { PrimaryPart: BasePart; }>,
                 private readonly direction: Vector3,
                 private readonly velocity: number,
             )
@@ -89,26 +91,27 @@ export namespace Physics {
             }
         }
     }
-    export interface PhysicsAttributes {
+    export interface PhysicsAttributes
+    {
         /**
          * How quickly the item falls and how far it can get knocked back.
          * Also determines how susceptible the item is to bouncing and rolling.
          */
-        Weight: number,
+        Weight: number;
 
         /**
          * The knockback resistance of the item.
          */
-        Inertia: number,
+        Inertia: number;
     }
 
     @Component({
         defaults: {
-        Weight: 100,
-        Inertia: 1,
-        }
-        })
-    export class PhysicsEntity<A extends PhysicsAttributes, I extends Model & { PrimaryPart: BasePart } > extends BaseComponent<A,I> implements OnStart
+            Weight: 100,
+            Inertia: 1,
+        },
+    })
+    export class PhysicsEntity<A extends PhysicsAttributes, I extends Model & { PrimaryPart: BasePart; }> extends BaseComponent<A, I> implements OnStart
     {
         constructor(protected readonly combatService: CombatService, private readonly effectsService: EffectsService)
         {
@@ -120,8 +123,9 @@ export namespace Physics {
 
             const { AssemblyRootPart } = this.GetPrimaryPart();
             if (AssemblyRootPart)
-
+            {
                 AssemblyRootPart.Massless = true;
+            }
         }
 
         onStart()
@@ -138,9 +142,9 @@ export namespace Physics {
             });
         }
 
-        public RotateFacing(towards: Vector3): void
-        public RotateFacing(towards: Instance & { Position: Vector3 }): void
-        public RotateFacing(towards: Instance & { Position: Vector3 } | Vector3)
+        public RotateFacing(towards: Vector3): void;
+        public RotateFacing(towards: Instance & { Position: Vector3; }): void;
+        public RotateFacing(towards: Instance & { Position: Vector3; } | Vector3)
         {
             const primaryPart = this.GetPrimaryPart();
 

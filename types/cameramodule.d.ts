@@ -2,11 +2,12 @@ declare namespace CameraModule
 {
     interface CameraUtils
     {
-        GetCameraMovementModeFromSettings(enumValue:
-            Enum.TouchCameraMovementMode |
-            Enum.ComputerCameraMovementMode |
-            Enum.DevTouchCameraMovementMode |
-            Enum.DevComputerCameraMovementMode
+        GetCameraMovementModeFromSettings(
+            enumValue:
+                | Enum.TouchCameraMovementMode
+                | Enum.ComputerCameraMovementMode
+                | Enum.DevTouchCameraMovementMode
+                | Enum.DevComputerCameraMovementMode,
         ): Enum.ComputerCameraMovementMode | Enum.DevComputerCameraMovementMode;
 
         setMouseBehaviorOverride(this: void, value?: Enum.MouseBehavior): void;
@@ -39,7 +40,7 @@ declare namespace CameraModule
 
     interface BaseCamera
     {
-        new: () => BaseCamera
+        new: () => BaseCamera;
 
         GetModuleName(): "BaseCamera";
 
@@ -75,7 +76,7 @@ declare namespace CameraModule
 
         OnPlayerCameraPropertyChange(): void;
 
-        InputTranslationToCameraAngleChange(translationVector: number, sensitivity: number): number
+        InputTranslationToCameraAngleChange(translationVector: number, sensitivity: number): number;
 
         GamepadZoomPress(): void;
 
@@ -91,9 +92,9 @@ declare namespace CameraModule
 
         UpdateForDistancePropertyChange(): void;
 
-        SetCameraToSubjectDistance(desiredSubjectDistance: number): number
+        SetCameraToSubjectDistance(desiredSubjectDistance: number): number;
 
-        SetCameraType( cameraType: Enum.CameraType ): void;
+        SetCameraType(cameraType: Enum.CameraType): void;
 
         GetCameraType(): Enum.CameraType;
 
@@ -125,7 +126,7 @@ declare namespace CameraModule
 
         CalculateNewLookVectorFromArg(suppliedLookVector: Vector3, rotateInput: Vector2): CFrame;
 
-        CalculateNewLookVectorVRFromArg(rotateInput: Vector2): Vector3
+        CalculateNewLookVectorVRFromArg(rotateInput: Vector2): Vector3;
 
         GetHumanoid(): Humanoid | undefined;
 
@@ -144,9 +145,12 @@ declare namespace CameraModule
 
         ActivateOcclusionMode(occlusionMode: Enum.DevCameraOcclusionMode): void;
 
-        ActivateCameraController(cameraMovementMode: Parameters<CameraModule.CameraUtils["GetCameraMovementModeFromSettings"]>["0"], legacyCameraType: Enum.CameraType): void
+        ActivateCameraController(
+            cameraMovementMode: Parameters<CameraModule.CameraUtils["GetCameraMovementModeFromSettings"]>["0"],
+            legacyCameraType: Enum.CameraType,
+        ): void;
 
-        ShouldUseVehicleCamera(): CameraModule
+        ShouldUseVehicleCamera(): CameraModule;
 
         activeCameraController: BaseCamera;
 

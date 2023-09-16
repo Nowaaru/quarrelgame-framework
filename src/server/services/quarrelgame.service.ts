@@ -1,11 +1,11 @@
 import { Components } from "@flamework/components";
-import { Service, OnStart, OnInit, Dependency, Modding } from "@flamework/core";
+import { Dependency, Modding, OnInit, OnStart, Service } from "@flamework/core";
 import Make from "@rbxts/make";
 import { Players, ReplicatedStorage, StarterPlayer, Workspace } from "@rbxts/services";
 import { Participant } from "server/components/participant.component";
 
+import { ServerFunctions } from "shared/network";
 import { BlockMode } from "shared/util/lib";
-import { ServerFunctions } from "shared/network"
 import { MatchService } from "./matchservice.service";
 
 export interface OnParticipantAdded
@@ -15,7 +15,7 @@ export interface OnParticipantAdded
 
 @Service({
     loadOrder: -2,
-    })
+})
 export class QuarrelGame implements OnStart, OnInit
 {
     public readonly DefaultBlockMode = BlockMode.MoveDirection;
@@ -23,12 +23,12 @@ export class QuarrelGame implements OnStart, OnInit
     public readonly CharacterContainer = Make("Folder", {
         Parent: Workspace,
         Name: "CharacterContainer",
-    })
+    });
 
     public readonly MatchContainer = Make("Folder", {
         Parent: Workspace,
         Name: "MapContainer",
-    })
+    });
 
     private readonly participantAddedHandler = new Set<OnParticipantAdded>();
 
@@ -58,19 +58,27 @@ export class QuarrelGame implements OnStart, OnInit
             const newParticipant = components.addComponent(player, Participant);
             this.participants.push(newParticipant);
             for (const participant of this.participantAddedHandler)
-
+            {
                 participant.onParticipantAdded(newParticipant);
+            }
 
             player.CharacterAdded.Connect((character) =>
             {
                 if (!character.Parent)
+                {
                     character.AncestryChanged.Once(() => reparentCharacter(character));
-                else reparentCharacter(character);
+                }
+                else
+                {
+                    reparentCharacter(character);
+                }
 
                 if (!character.FindFirstChild("Humanoid")?.FindFirstChild("Animator"))
+                {
                     Make("Animator", {
                         Parent: character.WaitForChild("Humanoid"),
                     });
+                }
             });
         });
 
@@ -79,25 +87,35 @@ export class QuarrelGame implements OnStart, OnInit
             for (const [i, participant] of pairs(this.participants))
             {
                 if (participant.instance === player)
-
+                {
                     this.participants.remove(i);
+                }
             }
         });
 
         // setup events
         ServerFunctions.RespawnCharacter.setCallback((player) =>
         {
-            assert(this.IsParticipant(player), `player ${player.UserId} is not a participant`);
+            assert(
+                this.IsParticipant(player),
+                `player ${player.UserId} is not a participant`,
+            );
             const thisParticipant = this.GetParticipant(player)!;
             if (thisParticipant.attributes.MatchId)
             {
                 for (const match of Dependency<MatchService>().GetOngoingMatches())
-
+                {
                     if (match.GetParticipants().has(thisParticipant))
+                    {
+                        return thisParticipant
+                            .LoadCombatant({ matchId: match.matchId })
+                            .then((entity) => entity.instance);
+                    }
+                }
 
-                        return thisParticipant.LoadCombatant({ matchId: match.matchId }).then((entity) => entity.instance);
-
-                warn(`player ${player.UserId} is in a match, but the match was not found`);
+                warn(
+                    `player ${player.UserId} is in a match, but the match was not found`,
+                );
             }
 
             print("Loading character.");
@@ -106,7 +124,10 @@ export class QuarrelGame implements OnStart, OnInit
 
         ServerFunctions.SelectCharacter.setCallback((player, characterId) =>
         {
-            assert(this.IsParticipant(player), `player ${player.UserId} is not a participant`);
+            assert(
+                this.IsParticipant(player),
+                `player ${player.UserId} is not a participant`,
+            );
 
             return this.GetParticipant(player)!.SelectCharacter(characterId);
         });
@@ -134,14 +155,17 @@ export class QuarrelGame implements OnStart, OnInit
 
     public GetAllParticipants()
     {
-        return [... this.participants];
+        return [...this.participants];
     }
 
-    public GetParticipantFromCharacter(item: Instance | undefined): Participant | undefined
+    public GetParticipantFromCharacter(
+        item: Instance | undefined,
+    ): Participant | undefined
     {
         if (!item)
-
+        {
             return undefined;
+        }
 
         const components = Dependency<Components>();
         const player = Players.GetPlayerFromCharacter(item);

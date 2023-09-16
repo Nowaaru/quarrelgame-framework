@@ -1,10 +1,11 @@
-import { Controller, OnStart, OnInit } from "@flamework/core";
-import { Mouse, MouseButton, MouseMovement, OnMouseButton, OnMouseMove } from "./mouse.controller";
+import { Controller, OnInit, OnStart } from "@flamework/core";
 import { Players, TweenService, UserInputService } from "@rbxts/services";
-import { ConvertPercentageToNumber } from "shared/util/lib";
 import { InputMode } from "shared/util/input";
+import { ConvertPercentageToNumber } from "shared/util/lib";
+import { Mouse, MouseButton, MouseMovement, OnMouseButton, OnMouseMove } from "./mouse.controller";
 
-export enum CursorMode {
+export enum CursorMode
+{
     Scriptable,
     Default,
 }
@@ -21,11 +22,12 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
 
     private baseSize = 8;
 
-    onMouseMove({position, delta}: MouseMovement): void
+    onMouseMove({ position, delta }: MouseMovement): void
     {
         if (this.CursorMode === CursorMode.Scriptable)
-
+        {
             return;
+        }
 
         this.SetPosition(position);
     }
@@ -33,10 +35,13 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
     onMouseButton(mouseButton: MouseButton, inputMode: InputMode): void
     {
         if (this.mouse.GetPressedButtons().isEmpty())
-
+        {
             this.InterpolateSize(undefined, this.baseSize);
-
-        else this.InterpolateSize(undefined, this.baseSize * 0.85);
+        }
+        else
+        {
+            this.InterpolateSize(undefined, this.baseSize * 0.85);
+        }
     }
 
     onInit()
@@ -49,13 +54,13 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
 
         this.CursorInstance.AnchorPoint = new Vector2(0.5, 0.5);
         this.CursorInstance.Name = "Cursor";
-        this.CursorInstance.BackgroundColor3 = new Color3(0.77,0.51,0.39);
+        this.CursorInstance.BackgroundColor3 = new Color3(0.77, 0.51, 0.39);
 
-        uiCorner.CornerRadius = new UDim(0,0);
+        uiCorner.CornerRadius = new UDim(0, 0);
 
         cursorContainer.Name = "Cursor Container";
         cursorContainer.IgnoreGuiInset = false;
-        cursorContainer.DisplayOrder = (2**31) - 1;
+        cursorContainer.DisplayOrder = (2 ** 31) - 1;
         cursorContainer.ResetOnSpawn = false;
     }
 
@@ -67,10 +72,10 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
 
     public SetPosition(position: readonly [xPx: number, yPx: number] = [0, 0])
     {
-        this.CursorInstance.Position = new UDim2(0, position[ 0 ], 0, position[ 1 ]);
+        this.CursorInstance.Position = new UDim2(0, position[0], 0, position[1]);
     }
 
-    public InterpolatePosition(tweenInfo = this.interpInfo, position: readonly[xPx: number, yPx: number] = [0, 0])
+    public InterpolatePosition(tweenInfo = this.interpInfo, position: readonly [xPx: number, yPx: number] = [0, 0])
     {
         const interpolationTween = TweenService.Create(this.CursorInstance, tweenInfo, {
             Position: UDim2.fromOffset(...position),
@@ -86,13 +91,13 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
      * @param radius The radius as a percentage.
      * @returns The radius converted into a UDim.
      */
-    public SetRadius(radius: string): void
+    public SetRadius(radius: string): void;
     /**
      * Change the radius of the cursor.
      * @param radius The radius as a number.
      * @returns The radius converted into a UDim.
      */
-    public SetRadius(radius: number): UDim
+    public SetRadius(radius: number): UDim;
     public SetRadius(radius: string | number): UDim
     {
         if (typeIs(radius, "string"))
@@ -106,11 +111,10 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
         return this.CursorInstance.UICorner.CornerRadius = new UDim(0, radius);
     }
 
-    public InterpolateRadius(tweenInfo: TweenInfo, radius: string): Tween
-    public InterpolateRadius(tweenInfo: TweenInfo, radius: number): Tween
+    public InterpolateRadius(tweenInfo: TweenInfo, radius: string): Tween;
+    public InterpolateRadius(tweenInfo: TweenInfo, radius: number): Tween;
     public InterpolateRadius(tweenInfo = this.interpInfo, radius: string | number): Tween
     {
-
         let radiusSize: UDim | undefined;
         if (typeIs(radius, "string"))
         {
@@ -119,10 +123,13 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
 
             radiusSize = new UDim(radiusScale);
         }
-        else radiusSize = new UDim(0, radius);
+        else
+        {
+            radiusSize = new UDim(0, radius);
+        }
 
         const interpolationTween = TweenService.Create(this.CursorInstance.UICorner, tweenInfo, {
-            CornerRadius: radiusSize
+            CornerRadius: radiusSize,
         });
 
         interpolationTween.Play();
@@ -146,7 +153,7 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
     public InterpolateRotation(tweenInfo = this.interpInfo, degrees = 0, absolute?: boolean): Tween
     {
         const interpolationTween = TweenService.Create(this.CursorInstance, tweenInfo, {
-            Rotation: absolute ? -this.CursorInstance.Rotation + degrees : degrees
+            Rotation: absolute ? -this.CursorInstance.Rotation + degrees : degrees,
         });
 
         interpolationTween.Play();
@@ -192,9 +199,9 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
     }
 
     public CursorInstance!: Frame & {
-        Parent: ScreenGui,
-        UICorner: UICorner,
-    }
+        Parent: ScreenGui;
+        UICorner: UICorner;
+    };
 
     private CursorMode = CursorMode.Default;
 }

@@ -1,20 +1,20 @@
 import { Components } from "@flamework/components";
-import { Controller, OnStart, OnInit, Dependency } from "@flamework/core";
+import { Controller, Dependency, OnInit, OnStart } from "@flamework/core";
 import { Animator } from "shared/components/animator.component";
-import { ClientEvents, ClientFunctions, Client as ClientNamespace, ServerEvents, ServerFunctions } from "shared/network";
+import { Client as ClientNamespace, ClientEvents, ClientFunctions, ServerEvents, ServerFunctions } from "shared/network";
+import { Character } from "shared/util/character";
 import { Input, InputMode, InputResult } from "shared/util/input";
-import { Client, OnRespawn } from "./client.controller";
+import { EntityState } from "shared/util/lib";
 import { CharacterController2D } from "./2dcontroller.controller";
 import { CharacterController3D } from "./3dcontroller.controller";
 import { CameraController3D } from "./camera3d.controller";
+import { Client, OnRespawn } from "./client.controller";
 import { HudController } from "./hud.controller";
-import { EntityState } from "shared/util/lib";
 import { OnKeyboardInput } from "./keyboard.controller";
 import { MotionInput } from "./motioninput.controller";
-import { Character } from "shared/util/character";
 
-import Characters from "shared/data/character";
 import { Players } from "@rbxts/services";
+import Characters from "shared/data/character";
 import { CameraController2D } from "./camera2d.controller";
 
 @Controller({})
@@ -22,7 +22,7 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
 {
     private selectedCharacter?: Character.Character;
 
-    private lockOnTarget?: Instance & { Position: Vector3 };
+    private lockOnTarget?: Instance & { Position: Vector3; };
 
     private character?: Model;
 
@@ -37,8 +37,8 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
     private keybindMap = new Map<Enum.KeyCode, Input>([
         [Enum.KeyCode.F, Input.Slash],
         [Enum.KeyCode.V, Input.Heavy],
-        [Enum.KeyCode.G, Input.Kick]
-    ])
+        [Enum.KeyCode.G, Input.Kick],
+    ]);
 
     onRespawn(character: Model): void
     {
@@ -48,19 +48,25 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
         {
             this.selectedCharacter = Characters.get(Players.LocalPlayer.GetAttribute("SelectedCharacter") as string);
             assert(this.selectedCharacter, `no selected character found (${Players.LocalPlayer.GetAttribute("SelectedCharacter")})`);
-        } else this.selectedCharacter = undefined;
+        }
+        else
+        {
+            this.selectedCharacter = undefined;
+        }
     }
 
     private handleOffensiveInput(buttonPressed: Enum.KeyCode)
     {
         const buttonType = this.keybindMap.get(buttonPressed);
         if (!this.character)
-
+        {
             return InputResult.Fail;
+        }
 
         if (!this.selectedCharacter)
-
+        {
             return InputResult.Fail;
+        }
 
         assert(Characters.has(this.selectedCharacter.Name), "selected character does not exist");
         if (buttonType)
@@ -72,19 +78,19 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
             const inputMotion = lockedMotionInput.GetInputsFilterNeutral();
             print("inputMotion", inputMotion);
 
-            if (inputMotion.size() === 1) // this likely means that it's a neutral input
-            {
+            if (inputMotion.size() === 1)
+            { // this likely means that it's a neutral input
                 if (buttonType in Characters.get(this.selectedCharacter.Name)!.Attacks)
                 {
-                    ClientFunctions[ buttonType as Input ].invoke();
+                    ClientFunctions[buttonType as Input].invoke();
 
                     return InputResult.Success;
                 }
             }
             else
-
+            {
                 ClientFunctions.SubmitMotionInput(inputMotion);
-
+            }
         }
 
         return InputResult.Fail;
@@ -129,12 +135,11 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
             return InputResult.Fail;
         }
 
-
         return this.handleOffensiveInput(buttonPressed);
     }
 
     private lockOnTracker?: RBXScriptConnection;
-    public LockOn(target?: Model & { PrimaryPart: Instance }, doFX?: boolean)
+    public LockOn(target?: Model & { PrimaryPart: Instance; }, doFX?: boolean)
     {
         if (target)
         {
@@ -142,8 +147,9 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
             this.lockOnTarget = primaryPart;
 
             if (this.lockOnTracker)
-
+            {
                 this.lockOnTracker?.Disconnect?.();
+            }
 
             if (this.lockOnTarget)
             {
@@ -154,8 +160,9 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
                 this.lockOnTracker = primaryPart.Destroying.Once(() =>
                 {
                     if (this.lockOnTarget === primaryPart)
-
+                    {
                         this.LockOn(undefined);
+                    }
                 });
 
                 return;
@@ -173,21 +180,23 @@ export class CombatController implements OnStart, OnInit, OnRespawn, OnKeyboardI
         {
             if (combatMode === ClientNamespace.CombatMode.TwoDimensional)
             {
-                const thisMatch = (await ClientFunctions.GetCurrentMatch());
+                const thisMatch = await ClientFunctions.GetCurrentMatch();
                 assert(thisMatch, "no match found");
 
                 this.cameraController2D.SetCameraEnabled(true);
                 this.cameraController2D.SetParticipants(...[...thisMatch.Participants.mapFiltered(({ ParticipantId }) =>
                 {
                     return Players.GetPlayers().find((p) => p.GetAttribute("ParticipantId") === ParticipantId)?.Character;
-                }), /* ... entity model support here ... */])
+                }) /* ... entity model support here ... */]);
             }
-            else this.cameraController2D.SetCameraEnabled(false);
-        })
+            else
+            {
+                this.cameraController2D.SetCameraEnabled(false);
+            }
+        });
     }
 
     onStart()
     {
-
     }
 }

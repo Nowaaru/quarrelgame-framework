@@ -1,4 +1,5 @@
-declare namespace PlayerModule {
+declare namespace PlayerModule
+{
     export interface PlayerModule
     {
         cameras: CameraModule.CameraModule;

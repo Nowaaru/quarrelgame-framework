@@ -1,12 +1,13 @@
-import { Service, OnStart, OnInit, Modding } from "@flamework/core";
+import { Modding, OnInit, OnStart, Service } from "@flamework/core";
 import { Players, RunService } from "@rbxts/services";
 import { ServerEvents, ServerFunctions } from "shared/network";
 
-export interface OnFrame {
+export interface OnFrame
+{
     /**
      * Fires whenever a Scheduler frame passes.
      */
-    onFrame(dt: number): void
+    onFrame(dt: number): void;
 }
 
 /**

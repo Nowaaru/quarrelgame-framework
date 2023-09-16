@@ -1,19 +1,19 @@
 {
-    "overrides": [
-        {
-            "files": [
-                "src/**/*.ts",
-                "src/**/*.tsx"
-            ]
-        }
-    ],
     "ignorePatterns": [
         "/out",
         "/node_modules"
     ],
+    "overrides": [
+        {
+            "files": [
+                "**/*.ts",
+                "**/*.tsx"
+            ]
+        }
+    ],
     "parserOptions": {
         "useJSXTextNode": true,
-        "ecmaVersion": 2018,
+        "ecmaVersion": "latest",
         "sourceType": "module",
         "project": "./tsconfig.json",
         "jsx": true
@@ -41,6 +41,11 @@
                 "blankLine": "never",
                 "prev": "var",
                 "next": "return"
+            },
+            {
+                "blankLine": "always",
+                "prev": "if",
+                "next": "*"
             }
         ],
         "prefer-exponentiation-operator": "warn",
@@ -48,9 +53,7 @@
         "no-whitespace-before-property": "warn",
         "computed-property-spacing": [
             "warn",
-            {
-            
-            }
+            "always"
         ],
         "no-mixed-spaces-and-tabs": "error",
         "roblox-ts/lua-truthiness": "off",
@@ -69,23 +72,7 @@
                 "max": 1
             }
         ],
-        "max-len": [
-            "warn",
-            {
-                "code": 160,
-                "ignoreComments": true,
-                "ignoreStrings": true,
-                "ignoreTemplateLiterals": true,
-                "ignoreRegExpLiterals": true
-            }
-        ],
         "no-confusing-arrow": "warn",
-        "newline-per-chained-call": [
-            "warn",
-            {
-                "ignoreChainWithDepth": 2
-            }
-        ],
         "no-constant-condition": "warn",
         "no-unused-expressions": "warn",
         "no-case-declarations": "error",
@@ -93,56 +80,24 @@
         "no-mixed-operators": "warn",
         "no-duplicate-case": "error",
         "no-sequences": "error",
-        "indent": [
+        "operator-linebreak": [
             "error",
-            4,
-            {
-                "ignoredNodes": [
-                    "ConditionalExpression"
-                ],
-                
-                "offsetTernaryExpressions": true,
-                
-                // specific indent rules
-                "VariableDeclarator": "first",
-                "MemberExpression": 1,
-                "SwitchCase": 1
-            }
-        ], 
+            "none"
+        ],
         "consistent-this": [
             "warn",
             "that"
         ],
-        "keyword-spacing": [
-            "warn",
-            {
-                "before": true,
-                "after": true
-            }
-        ],
         "no-else-return": "warn",
         "spaced-comment": "warn",
         "no-func-assign": "error",
-        // "no-unused-vars": "warn",
         "no-lone-blocks": "warn",
         "no-extra-semi": "warn",
-        
         "no-dupe-args": "error",
         "prefer-const": "error",
         "no-dupe-keys": "error",
         "no-lonely-if": "warn",
         "space-before-blocks": "warn",
-        "brace-style": [
-            "error",
-            "allman"
-        ],
-        "key-spacing": [
-            "warn",
-            {
-                "beforeColon": false,
-                "afterColon": true
-            }
-        ],
         "new-parens": [
             "error",
             "always"

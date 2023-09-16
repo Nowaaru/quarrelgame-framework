@@ -6,4 +6,4 @@ import { story } from "shared/util/story";
 export = story<CharacterSelectProps>({
     component: CharacterSelect,
     props: { Characters },
-})
+});

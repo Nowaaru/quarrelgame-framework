@@ -1,52 +1,60 @@
 import { BaseComponent, Component } from "@flamework/components";
-import { Controller, OnStart, OnInit, Reflect, Modding } from "@flamework/core";
+import { Controller, Modding, OnInit, OnStart, Reflect } from "@flamework/core";
 import { Mouse as ClackMouse } from "@rbxts/clack";
 import { Players, UserInputService } from "@rbxts/services";
 import EventEmitter from "@rbxts/task-event-emitter";
 import { InputMode } from "shared/util/input";
 import { Cursor } from "./cursor.controller";
 
-export enum MouseButton {
+export enum MouseButton
+{
     Left,
     Middle,
-    Right
+    Right,
 }
 
-export interface ScrollMovement {
-    direction: ScrollDirection,
-    value: number
+export interface ScrollMovement
+{
+    direction: ScrollDirection;
+    value: number;
 }
 
-export enum ScrollDirection {
+export enum ScrollDirection
+{
     Up,
-    Down
+    Down,
 }
 
-export interface MouseMovement {
+export interface MouseMovement
+{
     delta: readonly [x: number, y: number];
     position: readonly [x: number, y: number];
 }
 
-export interface OnMouseMove {
+export interface OnMouseMove
+{
     onMouseMove?(movement: MouseMovement): void;
 }
 
-export interface OnMouseButton {
+export interface OnMouseButton
+{
     onMouseButton?(mouseButton: MouseButton, inputMode: InputMode): void;
 }
 
-export interface OnMouseWheel {
+export interface OnMouseWheel
+{
     onMouseWheel?(direction: ScrollMovement): void;
 }
 
-export enum LockType {
+export enum LockType
+{
     Center,
-    Current
+    Current,
 }
 
 @Controller({
     loadOrder: 1,
-    })
+})
 export class Mouse implements OnStart, OnInit
 {
     constructor()
@@ -82,10 +90,13 @@ export class Mouse implements OnStart, OnInit
                     for (const listener of this.buttonListeners)
                     {
                         if (mode === InputMode.Down)
-
+                        {
                             this.pressedButtons.add(MouseButton.Left);
-
-                        else this.pressedButtons.delete(MouseButton.Left);
+                        }
+                        else
+                        {
+                            this.pressedButtons.delete(MouseButton.Left);
+                        }
 
                         Promise.try(() => listener.onMouseButton?.(MouseButton.Left, mode));
                     }
@@ -94,10 +105,13 @@ export class Mouse implements OnStart, OnInit
                     for (const listener of this.buttonListeners)
                     {
                         if (mode === InputMode.Down)
-
+                        {
                             this.pressedButtons.add(MouseButton.Right);
-
-                        else this.pressedButtons.delete(MouseButton.Right);
+                        }
+                        else
+                        {
+                            this.pressedButtons.delete(MouseButton.Right);
+                        }
 
                         Promise.try(() => listener.onMouseButton?.(MouseButton.Right, mode));
                     }
@@ -106,10 +120,13 @@ export class Mouse implements OnStart, OnInit
                     for (const listener of this.buttonListeners)
                     {
                         if (mode === InputMode.Down)
-
+                        {
                             this.pressedButtons.add(MouseButton.Middle);
-
-                        else this.pressedButtons.delete(MouseButton.Middle);
+                        }
+                        else
+                        {
+                            this.pressedButtons.delete(MouseButton.Middle);
+                        }
 
                         Promise.try(() => Promise.try(() => listener.onMouseButton?.(MouseButton.Middle, mode)));
                     }
@@ -124,20 +141,24 @@ export class Mouse implements OnStart, OnInit
             {
                 for (const listener of this.moveListeners)
                 {
-                    Promise.try(() => listener.onMouseMove?.({
-                        delta: [key.Delta.X, key.Delta.Y] as const,
-                        position: [key.Position.X, key.Position.Y] as const,
-                    }));
+                    Promise.try(() =>
+                        listener.onMouseMove?.({
+                            delta: [key.Delta.X, key.Delta.Y] as const,
+                            position: [key.Position.X, key.Position.Y] as const,
+                        })
+                    );
                 }
             }
             else if (key.UserInputType === Enum.UserInputType.MouseWheel)
             {
                 for (const listener of this.wheelListeners)
                 {
-                    Promise.try(() => listener.onMouseWheel?.({
-                        value: key.Delta.Z,
-                        direction: key.Delta.Z > 0 ? ScrollDirection.Up : ScrollDirection.Down,
-                    }));
+                    Promise.try(() =>
+                        listener.onMouseWheel?.({
+                            value: key.Delta.Z,
+                            direction: key.Delta.Z > 0 ? ScrollDirection.Up : ScrollDirection.Down,
+                        })
+                    );
                 }
             }
         });
@@ -153,10 +174,13 @@ export class Mouse implements OnStart, OnInit
     public Destroy()
     {
         if (this.isMouseLocked)
-
+        {
             this.clackInstance.unlockAndDestroy();
-
-        else this.clackInstance.destroy();
+        }
+        else
+        {
+            this.clackInstance.destroy();
+        }
     }
 
     public Position(): [x: number, y: number]
@@ -172,8 +196,9 @@ export class Mouse implements OnStart, OnInit
         {
             this.isMouseLocked = true;
             if (lockType === LockType.Center)
-
+            {
                 return this.clackInstance.lockCenter();
+            }
 
             return this.clackInstance.lock();
         }

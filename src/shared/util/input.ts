@@ -2,7 +2,8 @@
  * The medium the User is using
  * to interact with the client.
  */
-export enum InputType {
+export enum InputType
+{
     Gamepad,
     MouseKeyboard,
 }
@@ -10,18 +11,20 @@ export enum InputType {
 /**
  * The state of an input.
  */
-export enum InputMode {
+export enum InputMode
+{
     Release,
     Press,
-    Up = InputMode[ "Release" ],
-    Down = InputMode[ "Press" ]
+    Up = InputMode["Release"],
+    Down = InputMode["Press"],
 }
 
 /**
  * Whether the input was allowed
  * or denied.
  */
-export enum InputResult {
+export enum InputResult
+{
     Success,
     Fail,
 }
@@ -30,7 +33,8 @@ export enum InputResult {
  * Whether an input was processed by the
  * game client.
  */
-export enum InputProcessed {
+export enum InputProcessed
+{
     Processed,
     Unprocessed,
     Either,
@@ -41,7 +45,8 @@ export enum InputProcessed {
  */
 export type CommandNormal = readonly [Motion, Input];
 
-export enum Input {
+export enum Input
+{
     Dash = "DS",
 
     Punch = "P",
@@ -50,10 +55,11 @@ export enum Input {
     Heavy = "HS",
 
     Roman = "RC",
-    Burst = "BR"
+    Burst = "BR",
 }
 
-export enum Motion {
+export enum Motion
+{
     DownBack = 1,
     Down = 2,
     DownForward = 3,
@@ -81,22 +87,23 @@ export function ConvertMoveDirectionToMotion(moveDirection: Vector3): readonly [
         [new Vector3(0, -0.5, -0.5), Motion.DownBack],
         [new Vector3(0, -0.5, 0.5), Motion.DownForward],
         [new Vector3(0, 0, -1), Motion.Back],
-    ] as const).map((n) => [n[ 0 ].Unit, n[ 1 ]]);
+    ] as const).map((n) => [n[0].Unit, n[1]]);
 
     for (const [vector, motion] of moveDirectionMap)
     {
         if (vector.Dot(moveDirection.Unit) > motionDirectionLeniency)
         {
-            const out = [Motion[ motion ] as keyof typeof Motion, vector.Dot(moveDirection.Unit)] as const;
+            const out = [Motion[motion] as keyof typeof Motion, vector.Dot(moveDirection.Unit)] as const;
             if (vector === Vector3.zero)
-
-                return [ Motion[ motion ] as keyof typeof Motion, 0];
+            {
+                return [Motion[motion] as keyof typeof Motion, 0];
+            }
 
             return out;
         }
     }
 
-    return [ Motion[ Motion.Neutral ] as keyof typeof Motion, Vector3.zero.Dot(moveDirection)];
+    return [Motion[Motion.Neutral] as keyof typeof Motion, Vector3.zero.Dot(moveDirection)];
 }
 
 export type MotionInput = Array<Motion | Input>;

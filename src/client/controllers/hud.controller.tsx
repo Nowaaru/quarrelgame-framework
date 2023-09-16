@@ -1,14 +1,15 @@
-import { Controller, OnStart, OnInit } from "@flamework/core";
+import { Controller, OnInit, OnStart } from "@flamework/core";
+import Make from "@rbxts/make";
+import Roact from "@rbxts/roact";
+import { Players, TweenService } from "@rbxts/services";
+import HeadsUpDisplay from "client/ui/hud";
 import { Camera3D, CameraController3D } from "./camera3d.controller";
 import { Client } from "./client.controller";
-import Make from "@rbxts/make";
-import { Players, TweenService } from "@rbxts/services";
-import Roact from "@rbxts/roact";
-import HeadsUpDisplay from "client/ui/hud";
 
-interface WidescreenInterface {
-    Top: Frame,
-    Bottom: Frame,
+interface WidescreenInterface
+{
+    Top: Frame;
+    Bottom: Frame;
 }
 
 @Controller({})
@@ -31,7 +32,6 @@ export class HudController implements OnStart, OnInit
 
     onStart()
     {
-
     }
 
     private HudTree?: Roact.Tree;
@@ -44,8 +44,9 @@ export class HudController implements OnStart, OnInit
     public EnableHud()
     {
         if (this.HudTree)
-
+        {
             this.DisableHud();
+        }
 
         this.HudTree = Roact.mount(<HeadsUpDisplay />, this.hudInstance, "Heads-Up Display");
     }
@@ -53,8 +54,9 @@ export class HudController implements OnStart, OnInit
     public DisableHud()
     {
         if (this.HudTree)
-
+        {
             Roact.unmount(this.HudTree);
+        }
 
         this.HudTree = undefined;
     }
@@ -67,7 +69,6 @@ export class HudController implements OnStart, OnInit
 
     public SetLockOnTarget(targetModel?: Model)
     {
-
         if (targetModel !== this.lockOnTarget)
         {
             this.lockOnTarget = targetModel;
@@ -96,7 +97,7 @@ export class HudController implements OnStart, OnInit
                     FillTransparency: 1,
 
                     OutlineColor: Color3.fromRGB(255, 141, 42),
-                    FillColor: Color3.fromRGB(255, 141, 42)
+                    FillColor: Color3.fromRGB(255, 141, 42),
                 });
 
                 TweenService.Create(this.lockOnHighlight, new TweenInfo(0.5), {
@@ -111,11 +112,11 @@ export class HudController implements OnStart, OnInit
     {
         this.wideScreenEffectEnabled = !!enabled;
         TweenService.Create(this.widescreenInterface.Top, this.lockOnTweenInfo, {
-            Position: this.wideScreenEffectEnabled ? UDim2.fromScale(0, 0) : UDim2.fromScale(0, -this.widescreenInterface.Top.Size.Y.Scale)
+            Position: this.wideScreenEffectEnabled ? UDim2.fromScale(0, 0) : UDim2.fromScale(0, -this.widescreenInterface.Top.Size.Y.Scale),
         }).Play();
 
         TweenService.Create(this.widescreenInterface.Bottom, this.lockOnTweenInfo, {
-            Position: this.wideScreenEffectEnabled ? UDim2.fromScale(0, 1 - this.widescreenInterface.Bottom.Size.Y.Scale) : UDim2.fromScale(0, 1)
+            Position: this.wideScreenEffectEnabled ? UDim2.fromScale(0, 1 - this.widescreenInterface.Bottom.Size.Y.Scale) : UDim2.fromScale(0, 1),
         }).Play();
 
         if (!this.wideScreenEffectEnabled)
@@ -144,8 +145,8 @@ export class HudController implements OnStart, OnInit
             Name: "Top",
             BackgroundColor3: new Color3(),
             BorderSizePixel: 0,
-            Position: UDim2.fromScale(0, -1/8),
-            Size: UDim2.fromScale(1, 1/8),
+            Position: UDim2.fromScale(0, -1 / 8),
+            Size: UDim2.fromScale(1, 1 / 8),
         }),
 
         Bottom: Make("Frame", {
@@ -153,9 +154,9 @@ export class HudController implements OnStart, OnInit
             BackgroundColor3: new Color3(),
             BorderSizePixel: 0,
             Position: UDim2.fromScale(0, 1),
-            Size: UDim2.fromScale(1, 1/8),
+            Size: UDim2.fromScale(1, 1 / 8),
         }),
-    }
+    };
 
     private hudInstance = Make("ScreenGui", {
         Name: "Heads-Up Display",

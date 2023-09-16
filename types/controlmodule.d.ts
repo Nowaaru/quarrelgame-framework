@@ -1,6 +1,8 @@
-declare namespace ControlModule {
-    interface ControlModule {
-        GetMoveVector(): Vector3
+declare namespace ControlModule
+{
+    interface ControlModule
+    {
+        GetMoveVector(): Vector3;
 
         GetActiveController(): ControlModule;
 
@@ -17,8 +19,10 @@ declare namespace ControlModule {
         GetClickToMoveController(): ControlModule.ClickToMoveController.ClickToMove;
     }
 
-    namespace ClickToMoveController {
-        interface ClickToMove {
+    namespace ClickToMoveController
+    {
+        interface ClickToMove
+        {
             DisconnectEvents(): void;
 
             Start(): void;

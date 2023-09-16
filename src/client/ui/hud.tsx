@@ -1,22 +1,24 @@
 import { useEffect, useState } from "@rbxts/roact";
 import { Players } from "@rbxts/services";
 
-import Health from "./health";
 import Roact from "@rbxts/roact";
+import Health from "./health";
 import Stamina from "./stamina";
 
-export interface HudOptions {
-
+export interface HudOptions
+{
 }
 
-interface HealthTracker {
-    Health: number,
-    MaxHealth: number
+interface HealthTracker
+{
+    Health: number;
+    MaxHealth: number;
 }
 
-interface StaminaTracker {
-    Stamina: number,
-    MaxStamina: number
+interface StaminaTracker
+{
+    Stamina: number;
+    MaxStamina: number;
 }
 
 export default function HeadsUpDisplay(props: HudOptions)
@@ -36,15 +38,17 @@ export default function HeadsUpDisplay(props: HudOptions)
     useEffect(() =>
     {
         if (playerCharacter !== Players.LocalPlayer.Character)
-
+        {
             setCharacter(Players.LocalPlayer.Character);
+        }
     });
 
     useEffect(() =>
     {
         if (!playerCharacter)
-
+        {
             return undefined;
+        }
 
         const healthChangedHandler = () =>
         {
@@ -84,17 +88,17 @@ export default function HeadsUpDisplay(props: HudOptions)
             BackgroundTransparency={1}
             AnchorPoint={new Vector2(0.5, 0)}
             Position={UDim2.fromScale(0.5, 0.85)}
-            Size = { UDim2.fromScale(0.95, 1/10) }
+            Size={UDim2.fromScale(0.95, 1 / 10)}
         >
             <Health
                 Health={humanoidHealth.Health}
                 MaxHealth={humanoidHealth.MaxHealth}
-                Size = { UDim2.fromScale(0.35, 1)}
+                Size={UDim2.fromScale(0.35, 1)}
             />
             <Stamina
                 Stamina={humanoidStamina.Stamina}
                 MaxStamina={humanoidStamina.MaxStamina}
-                Size = { UDim2.fromScale(0.35, 1)}
+                Size={UDim2.fromScale(0.35, 1)}
                 Position={UDim2.fromScale(1, 0)}
             />
         </frame>

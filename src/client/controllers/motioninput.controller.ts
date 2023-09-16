@@ -1,23 +1,25 @@
-import { Controller, OnStart, OnInit, OnTick } from "@flamework/core";
-import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
+import { Controller, OnInit, OnStart, OnTick } from "@flamework/core";
 import { InputMode, InputResult } from "shared/util/input";
 import * as input from "shared/util/input";
+import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
 
 export type Frames = number;
 
-export namespace MotionInput {
+export namespace MotionInput
+{
     export import Motion = input.Motion;
 
     export import Input = input.Input;
-    export interface OnMotionInput {
+    export interface OnMotionInput
+    {
         onMotionInput(motionInput: MotionInput): void;
     }
 
     abstract class LockedMotionInput
     {
-        abstract GetInputs(): (Motion | Input)[]
+        abstract GetInputs(): (Motion | Input)[];
 
-        abstract GetInputsFilterNeutral(): (Motion | Input)[]
+        abstract GetInputsFilterNeutral(): (Motion | Input)[];
     }
 
     export class MotionInput
@@ -52,7 +54,7 @@ export namespace MotionInput {
 
         public GetInputs()
         {
-            return [... this.inputs ];
+            return [...this.inputs];
         }
 
         private inputs: Motion[] = [];
@@ -72,7 +74,7 @@ export namespace MotionInput {
 
         public pushToMotionInput(input: Motion | Input): void | LockedMotionInput
         {
-            print("pushed motion/input:", input in Input ? Input[ input as never ] : Motion[ input as never ]);
+            print("pushed motion/input:", input in Input ? Input[input as never] : Motion[input as never]);
             this.currentMotionInput = this.currentMotionInput ?? new MotionInput();
             if (input in Input)
             {
@@ -82,8 +84,9 @@ export namespace MotionInput {
                 return finishedInput;
             }
             else if (input in Motion)
-
+            {
                 this.currentMotionInput.PushDirection(input as Motion);
+            }
         }
 
         onTick()
@@ -91,7 +94,7 @@ export namespace MotionInput {
             if (this.currentMotionInput)
             {
                 const currentInputList = this.currentMotionInput.GetInputs();
-                if (currentInputList[ currentInputList.size() - 1 ] === Motion.Neutral)
+                if (currentInputList[currentInputList.size() - 1] === Motion.Neutral)
                 {
                     if (this.motionInputTimeout >= this.motionInputTimeoutLimit)
                     {
@@ -99,7 +102,10 @@ export namespace MotionInput {
                         this.motionInputTimeout = -1;
                         this.currentMotionInput = undefined;
                     }
-                    else this.motionInputTimeout += 1;
+                    else
+                    {
+                        this.motionInputTimeout += 1;
+                    }
                 }
 
                 return;
