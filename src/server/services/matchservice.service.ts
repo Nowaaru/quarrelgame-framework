@@ -18,7 +18,7 @@ export enum ArenaTypeFlags
 }
 
 export const DefaultMatchSettings: MatchSettings = {
-    ArenaType: ArenaTypeFlags["ALLOW_2D"] | ArenaTypeFlags["ALLOW_3D"],
+    ArenaType: ArenaTypeFlags[ "ALLOW_2D" ] | ArenaTypeFlags[ "ALLOW_3D" ],
     Map: "happyhome",
 };
 
@@ -216,7 +216,7 @@ export interface PostMatchData
 export class Match
 {
     private matchSettings: MatchSettings = {
-        ArenaType: ArenaTypeFlags["ALLOW_2D"] | ArenaTypeFlags["ALLOW_3D"],
+        ArenaType: ArenaTypeFlags[ "ALLOW_2D" ] | ArenaTypeFlags[ "ALLOW_3D" ],
         Map: "happyhome",
     };
 
@@ -270,13 +270,9 @@ export class Match
         if (this.matchHost === participant)
         {
             if (this.participants.has(this.originalMatchHost))
-            {
                 this.matchHost = this.originalMatchHost;
-            }
             else
-            {
-                this.matchHost = [...this.participants][0];
-            }
+                this.matchHost = [ ...this.participants ][ 0 ];
         }
 
         this.participants.delete(participant);
@@ -306,8 +302,7 @@ export class Match
     public HostIs(player: Player | Participant)
     {
         return (
-            (this.matchHost.instance === player || this.matchHost === player || this.originalMatchHost === player || this.originalMatchHost.instance === player)
-            && this.participants.has(this.matchHost) && [...this.participants].find(
+            (this.matchHost.instance === player || this.matchHost === player || this.originalMatchHost === player || this.originalMatchHost.instance === player)            && this.participants.has(this.matchHost) && [ ...this.participants ].find(
                     (n) => n === player || n.instance === player,
                 ) !== undefined
         );
@@ -359,7 +354,7 @@ export class Match
     private RequestParticipantsLoadMap(): Promise<Participant["id"][]>
     {
         return Promise.all<Promise<Participant["id"]>[]>(
-            [...this.participants].map((participant) =>
+            [ ...this.participants ].map((participant) =>
             {
                 return new Promise<Participant["id"]>((res, rej) =>
                 {
@@ -392,9 +387,7 @@ export class Match
         this.RequestParticipantsLoadMap().then(() =>
         {
             for (const participant of this.GetParticipants())
-            {
                 participant.instance.SetAttribute("MatchId", this.matchId);
-            }
 
             this.matchPhase = MatchPhase.InProgress;
             // Get map, arena, and call Predict on respawnCharacter
@@ -421,19 +414,17 @@ export class Match
                 );
             }
 
-            const randomStart = ArenaTypeFlags["ALLOW_2D"]; /* [
+            const randomStart = ArenaTypeFlags[ "ALLOW_2D" ]; /* [
                 ArenaTypeFlags[ "ALLOW_2D" ],
                 ArenaTypeFlags[ "ALLOW_3D" ],
             ][ math.random(1, 2) - 1 ];*/
 
-            const arena = randomStart === ArenaTypeFlags["ALLOW_2D"]
-                ? map.GetArenaFromIndex(MapNamespace.ArenaType["2D"], 0)
-                : map.GetArenaFromIndex(MapNamespace.ArenaType["3D"], 0);
+            const arena = randomStart === ArenaTypeFlags[ "ALLOW_2D" ]                ? map.GetArenaFromIndex(MapNamespace.ArenaType[ "2D" ], 0)                : map.GetArenaFromIndex(MapNamespace.ArenaType[ "3D" ], 0);
 
             for (const participant of this.GetParticipants())
             {
                 print("loading participant:", participant.instance.Name);
-                const startType = randomStart === ArenaTypeFlags["ALLOW_2D"] ? MapNamespace.ArenaType["2D"] : MapNamespace.ArenaType["3D"];
+                const startType = randomStart === ArenaTypeFlags[ "ALLOW_2D" ] ? MapNamespace.ArenaType[ "2D" ] : MapNamespace.ArenaType[ "3D" ];
                 this.RespawnParticipant(participant, startType, 0);
             }
 
@@ -476,7 +467,7 @@ export class Match
      */
     public GetParticipants(): Set<Participant>
     {
-        return new Set([...this.participants]);
+        return new Set([ ...this.participants ]);
     }
 
     /**
@@ -487,7 +478,7 @@ export class Match
      */
     public RespawnParticipant(
         participant: Participant,
-        arenaType: MapNamespace.ArenaType = MapNamespace.ArenaType["2D"],
+        arenaType: MapNamespace.ArenaType = MapNamespace.ArenaType[ "2D" ],
         arenaIndex = 0,
         combatMode: Client.CombatMode = Client.CombatMode.TwoDimensional,
     )
@@ -529,7 +520,7 @@ export class MatchService implements OnStart, OnInit
             const thisParticipant = Dependency<QuarrelGame>().GetParticipant(player);
             assert(thisParticipant, `participant for ${player} does not exist.`);
 
-            for (const [, match] of this.ongoingMatches)
+            for (const [ , match ] of this.ongoingMatches)
             {
                 if (match.HostIs(thisParticipant))
                 {
@@ -555,7 +546,7 @@ export class MatchService implements OnStart, OnInit
                 );
 
                 const newMatch = this.CreateMatch({
-                    Participants: [thisParticipant],
+                    Participants: [ thisParticipant ],
                     Settings: matchSettings,
                 });
 
@@ -589,9 +580,7 @@ export class MatchService implements OnStart, OnInit
             const thisParticipant = Dependency<QuarrelGame>().GetParticipant(player);
             assert(thisParticipant, `participant for ${player} does not exist.`);
             if (!thisParticipant.attributes.MatchId)
-            {
                 return Promise.resolve(undefined);
-            }
 
             const ongoingMatch = this.GetOngoingMatch(
                 thisParticipant.attributes.MatchId,
@@ -605,7 +594,7 @@ export class MatchService implements OnStart, OnInit
                 assert(currentLocation, `participant is not in an arena.`);
 
                 const matchParticipants = ongoingMatch.GetParticipants();
-                const matchEntitites = [...matchParticipants].map(
+                const matchEntitites = [ ...matchParticipants ].map(
                     (participant) => participant.entity as Entity.PlayerCombatant<Entity.PlayerCombatantAttributes>,
                 );
 
@@ -621,7 +610,7 @@ export class MatchService implements OnStart, OnInit
                         instance: thisArena,
                         config: thisArena.config,
                     },
-                    Participants: [...matchParticipants].map(
+                    Participants: [ ...matchParticipants ].map(
                         (participant) => participant.attributes,
                     ),
                     State: {
@@ -650,7 +639,7 @@ export class MatchService implements OnStart, OnInit
      */
     public CreateMatch(matchData: MatchData)
     {
-        const newMatch = new Match(matchData.Participants[0]);
+        const newMatch = new Match(matchData.Participants[ 0 ]);
         this.ongoingMatches.set(newMatch.matchId, newMatch);
 
         matchData.Participants.forEach((participant) => newMatch.AddParticipant(participant));
@@ -665,6 +654,6 @@ export class MatchService implements OnStart, OnInit
 
     public GetOngoingMatches(): Set<Match>
     {
-        return new Set([...this.ongoingMatches].map(([, match]) => match));
+        return new Set([ ...this.ongoingMatches ].map(([ , match ]) => match));
     }
 }

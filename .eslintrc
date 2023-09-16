@@ -58,10 +58,6 @@
         "no-mixed-spaces-and-tabs": "error",
         "roblox-ts/lua-truthiness": "off",
         "roblox-ts/no-array-pairs": "off",
-        "implicit-arrow-linebreak": [
-            "warn",
-            "beside"
-        ],
         "semi": [
             "error",
             "always"
@@ -80,10 +76,6 @@
         "no-mixed-operators": "warn",
         "no-duplicate-case": "error",
         "no-sequences": "error",
-        "operator-linebreak": [
-            "error",
-            "none"
-        ],
         "consistent-this": [
             "warn",
             "that"
@@ -110,10 +102,6 @@
         "no-empty": "error",
         "no-tabs": "error",
         "no-var": "error",
-        "curly": [
-            "error",
-            "multi-or-nest"
-        ],
         "yoda": "warn"
     }
 }
