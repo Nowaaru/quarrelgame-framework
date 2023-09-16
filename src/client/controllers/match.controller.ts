@@ -1,4 +1,4 @@
-import { Controller, Modding, OnStart } from "@flamework/core";
+import { Controller, Modding, OnInit, OnStart } from "@flamework/core";
 import { Players, Workspace } from "@rbxts/services";
 import type _Map from "server/components/map.component";
 import { ClientEvents, ClientFunctions, Server, ServerFunctions } from "shared/network";
@@ -12,7 +12,7 @@ export interface OnArenaChange
 @Controller({
     loadOrder: -1,
 })
-export class MatchController implements OnStart
+export class MatchController implements OnStart, OnInit
 {
     constructor(private cameraController2D: CameraController2D)
     {}
@@ -28,7 +28,6 @@ export class MatchController implements OnStart
     {
         ClientEvents.ArenaChanged.connect((matchId, arenaId) =>
         {
-            print("arena changed", matchId, arenaId);
             const currentMatch = this.GetCurrentMatch();
             if (currentMatch === undefined)
             {
@@ -49,10 +48,7 @@ export class MatchController implements OnStart
             this.cameraController2D.SetCameraEnabled(true);
 
             for (const listener of this.arenaChangedHandlers)
-            {
-                print("listener:", listener);
-                task.spawn(() => listener.onArenaChanged(matchId, this.matchData!.arenaInstance));
-            }
+                task.spawn(() => listener.onArenaChanged(matchId, this.matchData!));
         });
     }
 
@@ -61,9 +57,7 @@ export class MatchController implements OnStart
         ClientEvents.MatchParticipantRespawned.connect((characterModel) =>
         {
             if (characterModel === undefined)
-            {
                 return;
-            }
         });
 
         Modding.onListenerAdded<OnArenaChange>((l) => this.arenaChangedHandlers.add(l));
