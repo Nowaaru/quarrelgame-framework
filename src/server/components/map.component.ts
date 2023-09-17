@@ -59,7 +59,7 @@ namespace _Map
         readonly config?: ArenaConfiguration;
     }
 
-    export interface ArenaConfiguration
+    export interface ArenaConfiguration<T extends ArenaType = typeof ArenaType["2D"]>
     {
         /**
          * The location that the battle revolves around
@@ -108,7 +108,7 @@ namespace _Map
          * 📝 Defaults to `100` if the arena is a 3D arena.
          * 📝 Defaults to `Vector2.new(100, 100)` if the arena is a 2D arena.
          */
-        Size: number | Vector2;
+        Size: T extends typeof ArenaType["2D"] ? Vector2 : number;
     }
 
     /**
@@ -215,17 +215,17 @@ namespace _Map
             arenaIndex: number,
         ): Arena | undefined
         {
-            return this.currentMap.model.arena[ arenaType ]
+            return this.currentMap.model.arena[arenaType]
                 .GetChildren()
                 .mapFiltered(({ Name: arenaName }) =>
                 {
                     if (tonumber(arenaIndex) === tonumber(arenaName))
                     {
-                        return this.currentMap.model.arena[ arenaType ][
+                        return this.currentMap.model.arena[arenaType][
                             arenaName as never
                         ] as Arena;
                     }
-                })[ 0 ];
+                })[0];
         }
 
         public MoveEntityToArena(
@@ -245,7 +245,7 @@ namespace _Map
                 ?.Value ?? arena.GetPivot().RightVector.mul(-1);
 
             this.entityLocations.set(entity, { arenaType, arenaIndex });
-            if (arenaType === ArenaType[ "2D" ])
+            if (arenaType === ArenaType["2D"])
             {
                 entity
                     .GetPrimaryPart()
@@ -352,7 +352,7 @@ namespace _Map
                             Value: 5,
                         }),
 
-                        arena.Parent!.Name.match("2")[ 0 ]
+                        arena.Parent!.Name.match("2")[0]
                             ? Make("Vector3Value", {
                                 Name: "Size",
                                 Value: new Vector3(100, 100, 0),
