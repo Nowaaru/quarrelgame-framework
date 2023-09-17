@@ -48,7 +48,7 @@ export class MatchController implements OnStart, OnInit
             this.cameraController2D.SetCameraEnabled(true);
 
             for (const listener of this.arenaChangedHandlers)
-                task.spawn(() => listener.onArenaChanged(matchId, this.matchData!));
+                task.spawn(() => listener.onArenaChanged(matchId, this.matchData!.arenaInstance));
         });
     }
 
