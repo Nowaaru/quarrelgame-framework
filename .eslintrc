@@ -51,10 +51,6 @@
         "prefer-exponentiation-operator": "warn",
         // spacing
         "no-whitespace-before-property": "warn",
-        "computed-property-spacing": [
-            "warn",
-            "always"
-        ],
         "no-mixed-spaces-and-tabs": "error",
         "roblox-ts/lua-truthiness": "off",
         "roblox-ts/no-array-pairs": "off",
