@@ -96,6 +96,16 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
             }
         }
 
+        /*
+         * https://www.gamedev.net/forums/topic/660245-2dmake-a-camera-follow-multiple-characters/5175871/
+         *
+         * First you create a bounding box of your level that contains all of your characters plus a bit of a margin so a character isn't right on the edge.
+         * You then compare the aspect ratio of this bounding box to the aspect ratio of the screen.
+         * If the bounding box has a larger aspect ratio, then you base the zoom of the camera on screen.width / boundingBox.width, otherwise you use screen.height / boundingBox.height.
+         * The center point of the camera is simply the midpoint of the bounding box.
+         */
+        const paddingPercentage = 0.8;
+        const paddedCameraSize = this.camera.ViewportSize.X * paddingPercentage;
         if (radicalParticipants && radicalParticipants.size() >= 2)
         {
             let participantAPos, participantBPos;
@@ -123,6 +133,15 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
                 ),
                 positionMedian,
             ).add(this.character?.GetExtentsSize().mul(new Vector3(0, 0.5, 0)) ?? new Vector3());
+
+            const participantScreenPositions = radicalParticipants.map((n) => this.camera.WorldToViewportPoint(n.GetPivot().Position)[0]);
+            const { X, Y, Z } = participantScreenPositions[0].sub(participantScreenPositions[1]);
+            const participantScreenPositionDistanceAbsolute = new Vector3(...[ X, Y, Z ].map(math.abs));
+            const differenceFromEdges = (paddedCameraSize / 2) - participantScreenPositionDistanceAbsolute.X;
+
+            print("differenceFromEdges:", differenceFromEdges);
+            if (differenceFromEdges > 1250295253425569)
+                this.camera.FieldOfView = 70 + (differenceFromEdges * 0.1);
 
             this.camera.CFrame = targetCFrame;
         }
@@ -152,14 +171,29 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
                         positionMedian,
                     ).add(this.character?.GetExtentsSize().mul(new Vector3(0, 0.5, 0)) ?? new Vector3());
 
+                    const participantScreenPositions = [ focusedParticipant, { GetPivot: () => new CFrame(positionMedian) } as never ].map((n) =>
+                        this.camera.WorldToViewportPoint(n.GetPivot().Position)[0]
+                    );
+                    const { X, Y, Z } = participantScreenPositions[0].sub(participantScreenPositions[1]);
+                    const participantScreenPositionDistanceAbsolute = new Vector3(...[ X, Y, Z ].map(math.abs));
+                    const differenceFromEdges = (paddedCameraSize / 2) - participantScreenPositionDistanceAbsolute.X;
+                    print(
+                        "distance:",
+                        participantScreenPositionDistanceAbsolute.X,
+                        "target:",
+                        this.camera.ViewportSize.X * paddingPercentage,
+                        "difference:",
+                        differenceFromEdges,
+                    );
+
+                    if (participantScreenPositionDistanceAbsolute.X > this.camera.ViewportSize.X * paddingPercentage)
+                        this.camera.FieldOfView = (70 + (participantScreenPositionDistanceAbsolute.X - (this.camera.ViewportSize.X * paddingPercentage))) * 0.1;
+
                     this.camera.CFrame = targetCFrame;
                 }
             }
-
-            return;
         }
-
-        if (this.character)
+        else if (this.character)
         {
             const characterPivot = this.character.GetPivot();
             const extentsSize = this.character.GetExtentsSize().mul(new Vector3(0, 0.5, 0));

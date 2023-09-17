@@ -57,7 +57,6 @@ export class CharacterController2D extends CharacterController implements OnStar
         // to get out of the arena
         //
         // might just use an invisible wall or something for now, will have to figure it out later
-        //
 
         this._arena = arenaInstance;
         this.axis = arenaInstance.config.Axis.Value;
