@@ -62,9 +62,7 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
     onRender(): void
     {
         if (!this.cameraEnabled)
-        {
             return;
-        }
 
         this.camera.CameraType = Enum.CameraType.Scriptable;
 
@@ -74,9 +72,8 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
         for (const participant of this.allParticipants)
         {
             if (!google.has(participant))
-            {
                 google.set(participant, new Set());
-            }
+
             for (const otherParticipant of this.allParticipants.filter((n) => n !== participant))
             {
                 const alreadyChecked = google.get(participant)?.has(otherParticipant);
@@ -87,14 +84,14 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
                 }
                 else
                 {
-                    google.set(participant, new Set([...google.get(participant)!, otherParticipant])).get(participant)!;
+                    google.set(participant, new Set([ ...google.get(participant)!, otherParticipant ])).get(participant)!;
                 }
 
                 const distanceFromOtherParticipant = participant.GetPivot().Position.sub(otherParticipant.GetPivot().Position).Magnitude;
                 if (math.max(distanceFromOtherParticipant, largestSize) > largestSize)
                 {
                     largestSize = math.clamp(distanceFromOtherParticipant, this.minDistance, this.maxDistance);
-                    radicalParticipants = [participant, otherParticipant];
+                    radicalParticipants = [ participant, otherParticipant ];
                 }
             }
         }
@@ -110,14 +107,15 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
                 assert(currentMatchData, "current match data is not defined - required for greater than 2 participants");
                 const { arenaInstance } = currentMatchData;
 
-                [participantAPos, participantBPos] = [radicalParticipants[0].GetPivot().Position, arenaInstance.config.Origin.Value.Position];
+                [ participantAPos, participantBPos ] = [ radicalParticipants[0].GetPivot().Position, arenaInstance.config.Origin.Value.Position ];
             }
             else
             {
-                [participantAPos, participantBPos] = radicalParticipants.map(
+                [ participantAPos, participantBPos ] = radicalParticipants.map(
                     (n) => n.GetPivot().Position.mul(new Vector3(1, 0, 1)).add(new Vector3(0, radicalParticipants![0].GetPivot().Position.Y)),
                 );
             }
+
             const positionMedian = participantAPos.Lerp(participantBPos, 0.5);
             const targetCFrame = CFrame.lookAt(
                 positionMedian.add(
@@ -202,9 +200,7 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
         }).tap(() =>
         {
             for (const cameraListener of this.cameraListeners)
-            {
                 Promise.try(() => cameraListener[`on2DCamera${enabled ? "Enabled" : "Disabled"}`]?.());
-            }
         });
     }
 }

@@ -36,6 +36,7 @@ export class CharacterController2D extends CharacterController implements OnStar
         super(Dependency<MatchController>(), Dependency<Keyboard>(), Dependency<Mouse>(), Dependency<Gamepad>());
     }
 
+    private invisibleWallSets = new Set<Folder>();
     onArenaChanged(
         _: string,
         arenaInstance: Model & {
@@ -45,11 +46,59 @@ export class CharacterController2D extends CharacterController implements OnStar
         },
     ): void
     {
+        for (const wallSet of this.invisibleWallSets)
+            wallSet.Destroy();
+
+        // memory leak begone
+        this.invisibleWallSets.clear();
+
         // TODO: use attachment movers like AlignPosition to keep the player inside of the bounds of the
         // of the arena instead of just disabling movement because people can jump and end up using the momentum
         // to get out of the arena
+        //
+        // might just use an invisible wall or something for now, will have to figure it out later
+        //
 
         this._arena = arenaInstance;
+        this.axis = arenaInstance.config.Axis.Value;
+
+        const { config } = arenaInstance;
+        const { Size, Origin } = config;
+
+        const Transparency = 1;
+        const CanQuery = false;
+        const Parent = Make("Folder", {
+            Parent: arenaInstance.model,
+            Children: [
+                Make("Part", {
+                    CFrame: Origin.Value.add(new Vector3(Size.Value.X / 2)),
+                    Size: new Vector3(1, Size.Value.Y * 2, 45),
+                    Anchored: true,
+                    Name: "BoundaryLeft",
+                    Transparency,
+                    CanQuery,
+                }),
+                Make("Part", {
+                    CFrame: Origin.Value.sub(new Vector3(Size.Value.X / 2)),
+                    Size: new Vector3(1, Size.Value.Y * 2, 45),
+                    Anchored: true,
+                    Name: "BoundaryRight",
+                    Transparency,
+                    CanQuery,
+                }),
+                Make("Part", {
+                    CFrame: Origin.Value.add(new Vector3(45, Size.Value.Y + 4, 0)),
+                    Size: new Vector3(45, 4, 45),
+                    Anchored: true,
+                    Name: "BoundaryTop",
+                    Transparency,
+                    CanQuery,
+                }),
+            ],
+            Name: "InvisibleWalls",
+        });
+
+        this.invisibleWallSets.add(Parent);
     }
 
     private lastFrameNormal: Vector3 = Vector3.zero;
@@ -81,7 +130,7 @@ export class CharacterController2D extends CharacterController implements OnStar
 
         const [ motion ] = ConvertMoveDirectionToMotion(playerDirection);
         if (this.lastFrameNormal !== playerDirection)
-            this.motionInputController.pushToMotionInput(Motion[ motion ]);
+            this.motionInputController.pushToMotionInput(Motion[motion]);
 
         const currentLastFrameNormal = this.lastFrameNormal;
         this.lastFrameNormal = playerDirection;
