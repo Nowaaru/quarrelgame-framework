@@ -1,4 +1,4 @@
-import { Controller, Dependency, OnInit, OnRender, OnStart } from "@flamework/core";
+import { Controller, Dependency, OnInit, OnPhysics, OnRender, OnStart } from "@flamework/core";
 import Object from "@rbxts/object-utils";
 import { TweenService } from "@rbxts/services";
 import { CameraController } from "./camera.controller";
@@ -18,7 +18,7 @@ export interface Camera2D
 }
 
 @Controller({})
-export class CameraController2D extends CameraController implements OnInit, OnRender, OnRespawn, OnStart
+export class CameraController2D extends CameraController implements OnInit, OnPhysics, OnRespawn, OnStart
 {
     private readonly cameraListeners: Set<Camera2D> = new Set<Camera2D>();
 
@@ -59,7 +59,7 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
     {
     }
 
-    onRender(): void
+    onPhysics(): void
     {
         if (!this.cameraEnabled)
             return;
@@ -104,7 +104,7 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
          * If the bounding box has a larger aspect ratio, then you base the zoom of the camera on screen.width / boundingBox.width, otherwise you use screen.height / boundingBox.height.
          * The center point of the camera is simply the midpoint of the bounding box.
          */
-        const paddingPercentage = 0.8;
+        const paddingPercentage = 0.15;
         const paddedCameraSize = this.camera.ViewportSize.X * paddingPercentage;
         if (radicalParticipants && radicalParticipants.size() >= 2)
         {
@@ -154,9 +154,10 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
             {
                 if (currentMatchData)
                 {
+                    // TODO: add a way to make camera distance easily configurable
+
                     const { arenaInstance } = currentMatchData;
                     const { config: arenaConfig } = arenaInstance;
-                    print("flex wet in the flesh");
                     const arenaForwardCFrame = CFrame.lookAt(arenaConfig.Origin.Value.Position, arenaConfig.Origin.Value.PointToWorldSpace(arenaConfig.Axis.Value));
                     const focusedParticipant = radicalParticipants?.[0] ?? this.character;
                     const positionMedian = focusedParticipant.GetPivot().Position
@@ -164,37 +165,30 @@ export class CameraController2D extends CameraController implements OnInit, OnRe
                         .Lerp(currentMatchData.arenaInstance.config.Origin.Value.Position.mul(new Vector3(1, 0, 1)), 0.5)
                         .add(focusedParticipant.GetPivot().Position.mul(new Vector3(0, 1, 0)));
 
-                    const targetCFrame = CFrame.lookAt(
-                        positionMedian.add(
-                            arenaForwardCFrame.RightVector.mul(16).mul(this.cameraDirection === CameraFacing.Right ? 1 : -1),
-                        ),
-                        positionMedian,
-                    ).add(this.character?.GetExtentsSize().mul(new Vector3(0, 0.5, 0)) ?? new Vector3());
+                    const { ViewportSize: CameraSize } = this.camera;
+                    const aspectRatio = CameraSize.X / CameraSize.Y;
+                    const baseSize = focusedParticipant.GetPivot().Position.sub(positionMedian).mul(new Vector3(1, 0, 1));
+                    const extentsSize = new Vector3(math.abs(baseSize.X), baseSize.Z).mul(new Vector3(1, 1 / aspectRatio, 1)).mul(1 + paddingPercentage);
 
-                    const participantScreenPositions = [ focusedParticipant, { GetPivot: () => new CFrame(positionMedian) } as never ].map((n) =>
-                        this.camera.WorldToViewportPoint(n.GetPivot().Position)[0]
+                    const offset = (extentsSize.Magnitude / 2) / math.tan(math.rad(this.camera.FieldOfView / 2));
+                    const cameraPosition = positionMedian.add(
+                        arenaForwardCFrame.RightVector.mul((8 + math.max(8, math.abs(offset))) * (this.cameraDirection === CameraFacing.Right ? 1 : -1)),
                     );
-                    const { X, Y, Z } = participantScreenPositions[0].sub(participantScreenPositions[1]);
-                    const participantScreenPositionDistanceAbsolute = new Vector3(...[ X, Y, Z ].map(math.abs));
-                    const differenceFromEdges = (paddedCameraSize / 2) - participantScreenPositionDistanceAbsolute.X;
+
                     print(
-                        "distance:",
-                        participantScreenPositionDistanceAbsolute.X,
-                        "target:",
-                        this.camera.ViewportSize.X * paddingPercentage,
-                        "difference:",
-                        differenceFromEdges,
+                        "extents size:",
+                        extentsSize,
+                        "offset:",
+                        offset,
                     );
-
-                    if (participantScreenPositionDistanceAbsolute.X > this.camera.ViewportSize.X * paddingPercentage)
-                        this.camera.FieldOfView = (70 + (participantScreenPositionDistanceAbsolute.X - (this.camera.ViewportSize.X * paddingPercentage))) * 0.1;
-
-                    this.camera.CFrame = targetCFrame;
+                    this.camera.CFrame = CFrame.lookAt(cameraPosition, positionMedian);
+                    this.camera.Focus = this.camera.CFrame.Rotation.add(positionMedian);
                 }
             }
         }
         else if (this.character)
         {
+            print("uh oh");
             const characterPivot = this.character.GetPivot();
             const extentsSize = this.character.GetExtentsSize().mul(new Vector3(0, 0.5, 0));
             const characterWithHeight = characterPivot.Position.add(extentsSize);
