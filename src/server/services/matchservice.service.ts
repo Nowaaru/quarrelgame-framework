@@ -4,7 +4,7 @@ import { Entity } from "server/components/entity.component";
 import { Client, ClientEvents, ServerEvents, ServerFunctions } from "shared/network";
 import { Identifier } from "shared/util/identifier";
 
-import type { Participant } from "server/components/participant.component";
+import { Participant } from "server/components/participant.component";
 import { QuarrelGame } from "./quarrelgame.service";
 
 import Make from "@rbxts/make";
@@ -18,7 +18,7 @@ export enum ArenaTypeFlags
 }
 
 export const DefaultMatchSettings: MatchSettings = {
-    ArenaType: ArenaTypeFlags[ "ALLOW_2D" ] | ArenaTypeFlags[ "ALLOW_3D" ],
+    ArenaType: ArenaTypeFlags["ALLOW_2D"] | ArenaTypeFlags["ALLOW_3D"],
     Map: "happyhome",
 };
 
@@ -216,7 +216,7 @@ export interface PostMatchData
 export class Match
 {
     private matchSettings: MatchSettings = {
-        ArenaType: ArenaTypeFlags[ "ALLOW_2D" ] | ArenaTypeFlags[ "ALLOW_3D" ],
+        ArenaType: ArenaTypeFlags["ALLOW_2D"] | ArenaTypeFlags["ALLOW_3D"],
         Map: "happyhome",
     };
 
@@ -272,7 +272,7 @@ export class Match
             if (this.participants.has(this.originalMatchHost))
                 this.matchHost = this.originalMatchHost;
             else
-                this.matchHost = [ ...this.participants ][ 0 ];
+                this.matchHost = [ ...this.participants ][0];
         }
 
         this.participants.delete(participant);
@@ -302,7 +302,8 @@ export class Match
     public HostIs(player: Player | Participant)
     {
         return (
-            (this.matchHost.instance === player || this.matchHost === player || this.originalMatchHost === player || this.originalMatchHost.instance === player)            && this.participants.has(this.matchHost) && [ ...this.participants ].find(
+            (this.matchHost.instance === player || this.matchHost === player || this.originalMatchHost === player || this.originalMatchHost.instance === player)
+            && this.participants.has(this.matchHost) && [ ...this.participants ].find(
                     (n) => n === player || n.instance === player,
                 ) !== undefined
         );
@@ -414,24 +415,32 @@ export class Match
                 );
             }
 
-            const randomStart = ArenaTypeFlags[ "ALLOW_2D" ]; /* [
+            const randomStart = ArenaTypeFlags["ALLOW_2D"]; /* [
                 ArenaTypeFlags[ "ALLOW_2D" ],
                 ArenaTypeFlags[ "ALLOW_3D" ],
             ][ math.random(1, 2) - 1 ];*/
 
-            const arena = randomStart === ArenaTypeFlags[ "ALLOW_2D" ]                ? map.GetArenaFromIndex(MapNamespace.ArenaType[ "2D" ], 0)                : map.GetArenaFromIndex(MapNamespace.ArenaType[ "3D" ], 0);
+            const arena = randomStart === ArenaTypeFlags["ALLOW_2D"]
+                ? map.GetArenaFromIndex(MapNamespace.ArenaType["2D"], 0)
+                : map.GetArenaFromIndex(MapNamespace.ArenaType["3D"], 0);
 
             for (const participant of this.GetParticipants())
             {
                 print("loading participant:", participant.instance.Name);
-                const startType = randomStart === ArenaTypeFlags[ "ALLOW_2D" ] ? MapNamespace.ArenaType[ "2D" ] : MapNamespace.ArenaType[ "3D" ];
+                const startType = randomStart === ArenaTypeFlags["ALLOW_2D"] ? MapNamespace.ArenaType["2D"] : MapNamespace.ArenaType["3D"];
                 this.RespawnParticipant(participant, startType, 0);
+                ServerEvents.MatchStarted.fire(participant.instance, this.matchId, this.Serialize(participant));
             }
 
             return Promise.fromEvent(this.Ended).finally(
                 () => (this.matchPhase = MatchPhase.Ending),
             );
         });
+    }
+
+    public Serialize(perspective: Participant)
+    {
+        return Dependency<MatchService>().SerializeMatch(perspective, this.matchId);
     }
 
     /**
@@ -478,7 +487,7 @@ export class Match
      */
     public RespawnParticipant(
         participant: Participant,
-        arenaType: MapNamespace.ArenaType = MapNamespace.ArenaType[ "2D" ],
+        arenaType: MapNamespace.ArenaType = MapNamespace.ArenaType["2D"],
         arenaIndex = 0,
         combatMode: Client.CombatMode = Client.CombatMode.TwoDimensional,
     )
@@ -582,50 +591,57 @@ export class MatchService implements OnStart, OnInit
             if (!thisParticipant.attributes.MatchId)
                 return Promise.resolve(undefined);
 
-            const ongoingMatch = this.GetOngoingMatch(
-                thisParticipant.attributes.MatchId,
-            );
-            if (ongoingMatch)
-            {
-                const currentMap = ongoingMatch.GetMap();
-                const currentLocation = currentMap.GetEntityLocation(
-                    thisParticipant.entity!,
-                );
-                assert(currentLocation, `participant is not in an arena.`);
-
-                const matchParticipants = ongoingMatch.GetParticipants();
-                const matchEntitites = [ ...matchParticipants ].map(
-                    (participant) => participant.entity as Entity.PlayerCombatant<Entity.PlayerCombatantAttributes>,
-                );
-
-                const thisArena = ongoingMatch
-                    .GetMap()
-                    .GetArenaFromIndex(
-                        currentLocation.arenaType,
-                        currentLocation.arenaIndex,
-                    )!;
-                return {
-                    Settings: ongoingMatch.GetMatchSettings(),
-                    Arena: {
-                        instance: thisArena,
-                        config: thisArena.config,
-                    },
-                    Participants: [ ...matchParticipants ].map(
-                        (participant) => participant.attributes,
-                    ),
-                    State: {
-                        CombatantStates: matchEntitites.map((n) => n.attributes),
-                        EntityStates: [],
-                        Tick: -1,
-                        Time: -1,
-                    },
-                    Map: ongoingMatch.GetMap().instance,
-                    Phase: ongoingMatch.GetMatchPhase(),
-                };
-            }
+            const serializedMatch = this.SerializeMatch(thisParticipant, thisParticipant.attributes.MatchId);
+            if (serializedMatch)
+                return serializedMatch;
 
             return new Promise<void>((_, rej) => rej("participant is not in a match")) as never;
         });
+    }
+
+    public SerializeMatch(thisParticipant: Participant, matchId: string)
+    {
+        const ongoingMatch = this.GetOngoingMatch(
+            matchId,
+        );
+        if (ongoingMatch)
+        {
+            const currentMap = ongoingMatch.GetMap();
+            const currentLocation = currentMap.GetEntityLocation(
+                thisParticipant.entity!,
+            );
+            assert(currentLocation, `participant is not in an arena.`);
+
+            const matchParticipants = ongoingMatch.GetParticipants();
+            const matchEntitites = [ ...matchParticipants ].map(
+                (participant) => participant.entity as Entity.PlayerCombatant<Entity.PlayerCombatantAttributes>,
+            );
+
+            const thisArena = ongoingMatch
+                .GetMap()
+                .GetArenaFromIndex(
+                    currentLocation.arenaType,
+                    currentLocation.arenaIndex,
+                )!;
+            return {
+                Settings: ongoingMatch.GetMatchSettings(),
+                Arena: {
+                    instance: thisArena,
+                    config: thisArena.config,
+                },
+                Participants: [ ...matchParticipants ].map(
+                    (participant) => participant.attributes,
+                ),
+                State: {
+                    CombatantStates: matchEntitites.map((n) => n.attributes),
+                    EntityStates: [],
+                    Tick: -1,
+                    Time: -1,
+                },
+                Map: ongoingMatch.GetMap().instance,
+                Phase: ongoingMatch.GetMatchPhase(),
+            };
+        }
     }
 
     onStart()
@@ -639,7 +655,7 @@ export class MatchService implements OnStart, OnInit
      */
     public CreateMatch(matchData: MatchData)
     {
-        const newMatch = new Match(matchData.Participants[ 0 ]);
+        const newMatch = new Match(matchData.Participants[0]);
         this.ongoingMatches.set(newMatch.matchId, newMatch);
 
         matchData.Participants.forEach((participant) => newMatch.AddParticipant(participant));

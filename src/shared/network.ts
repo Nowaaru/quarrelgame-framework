@@ -207,6 +207,8 @@ export namespace Client
     {
         ArenaChanged(mapId: string, arenaId: string | number): void;
         MatchParticipantRespawned(characterModel: Model): void;
+        MatchJoined(matchId: string, matchData: ReturnType<Server.Functions["GetCurrentMatch"]>): void;
+        MatchStarted(matchId: string, matchData: ReturnType<Server.Functions["GetCurrentMatch"]>): void;
     }
 
     export interface Events extends MatchEvents
