@@ -9,6 +9,12 @@ export interface OnArenaChange
     onArenaChanged(matchId: string, arenaInstance: _Map.Arena): void;
 }
 
+// TODO: Implement.
+export interface OnMatchStart
+{
+    onMatchStart(matchId: string, matchData: Awaited<ReturnType<typeof ClientFunctions["GetCurrentMatch"]>>): void;
+}
+
 @Controller({
     loadOrder: -1,
 })

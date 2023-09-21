@@ -1,15 +1,9 @@
 import { Controller, Dependency, OnInit, OnPhysics, OnRender, OnStart } from "@flamework/core";
 import Object from "@rbxts/object-utils";
 import { TweenService } from "@rbxts/services";
-import { CameraController } from "./camera.controller";
+import { CameraController, CameraFacing } from "./camera.controller";
 import { OnRespawn } from "./client.controller";
 import { MatchController } from "./match.controller";
-
-export enum CameraFacing
-{
-    Left,
-    Right,
-}
 
 export interface Camera2D
 {
@@ -20,19 +14,56 @@ export interface Camera2D
 @Controller({})
 export class CameraController2D extends CameraController implements OnInit, OnPhysics, OnRespawn, OnStart
 {
-    private readonly cameraListeners: Set<Camera2D> = new Set<Camera2D>();
+    protected readonly cameraListeners: Set<Camera2D> = new Set<Camera2D>();
 
-    private readonly allParticipants: Model[] = [];
+    protected readonly allParticipants: Model[] = [];
 
-    private cameraDirection: CameraFacing = CameraFacing.Left;
+    protected cameraDirection: CameraFacing = CameraFacing.Left;
 
-    private minDistance = 16;
+    protected minDistance = 8;
 
-    private maxDistance = 48;
+    protected maxDistance = 32;
+
+    protected paddingPercentage = 0.15;
 
     constructor()
     {
         super();
+    }
+
+    protected GetRadicalParticipants(...participants: Model[])
+    {
+        let largestSize = -math.huge;
+        let radicalParticipants: [Model, Model] | undefined;
+        const google = new Map<Model, Set<Model>>();
+        for (const participant of (participants.size() > 0 ? participants : this.allParticipants))
+        {
+            if (!google.has(participant))
+                google.set(participant, new Set());
+
+            for (const otherParticipant of this.allParticipants.filter((n) => n !== participant))
+            {
+                const alreadyChecked = google.get(participant)?.has(otherParticipant);
+                if (alreadyChecked)
+                {
+                    print(`already checked: ${participant.Name} -> ${otherParticipant.Name}`);
+                    continue;
+                }
+                else
+                {
+                    google.set(participant, new Set([ ...google.get(participant)!, otherParticipant ])).get(participant)!;
+                }
+
+                const distanceFromOtherParticipant = participant.GetPivot().Position.sub(otherParticipant.GetPivot().Position).Magnitude;
+                if (math.max(distanceFromOtherParticipant, largestSize) > largestSize)
+                {
+                    largestSize = math.clamp(distanceFromOtherParticipant, this.minDistance, this.maxDistance);
+                    radicalParticipants = [ participant, otherParticipant ];
+                }
+            }
+        }
+
+        return [ radicalParticipants, largestSize ] as LuaTuple<[typeof radicalParticipants, number]>;
     }
 
     public AddParticipants(...participants: Array<Model>)
@@ -65,36 +96,7 @@ export class CameraController2D extends CameraController implements OnInit, OnPh
             return;
 
         this.camera.CameraType = Enum.CameraType.Scriptable;
-
-        let largestSize = -math.huge;
-        let radicalParticipants: [Model, Model] | undefined;
-        const google = new Map<Model, Set<Model>>();
-        for (const participant of this.allParticipants)
-        {
-            if (!google.has(participant))
-                google.set(participant, new Set());
-
-            for (const otherParticipant of this.allParticipants.filter((n) => n !== participant))
-            {
-                const alreadyChecked = google.get(participant)?.has(otherParticipant);
-                if (alreadyChecked)
-                {
-                    print(`already checked: ${participant.Name} -> ${otherParticipant.Name}`);
-                    continue;
-                }
-                else
-                {
-                    google.set(participant, new Set([ ...google.get(participant)!, otherParticipant ])).get(participant)!;
-                }
-
-                const distanceFromOtherParticipant = participant.GetPivot().Position.sub(otherParticipant.GetPivot().Position).Magnitude;
-                if (math.max(distanceFromOtherParticipant, largestSize) > largestSize)
-                {
-                    largestSize = math.clamp(distanceFromOtherParticipant, this.minDistance, this.maxDistance);
-                    radicalParticipants = [ participant, otherParticipant ];
-                }
-            }
-        }
+        const [ radicalParticipants, largestSize ] = this.GetRadicalParticipants();
 
         /*
          * https://www.gamedev.net/forums/topic/660245-2dmake-a-camera-follow-multiple-characters/5175871/
@@ -104,8 +106,7 @@ export class CameraController2D extends CameraController implements OnInit, OnPh
          * If the bounding box has a larger aspect ratio, then you base the zoom of the camera on screen.width / boundingBox.width, otherwise you use screen.height / boundingBox.height.
          * The center point of the camera is simply the midpoint of the bounding box.
          */
-        const paddingPercentage = 0.15;
-        const paddedCameraSize = this.camera.ViewportSize.X * paddingPercentage;
+        const paddedCameraSize = this.camera.ViewportSize.X * this.paddingPercentage;
         if (radicalParticipants && radicalParticipants.size() >= 2)
         {
             let participantAPos, participantBPos;
@@ -168,7 +169,7 @@ export class CameraController2D extends CameraController implements OnInit, OnPh
                     const { ViewportSize: CameraSize } = this.camera;
                     const aspectRatio = CameraSize.X / CameraSize.Y;
                     const baseSize = focusedParticipant.GetPivot().Position.sub(positionMedian).mul(new Vector3(1, 0, 1));
-                    const extentsSize = new Vector3(math.abs(baseSize.X), baseSize.Z).mul(new Vector3(1, 1 / aspectRatio, 1)).mul(1 + paddingPercentage);
+                    const extentsSize = new Vector3(math.abs(baseSize.X), baseSize.Z).mul(new Vector3(1, 1 / aspectRatio, 1)).mul(1 + this.paddingPercentage);
 
                     const offset = (extentsSize.Magnitude / 2) / math.tan(math.rad(this.camera.FieldOfView / 2));
                     const cameraPosition = positionMedian.add(

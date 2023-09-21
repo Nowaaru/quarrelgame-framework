@@ -4,6 +4,12 @@ import { Players, Workspace } from "@rbxts/services";
 import { BaseCamera, CameraUtils, PlayerModule } from "shared/util/player";
 import { OnRespawn } from "./client.controller";
 
+export enum CameraFacing
+{
+    Left,
+    Right,
+}
+
 export abstract class CameraController implements OnRespawn
 {
     protected readonly BaseFOV = 72;
