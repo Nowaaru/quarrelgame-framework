@@ -13,7 +13,7 @@ export interface Camera3D
     on3DCameraDisabled?(): void;
 }
 
-export abstract class CameraController3D extends CameraController implements OnStart, OnInit, OnMouseMove
+export abstract class CameraController3D extends CameraController implements OnStart, OnInit, OnMouseMove, Camera3D
 {
     constructor(
         private readonly mouse: Mouse,
@@ -295,6 +295,16 @@ export abstract class CameraController3D extends CameraController implements OnS
 
         BoundKeys.Value = "";
         print("Camera Controller initiated.");
+    }
+
+    on3DCameraEnabled(): void
+    {
+        this.camera.CameraType = Enum.CameraType.Scriptable;
+    }
+
+    on3DCameraDisabled(): void
+    {
+        this.camera.CameraType = Enum.CameraType.Custom;
     }
 
     onStart()

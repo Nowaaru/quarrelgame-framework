@@ -13,8 +13,11 @@ import { ConvertMoveDirectionToMotion, InputMode, InputResult, Motion } from "sh
 import { EntityState } from "shared/util/lib";
 
 import Make from "@rbxts/make";
+import { Players, Workspace } from "@rbxts/services";
 import { MatchController, OnArenaChange } from "client/controllers/match.controller";
 import type _Map from "server/components/map.component";
+import { Animator } from "shared/components/animator.component";
+import { StatefulComponent } from "shared/components/state.component";
 
 interface ChangedSignals
 {
@@ -25,7 +28,7 @@ export class CharacterController2D extends CharacterController implements OnStar
 {
     private axis?: Vector3;
 
-    private _arena?: _Map.Arena;
+    protected _arena?: _Map.Arena;
 
     constructor(
         private readonly combatController: CombatController2D,
@@ -194,9 +197,9 @@ export class CharacterController2D extends CharacterController implements OnStar
         print("2D Character Controller started.");
     }
 
-    onRespawn(character: Model): void
+    async onRespawn(character: Model): Promise<void>
     {
-        this.character = character;
+        super.onRespawn(character);
         const rootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
 
         this.alignPos = Make("AlignPosition", {
@@ -210,6 +213,24 @@ export class CharacterController2D extends CharacterController implements OnStar
             ForceLimitMode: Enum.ForceLimitMode.PerAxis,
             Responsiveness: 200,
         });
+
+        const currentMatch = await ClientFunctions.GetCurrentMatch();
+        if (currentMatch?.Arena)
+        {
+            const components = Dependency<Components>();
+
+            this.character = character;
+            character.WaitForChild("Humanoid").WaitForChild("Animator");
+            components.addComponent(character, Animator.Animator);
+            components.addComponent(character, StatefulComponent);
+
+            this.SetAxis(currentMatch.Arena.config.Axis.Value);
+            this.SetEnabled(true);
+
+            print("character model on respawn:", character);
+
+            Workspace.CurrentCamera!.CameraSubject = character.FindFirstChildWhichIsA("Humanoid") as Humanoid;
+        }
     }
 
     public readonly keyboardDirectionMap: Map<Enum.KeyCode, Enum.NormalId> = new Map([

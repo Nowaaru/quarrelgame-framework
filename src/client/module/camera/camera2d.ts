@@ -1,6 +1,8 @@
-import { OnPhysics } from "@flamework/core";
+import { OnInit, OnPhysics } from "@flamework/core";
+import { Players, Workspace } from "@rbxts/services";
 import { OnRespawn } from "client/controllers/client.controller";
 import { CameraController, CameraFacing } from "client/module/camera";
+import { ClientFunctions } from "shared/network";
 
 export interface Camera2D
 {
@@ -14,7 +16,7 @@ export enum CameraMode2D
     Multi,
 }
 
-export abstract class CameraController2D extends CameraController implements OnPhysics, OnRespawn
+export abstract class CameraController2D extends CameraController implements OnInit, OnPhysics, OnRespawn, Camera2D
 {
     protected readonly cameraListeners: Set<Camera2D> = new Set<Camera2D>();
 
@@ -24,11 +26,11 @@ export abstract class CameraController2D extends CameraController implements OnP
 
     protected cameraMode: CameraMode2D = CameraMode2D.Single;
 
-    protected minDistance = 8;
+    protected minDistance = 16;
 
     protected maxDistance = 32;
 
-    protected paddingPercentage = 0.15;
+    protected paddingPercentage = 1;
 
     constructor()
     {
@@ -107,8 +109,16 @@ export abstract class CameraController2D extends CameraController implements OnP
      */
     public abstract multiParticipantCameraHandler(...characters: Model[]): void;
 
+    onInit()
+    {
+        this.bindToCamera(Workspace.CurrentCamera!);
+    }
+
     onPhysics(): void
     {
+        if (!this.cameraEnabled)
+            return;
+
         switch ( this.cameraMode )
         {
             case CameraMode2D.Single:
@@ -125,12 +135,32 @@ export abstract class CameraController2D extends CameraController implements OnP
         }
     }
 
-    onRespawn(character: Model): void
+    on2DCameraEnabled(): void
     {
+        this.camera.CameraType = Enum.CameraType.Scriptable;
+    }
+
+    on2DCameraDisabled(): void
+    {
+        this.camera.CameraType = Enum.CameraType.Custom;
+    }
+
+    async onRespawn(character: Model): Promise<void>
+    {
+        super.onRespawn(character);
         this.allParticipants.clear();
         this.allParticipants.push(character);
 
-        super.onRespawn(character);
+        const currentMatch = await ClientFunctions.GetCurrentMatch();
+        if (currentMatch?.Arena)
+        {
+            this.SetParticipants(...currentMatch.Participants.mapFiltered(({ ParticipantId }) =>
+            {
+                return Players.GetPlayers().find((player) => player.GetAttribute("ParticipantId") === ParticipantId)?.Character;
+            }));
+
+            this.SetCameraEnabled(true);
+        }
     }
 
     public async SetMinimumDistance(baseCameraDistance: number)
@@ -159,6 +189,11 @@ export abstract class CameraController2D extends CameraController implements OnP
             return res();
         }).tap(() =>
         {
+            if (enabled)
+                this.on2DCameraEnabled();
+            else
+                this.on2DCameraDisabled();
+
             for (const cameraListener of this.cameraListeners)
                 Promise.try(() => cameraListener[`on2DCamera${enabled ? "Enabled" : "Disabled"}`]?.());
         });

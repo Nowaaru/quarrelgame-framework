@@ -20,9 +20,6 @@ export interface OnMatchStart
 })
 export class MatchController implements OnStart, OnInit
 {
-    constructor(private cameraController2D: CameraController2D)
-    {}
-
     private arenaChangedHandlers = new Set<OnArenaChange>();
 
     private matchData: {

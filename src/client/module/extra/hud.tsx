@@ -11,7 +11,6 @@ interface WidescreenInterface
     Bottom: Frame;
 }
 
-@Controller({})
 export class HudController implements OnStart, OnInit
 {
     constructor(

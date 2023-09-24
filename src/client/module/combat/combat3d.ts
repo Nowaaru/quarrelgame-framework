@@ -1,6 +1,6 @@
 import { Players } from "@rbxts/services";
-import { HudController } from "client/controllers/hud.controller";
 import { CombatController } from "client/module/combat";
+import { HudController } from "client/module/extra/hud";
 import { Client, ClientEvents, ClientFunctions } from "shared/network";
 import { Input } from "shared/util/input";
 import { CameraController3D } from "../camera/camera3d";

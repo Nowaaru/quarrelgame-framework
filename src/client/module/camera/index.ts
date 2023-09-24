@@ -28,13 +28,13 @@ export abstract class CameraController implements OnRespawn
 
     public readonly LocalPlayer = Players.LocalPlayer;
 
-    public bindToCamera(targetCamera: Camera)
+    public bindToCamera(targetCamera: Camera, targetSubject?: Humanoid)
     {
         this.camera = targetCamera as Camera & { CameraSubject: Humanoid; };
         this.camera.CameraType = Enum.CameraType.Scriptable;
 
         Workspace.CurrentCamera = this.camera;
-        this.camera.CameraSubject = this.LocalPlayer.Character?.WaitForChild("Humanoid") as Humanoid;
+        this.camera.CameraSubject = targetSubject ?? this.character?.WaitForChild("Humanoid") as Humanoid;
     }
 
     onRespawn(character: Model): void

@@ -39,9 +39,7 @@ export class Keyboard implements OnStart, OnInit
             const key: "allHeldKeysProcessed" | "allHeldKeys" = `allHeldKeys${isProcessed ? "Processed" : ""}`;
 
             if (!this[key].has(pressedKey))
-            {
                 this[key].add(pressedKey);
-            }
 
             this.keyDown.emit(pressedKey);
             this.keyboardListeners.forEach((keyboardInputObject) =>
@@ -86,21 +84,17 @@ export class Keyboard implements OnStart, OnInit
         {
             print("lok ok 1");
             if (con === keyToPress && keyPressInitTime === undefined)
-            {
                 keyPressInitTime = os.clock();
-            }
         });
 
         const _dn = this.clackKeyboardInstance.keyUp.Connect((con) =>
         {
             if (con !== keyToPress)
-            {
                 return;
-            }
+
             if (keyPressInitTime === undefined)
-            {
                 return;
-            }
+
             if (os.clock() >= keyPressInitTime + duration)
             {
                 _dn.Disconnect();
@@ -109,6 +103,7 @@ export class Keyboard implements OnStart, OnInit
                 returnedEmitter.emit();
                 returnedEmitter.destroy();
             }
+
             keyPressInitTime = undefined;
         });
 
@@ -118,30 +113,29 @@ export class Keyboard implements OnStart, OnInit
     public Puppeteer(keyToPress: Enum.KeyCode, inputMode: InputMode, isProcessed?: boolean): boolean
     {
         if (inputMode === InputMode.Release)
-        {
             this.clackKeyboardInstance.keyUp.Fire(keyToPress, !!isProcessed);
-        }
         else
-        {
             this.clackKeyboardInstance.keyDown.Fire(keyToPress, !!isProcessed);
-        }
 
         return true;
     }
 
     public isKeyDown(key: Enum.KeyCode, processFiltering = InputProcessed.Either)
     {
-        return this.areKeysDown([key], processFiltering);
+        return this.areKeysDown([ key ], processFiltering);
     }
 
     public areKeysDown(keys: Enum.KeyCode[], processFiltering = InputProcessed.Either): boolean
     {
-        const allValidPressedKeys = [...[...this.allHeldKeys].map((k) => [k, false] as const), ...[...this.allHeldKeysProcessed].map((k) => [k, true] as const)]
-            .filter(([key, isProcessed]) =>
+        const allValidPressedKeys = [
+            ...[ ...this.allHeldKeys ].map((k) => [ k, false ] as const),
+            ...[ ...this.allHeldKeysProcessed ].map((k) => [ k, true ] as const),
+        ]
+            .filter(([ key, isProcessed ]) =>
             {
                 return (processFiltering === InputProcessed.Either) || (processFiltering === InputProcessed.Processed && isProcessed)
                     || (processFiltering === InputProcessed.Unprocessed && !isProcessed);
-            }).map(([k]) => k);
+            }).map(([ k ]) => k);
 
         return keys.filter((n, i) => keys.findIndex((l) => l === n) === i).every((k) => allValidPressedKeys.includes(k));
     }
