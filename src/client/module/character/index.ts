@@ -1,14 +1,10 @@
-import { BaseComponent, Component } from "@flamework/components";
-import { Controller, OnInit, OnRender, OnTick } from "@flamework/core";
-import Make from "@rbxts/make";
-import Object from "@rbxts/object-utils";
-import { ContextActionService, Players, Workspace } from "@rbxts/services";
+import { ContextActionService, Players } from "@rbxts/services";
+import { OnRespawn } from "client/controllers/client.controller";
 import { Gamepad, GamepadButtons, OnGamepadInput } from "client/controllers/gamepad.controller";
-import { Keyboard, OnKeyboardInput } from "client/controllers/keyboard.controller";
+import { Keyboard } from "client/controllers/keyboard.controller";
+import { MatchController } from "client/controllers/match.controller";
 import { Mouse } from "client/controllers/mouse.controller";
 import { InputMode, InputResult } from "shared/util/input";
-import { OnRespawn } from "./client.controller";
-import { MatchController } from "./match.controller";
 
 export abstract class CharacterController implements OnGamepadInput, OnRespawn
 {
@@ -26,7 +22,7 @@ export abstract class CharacterController implements OnGamepadInput, OnRespawn
     )
     {}
 
-    abstract readonly keyboardDirectionMap: Map<Enum.KeyCode, Enum.NormalId>;
+    protected abstract readonly keyboardDirectionMap: Map<Enum.KeyCode, Enum.NormalId>;
 
     protected GenerateRelativeVectorFromNormalId(
         relativeTo: CFrame,
@@ -65,8 +61,8 @@ export abstract class CharacterController implements OnGamepadInput, OnRespawn
         this.theseMovementActions = [
             ...ContextActionService.GetAllBoundActionInfo(),
         ]
-            .filter(([k, n]) => !!k.match("move(.*)Action")[0])
-            .map(([k, n]) => n);
+            .filter(([ k, n ]) => !!k.match("move(.*)Action")[0])
+            .map(([ k, n ]) => n);
         const actionPriority = this.theseMovementActions
             .map((n) => n.priorityLevel ?? Enum.ContextActionPriority.High)
             .reduce((a, b) => math.max(a, b));
@@ -80,7 +76,7 @@ export abstract class CharacterController implements OnGamepadInput, OnRespawn
             false,
             actionPriority + 1,
             ...this.theseMovementActions.reduce(
-                (a, b) => [...a, ...b.inputTypes] as never,
+                (a, b) => [ ...a, ...b.inputTypes ] as never,
                 [],
             ),
         );
@@ -95,22 +91,16 @@ export abstract class CharacterController implements OnGamepadInput, OnRespawn
     public ToggleRobloxMovement()
     {
         if (this.theseMovementActions)
-        {
             this.EnableRobloxMovement();
-        }
         else
-        {
             this.DisableRobloxMovement();
-        }
     }
 
     onRespawn(character: Model): void
     {
         this.character = character;
         if (this.theseMovementActions)
-        {
             this.EnableRobloxMovement();
-        }
     }
 
     abstract onGamepadInput(

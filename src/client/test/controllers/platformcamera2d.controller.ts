@@ -1,27 +1,19 @@
 import { Controller, Dependency, OnInit, OnPhysics, OnStart } from "@flamework/core";
-import { Players } from "@rbxts/services";
-import type { Entity } from "server/components/entity.component";
+import { CameraFacing } from "client/module/camera";
+import { CameraController2D, CameraMode2D } from "client/module/camera/camera2d";
 import _Map from "server/components/map.component";
-import type { ParticipantAttributes } from "server/components/participant.component";
-import type { MatchPhase, MatchService, MatchSettings, MatchState } from "server/services/matchservice.service";
-import { EntityAttributes } from "shared/components/entity.component";
-import { CameraController, CameraFacing } from "./camera.controller";
-import { CameraController2D } from "./camera2d.controller";
 
-import { OnRespawn } from "./client.controller";
-import { MatchController, OnMatchStart } from "./match.controller";
+import { Players } from "@rbxts/services";
+import { OnRespawn } from "client/controllers/client.controller";
+import { MatchController } from "client/controllers/match.controller";
+import { ClientFunctions } from "shared/network";
 
-enum PlatformControllerCameraMode
-{
-    Single,
-    Multi,
-}
-
+@Controller({})
 export class PlatformCameraController2D extends CameraController2D implements OnInit, OnPhysics, OnRespawn, OnStart
 {
     protected cameraDirection: CameraFacing = CameraFacing.Left;
 
-    protected cameraMode: PlatformControllerCameraMode = PlatformControllerCameraMode.Multi;
+    protected cameraMode: CameraMode2D = CameraMode2D.Multi;
 
     constructor()
     {
@@ -32,42 +24,26 @@ export class PlatformCameraController2D extends CameraController2D implements On
     {
     }
 
-    onPhysics(): void
+    async onRespawn(character: Model): Promise<void>
     {
-        switch ( this.cameraMode )
+        super.onRespawn(character);
+        const currentMatch = await ClientFunctions.GetCurrentMatch();
+        if (currentMatch?.Arena)
         {
-            case PlatformControllerCameraMode.Single:
+            this.SetParticipants(...currentMatch.Participants.mapFiltered(({ ParticipantId }) =>
             {
-                assert(this.character, "character is not defined");
-                this.singularParticipantCameraHandler(this.character!, true);
-                break;
-            }
+                return Players.GetPlayers().find((player) => player.GetAttribute("ParticipantId") === ParticipantId)?.Character;
+            }));
 
-            case PlatformControllerCameraMode.Multi:
-            {
-                this.multiParticipantCameraHandler();
-            }
+            this.SetCameraEnabled(true);
         }
-    }
-
-    onRespawn(character: Model): void
-    {
-        this.character = character;
     }
 
     onStart(): void
     {
     }
 
-    /**
-     * Run a camera cycle.
-     *
-     * @param participant The participant to handle.
-     * @param emulateMultiCamera Whether to emulate functionality of the
-     * multiParticipantCameraHandler by acting as if the middle of the arena
-     * is the second participant.
-     */
-    private singularParticipantCameraHandler(participant: Model, emulateMultiCamera?: boolean)
+    public singularParticipantCameraHandler(participant: Model, emulateMultiCamera?: boolean)
     {
         const currentMatchData = Dependency<MatchController>().GetMatchData();
         assert(currentMatchData, "currentMatchData is not defined");
@@ -102,11 +78,7 @@ export class PlatformCameraController2D extends CameraController2D implements On
         );
     }
 
-    /**
-     *  Run a camera cycle.
-     * @param participant The participant to handle.
-     */
-    private multiParticipantCameraHandler(...participants: Model[]): void
+    public multiParticipantCameraHandler(...characters: Model[]): void
     {
         const currentMatchData = Dependency<MatchController>().GetMatchData();
         assert(this.character, "character is not defined");
@@ -117,7 +89,7 @@ export class PlatformCameraController2D extends CameraController2D implements On
             const { config: arenaConfig } = arenaInstance;
             const arenaForwardCFrame = CFrame.lookAt(arenaConfig.Origin.Value.Position, arenaConfig.Origin.Value.PointToWorldSpace(arenaConfig.Axis.Value));
 
-            const [ radicalParticipants ] = this.GetRadicalParticipants(...participants);
+            const [ radicalParticipants ] = this.GetRadicalParticipants(...characters);
             const [ focusedParticipant, farthestParticipant ] = radicalParticipants ?? [];
             assert(focusedParticipant, "cannot find focused participant");
             assert(farthestParticipant, "cannot find farthest participant");
@@ -142,16 +114,6 @@ export class PlatformCameraController2D extends CameraController2D implements On
             this.camera.CFrame = CFrame.lookAt(cameraPosition, positionMedian);
             this.camera.Focus = this.camera.CFrame.Rotation.add(positionMedian);
         }
-    }
-
-    public async SetBaseCameraDistance(baseCameraDistance: number)
-    {
-        this.minDistance = baseCameraDistance;
-    }
-
-    public async SetCameraMode(cameraMode: PlatformControllerCameraMode)
-    {
-        this.cameraMode = cameraMode;
     }
 
     public async SetCameraEnabled(enabled: boolean): Promise<void>

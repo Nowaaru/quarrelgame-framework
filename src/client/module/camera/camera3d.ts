@@ -1,11 +1,11 @@
 import { Components } from "@flamework/components";
 import { Controller, Dependency, Modding, OnInit, OnStart } from "@flamework/core";
 import { Players, RunService, TweenService, UserInputService, Workspace } from "@rbxts/services";
+import { Cursor, CursorMode } from "client/controllers/cursor.controller";
+import { LockType, Mouse, MouseMovement, OnMouseMove } from "client/controllers/mouse.controller";
+import { CameraController } from "client/module/camera";
 import { StateAttributes, StatefulComponent } from "shared/components/state.component";
 import { EntityState } from "shared/util/lib";
-import { CameraController } from "./camera.controller";
-import { Cursor, CursorMode } from "./cursor.controller";
-import { LockType, Mouse, MouseMovement, OnMouseMove } from "./mouse.controller";
 
 export interface Camera3D
 {
@@ -13,8 +13,7 @@ export interface Camera3D
     on3DCameraDisabled?(): void;
 }
 
-@Controller({})
-export class CameraController3D extends CameraController implements OnStart, OnInit, OnMouseMove
+export abstract class CameraController3D extends CameraController implements OnStart, OnInit, OnMouseMove
 {
     constructor(
         private readonly mouse: Mouse,
@@ -30,8 +29,6 @@ export class CameraController3D extends CameraController implements OnStart, OnI
         targetInstance?: T,
     )
     {
-        const gameSettings = UserSettings().GetService("UserGameSettings");
-
         if (!this.lockOnTarget && targetInstance)
         {
             this.lockOnTarget = targetInstance;
@@ -116,11 +113,11 @@ export class CameraController3D extends CameraController implements OnStart, OnI
         return interpolationTween;
     }
 
-    private readonly mouseLockOffset = new Vector3(2, 1, 0);
+    protected readonly mouseLockOffset = new Vector3(2, 1, 0);
 
-    private crouchCameraOffset = new Vector3();
+    protected crouchCameraOffset = new Vector3();
 
-    private directionCameraOffset = new Vector3();
+    protected directionCameraOffset = new Vector3();
 
     public InterpolateOffset(
         tweenInfo: TweenInfo = this.battleCameraTweenInfo,
@@ -163,18 +160,14 @@ export class CameraController3D extends CameraController implements OnStart, OnI
         return new Promise<void>((resolve, reject) =>
         {
             if (!this.LocalPlayer.Character)
-            {
                 return reject("The character is not defined.");
-            }
 
             const Humanoid = this.LocalPlayer.Character.WaitForChild(
                 "Humanoid",
                 3,
             ) as Humanoid | undefined;
             if (!Humanoid)
-            {
                 return reject("The character does not have a humanoid.");
-            }
 
             const userSettings = UserSettings().GetService("UserGameSettings");
             if (enabled)
@@ -208,7 +201,7 @@ export class CameraController3D extends CameraController implements OnStart, OnI
 
                 Promise.fromEvent(
                     this.cursor.InterpolateTransparency(undefined, 1).Completed,
-                ).then(() =>
+                ).then(async () =>
                 {
                     this.cursor.SetCursorMode(CursorMode.Default);
                     task.wait(1 / 8);
@@ -229,7 +222,7 @@ export class CameraController3D extends CameraController implements OnStart, OnI
                 const viewportSize = this.cursor.CursorInstance.Parent.AbsoluteSize;
                 const viewportCenter = viewportSize.div(2);
 
-                const [cameraCenter, isVisible] = [viewportCenter, true]; // this.camera.WorldToViewportPoint(this.camera.CFrame.Position);
+                const [ cameraCenter, isVisible ] = [ viewportCenter, true ]; // this.camera.WorldToViewportPoint(this.camera.CFrame.Position);
 
                 this.cursor.SetCursorMode(CursorMode.Scriptable);
 
@@ -263,7 +256,7 @@ export class CameraController3D extends CameraController implements OnStart, OnI
                         this.cursor.InterpolateTransparency(undefined, 1).Completed,
                     ).then(() =>
                     {
-                        this.cursor.SetPosition([viewportCenter.X, viewportCenter.Y]);
+                        this.cursor.SetPosition([ viewportCenter.X, viewportCenter.Y ]);
 
                         return Promise.fromEvent(
                             this.cursor.InterpolateTransparency(undefined, 0).Completed,
@@ -285,9 +278,7 @@ export class CameraController3D extends CameraController implements OnStart, OnI
     onMouseMove({ delta }: MouseMovement): void
     {
         if (!this.cameraEnabled)
-        {
             return;
-        }
     }
 
     onInit()
@@ -342,16 +333,12 @@ export class CameraController3D extends CameraController implements OnStart, OnI
                         const oldState = EntityState[
                             EntityState[_oldState as number] as keyof typeof EntityState
                         ];
-                        const crouchStateTest = [EntityState.Crouch];
+                        const crouchStateTest = [ EntityState.Crouch ];
 
                         if (crouchStateTest.includes(newState))
-                        {
                             this.crouchCameraOffset = new Vector3(0, -2, 0);
-                        }
                         else if (crouchStateTest.includes(oldState))
-                        {
                             this.crouchCameraOffset = Vector3.zero;
-                        }
 
                         if (this.crouchCameraOffset !== _cameraOffset)
                         {

@@ -4,24 +4,23 @@ import { Controller, Dependency, OnPhysics, OnRender, OnStart, OnTick } from "@f
 import { OnRespawn } from "client/controllers/client.controller";
 import { Gamepad, GamepadButtons } from "client/controllers/gamepad.controller";
 import { Keyboard } from "client/controllers/keyboard.controller";
+import { MotionInput } from "client/controllers/motioninput.controller";
 import { Mouse } from "client/controllers/mouse.controller";
+import { CharacterController } from "client/module/character";
+import { CombatController2D } from "client/module/combat/combat2d";
 import { ClientFunctions } from "shared/network";
 import { ConvertMoveDirectionToMotion, InputMode, InputResult, Motion } from "shared/util/input";
 import { EntityState } from "shared/util/lib";
-import { CharacterController } from "./character.controller";
-import { CombatController } from "./combat.controller";
-import { MotionInput } from "./motioninput.controller";
 
 import Make from "@rbxts/make";
+import { MatchController, OnArenaChange } from "client/controllers/match.controller";
 import type _Map from "server/components/map.component";
-import { MatchController, OnArenaChange } from "./match.controller";
 
 interface ChangedSignals
 {
     [stateName: string]: unknown;
 }
 
-@Controller({})
 export class CharacterController2D extends CharacterController implements OnStart, OnRespawn, OnRender, OnArenaChange
 {
     private axis?: Vector3;
@@ -29,7 +28,7 @@ export class CharacterController2D extends CharacterController implements OnStar
     private _arena?: _Map.Arena;
 
     constructor(
-        private readonly combatController: CombatController,
+        private readonly combatController: CombatController2D,
         private readonly motionInputController: MotionInput.MotionInputController,
     )
     {

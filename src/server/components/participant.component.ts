@@ -93,6 +93,7 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
         {
             error(`match of ID ${matchId} does not exist.`);
         }
+
         return new Promise<Entity.PlayerCombatant<A>>((res) =>
         {
             assert(

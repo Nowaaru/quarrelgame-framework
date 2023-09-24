@@ -1,8 +1,8 @@
 import { Controller, Modding, OnInit, OnStart } from "@flamework/core";
 import { Players, Workspace } from "@rbxts/services";
+import { CameraController2D } from "client/module/camera/camera2d";
 import type _Map from "server/components/map.component";
 import { ClientEvents, ClientFunctions, Server, ServerFunctions } from "shared/network";
-import { CameraController2D } from "./camera2d.controller";
 
 export interface OnArenaChange
 {
@@ -45,13 +45,6 @@ export class MatchController implements OnStart, OnInit
                 matchId,
                 arenaInstance: currentMatch.Arena.instance as _Map.Arena,
             };
-
-            this.cameraController2D.SetParticipants(
-                ...currentMatch.Participants.mapFiltered((n) => n.ParticipantId).map((n) =>
-                    Players.GetPlayers().find((a) => a.GetAttribute("ParticipantId") === n)?.Character as Model
-                ),
-            );
-            this.cameraController2D.SetCameraEnabled(true);
 
             for (const listener of this.arenaChangedHandlers)
                 task.spawn(() => listener.onArenaChanged(matchId, this.matchData!.arenaInstance));

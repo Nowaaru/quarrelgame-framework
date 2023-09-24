@@ -2,9 +2,8 @@ import { Controller, OnInit, OnStart } from "@flamework/core";
 import Make from "@rbxts/make";
 import Roact from "@rbxts/roact";
 import { Players, TweenService } from "@rbxts/services";
+import { Camera3D, CameraController3D } from "client/module/camera/camera3d";
 import HeadsUpDisplay from "client/ui/hud";
-import { Camera3D, CameraController3D } from "./camera3d.controller";
-import { Client } from "./client.controller";
 
 interface WidescreenInterface
 {
@@ -44,9 +43,7 @@ export class HudController implements OnStart, OnInit
     public EnableHud()
     {
         if (this.HudTree)
-        {
             this.DisableHud();
-        }
 
         this.HudTree = Roact.mount(<HeadsUpDisplay />, this.hudInstance, "Heads-Up Display");
     }
@@ -54,9 +51,7 @@ export class HudController implements OnStart, OnInit
     public DisableHud()
     {
         if (this.HudTree)
-        {
             Roact.unmount(this.HudTree);
-        }
 
         this.HudTree = undefined;
     }
