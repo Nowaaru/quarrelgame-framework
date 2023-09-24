@@ -13,7 +13,7 @@ export class PlatformCameraController2D extends CameraController2D implements On
 {
     protected cameraDirection: CameraFacing = CameraFacing.Left;
 
-    protected cameraMode: CameraMode2D = CameraMode2D.Multi;
+    protected cameraMode: CameraMode2D = CameraMode2D.Single;
 
     constructor()
     {
@@ -22,21 +22,6 @@ export class PlatformCameraController2D extends CameraController2D implements On
 
     onInit(): void | Promise<void>
     {
-    }
-
-    async onRespawn(character: Model): Promise<void>
-    {
-        super.onRespawn(character);
-        const currentMatch = await ClientFunctions.GetCurrentMatch();
-        if (currentMatch?.Arena)
-        {
-            this.SetParticipants(...currentMatch.Participants.mapFiltered(({ ParticipantId }) =>
-            {
-                return Players.GetPlayers().find((player) => player.GetAttribute("ParticipantId") === ParticipantId)?.Character;
-            }));
-
-            this.SetCameraEnabled(true);
-        }
     }
 
     onStart(): void
@@ -83,41 +68,40 @@ export class PlatformCameraController2D extends CameraController2D implements On
         const currentMatchData = Dependency<MatchController>().GetMatchData();
         assert(this.character, "character is not defined");
         assert(currentMatchData, "currentMatchData is not defined");
-        if (currentMatchData)
-        {
-            const { arenaInstance } = currentMatchData;
-            const { config: arenaConfig } = arenaInstance;
-            const arenaForwardCFrame = CFrame.lookAt(arenaConfig.Origin.Value.Position, arenaConfig.Origin.Value.PointToWorldSpace(arenaConfig.Axis.Value));
 
-            const [ radicalParticipants ] = this.GetRadicalParticipants(...characters);
-            const [ focusedParticipant, farthestParticipant ] = radicalParticipants ?? [];
-            assert(focusedParticipant, "cannot find focused participant");
-            assert(farthestParticipant, "cannot find farthest participant");
+        const { arenaInstance } = currentMatchData;
+        const { config: arenaConfig } = arenaInstance;
+        const arenaForwardCFrame = CFrame.lookAt(arenaConfig.Origin.Value.Position, arenaConfig.Origin.Value.PointToWorldSpace(arenaConfig.Axis.Value));
 
-            const positionMedian = focusedParticipant.GetPivot().Position
-                .mul(new Vector3(1, 0, 1))
-                .Lerp(currentMatchData.arenaInstance.config.Origin.Value.Position.mul(new Vector3(1, 0, 1)), 0.5)
-                .add(focusedParticipant.GetPivot().Position.mul(new Vector3(0, 1, 0)));
+        const [ radicalParticipants ] = this.GetRadicalParticipants(...characters);
+        const [ focusedParticipant, farthestParticipant ] = radicalParticipants ?? [];
+        assert(focusedParticipant, "cannot find focused participant");
+        assert(farthestParticipant, "cannot find farthest participant");
 
-            const { ViewportSize: CameraSize } = this.camera;
-            const aspectRatio = CameraSize.X / CameraSize.Y;
-            const baseSize = focusedParticipant.GetPivot().Position.sub(positionMedian).mul(new Vector3(1, 0, 1));
-            const extentsSize = new Vector3(math.abs(baseSize.X), baseSize.Z).mul(new Vector3(1, 1 / aspectRatio, 1)).mul(1 + this.paddingPercentage);
+        const positionMedian = focusedParticipant.GetPivot().Position
+            .mul(new Vector3(1, 0, 1))
+            .Lerp(currentMatchData.arenaInstance.config.Origin.Value.Position.mul(new Vector3(1, 0, 1)), 0.5)
+            .add(focusedParticipant.GetPivot().Position.mul(new Vector3(0, 1, 0)));
 
-            const offset = (extentsSize.Magnitude / 2) / math.tan(math.rad(this.camera.FieldOfView / 2));
-            const cameraPosition = positionMedian.add(
-                arenaForwardCFrame.RightVector.mul(
-                    (this.minDistance + math.max(this.minDistance, math.abs(offset))) * (this.cameraDirection === CameraFacing.Right ? 1 : -1),
-                ),
-            );
+        const { ViewportSize: CameraSize } = this.camera;
+        const aspectRatio = CameraSize.X / CameraSize.Y;
+        const baseSize = focusedParticipant.GetPivot().Position.sub(positionMedian).mul(new Vector3(1, 0, 1));
+        const extentsSize = new Vector3(math.abs(baseSize.X), baseSize.Z).mul(new Vector3(1, 1 / aspectRatio, 1).mul(3 * (1 + this.paddingPercentage)));
+        print("extents size:", extentsSize);
 
-            this.camera.CFrame = CFrame.lookAt(cameraPosition, positionMedian);
-            this.camera.Focus = this.camera.CFrame.Rotation.add(positionMedian);
-        }
+        const offset = (extentsSize.Magnitude / 2) / math.tan(math.rad(this.camera.FieldOfView / 2));
+        const cameraPosition = positionMedian.add(
+            arenaForwardCFrame.RightVector.mul(
+                (math.clamp(math.abs(offset), this.minDistance, this.maxDistance)) * (this.cameraDirection === CameraFacing.Right ? 1 : -1),
+            ),
+        );
+
+        this.camera.CFrame = CFrame.lookAt(cameraPosition, positionMedian);
+        this.camera.Focus = this.camera.CFrame.Rotation.add(positionMedian);
     }
 
     public async SetCameraEnabled(enabled: boolean): Promise<void>
     {
-        this.cameraEnabled = enabled;
+        super.SetCameraEnabled(this.cameraEnabled = enabled);
     }
 }
