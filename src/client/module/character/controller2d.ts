@@ -214,6 +214,7 @@ export class CharacterController2D extends CharacterController implements OnStar
             Responsiveness: 200,
         });
 
+        // TODO: fix bug that prevents this part in the controller from running
         const currentMatch = await ClientFunctions.GetCurrentMatch();
         if (currentMatch?.Arena)
         {

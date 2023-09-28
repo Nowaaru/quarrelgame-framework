@@ -1,9 +1,9 @@
 import { Components } from "@flamework/components";
-import { Controller, Dependency, Modding, OnInit, OnStart } from "@flamework/core";
-import { Players, RunService, TweenService, UserInputService, Workspace } from "@rbxts/services";
-import { Cursor, CursorMode } from "client/controllers/cursor.controller";
-import { LockType, Mouse, MouseMovement, OnMouseMove } from "client/controllers/mouse.controller";
+import { Dependency, Modding, OnInit, OnStart } from "@flamework/core";
+import { Players, RunService, TweenService, Workspace } from "@rbxts/services";
+import { Mouse, MouseMovement, OnMouseMove } from "client/controllers/mouse.controller";
 import { CameraController } from "client/module/camera";
+import { Cursor, CursorMode } from "client/module/extra/cursor";
 import { StateAttributes, StatefulComponent } from "shared/components/state.component";
 import { EntityState } from "shared/util/lib";
 
@@ -41,7 +41,7 @@ export abstract class CameraController3D extends CameraController implements OnS
             RunService.BindToRenderStep(
                 "LockOn",
                 Enum.RenderPriority.Last.Value + 2,
-                (dt) =>
+                () =>
                 {
                     assert(this.LocalPlayer.Character, "character does not exist");
 

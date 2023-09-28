@@ -1,9 +1,8 @@
 import { Controller, Modding, OnInit, OnStart } from "@flamework/core";
 import { FunctionParameters } from "@flamework/networking/out/types";
 import { Keyboard as ClackKeyboard } from "@rbxts/clack";
+import Signal from "@rbxts/signal";
 import { InputMode, InputProcessed, InputResult } from "shared/util/input";
-
-import EventEmitter from "@rbxts/task-event-emitter";
 
 export interface OnKeyboardInput
 {
@@ -41,7 +40,7 @@ export class Keyboard implements OnStart, OnInit
             if (!this[key].has(pressedKey))
                 this[key].add(pressedKey);
 
-            this.keyDown.emit(pressedKey);
+            this.keyDown.Fire(pressedKey);
             this.keyboardListeners.forEach((keyboardInputObject) =>
             {
                 if (isProcessed)
@@ -60,7 +59,7 @@ export class Keyboard implements OnStart, OnInit
             const key: "allHeldKeysProcessed" | "allHeldKeys" = `allHeldKeys${isProcessed ? "Processed" : ""}`;
 
             this[key].delete(pressedKey);
-            this.keyUp.emit(pressedKey);
+            this.keyUp.Fire(pressedKey);
             this.keyboardListeners.forEach((keyboardInputObject) =>
             {
                 if (isProcessed)
@@ -75,9 +74,9 @@ export class Keyboard implements OnStart, OnInit
         });
     }
 
-    public keyHeldFor(keyToPress: Enum.KeyCode, duration: number): EventEmitter<[]>
+    public keyHeldFor(keyToPress: Enum.KeyCode, duration: number): Signal<() => void>
     {
-        const returnedEmitter = new EventEmitter();
+        const returnedFireter = new Signal();
         let keyPressInitTime: number | undefined;
 
         const _cn = this.clackKeyboardInstance.keyDown.Connect((con) =>
@@ -100,14 +99,14 @@ export class Keyboard implements OnStart, OnInit
                 _dn.Disconnect();
                 _cn.Disconnect();
 
-                returnedEmitter.emit();
-                returnedEmitter.destroy();
+                returnedFireter.Fire();
+                returnedFireter.Destroy();
             }
 
             keyPressInitTime = undefined;
         });
 
-        return returnedEmitter;
+        return returnedFireter;
     }
 
     public Puppeteer(keyToPress: Enum.KeyCode, inputMode: InputMode, isProcessed?: boolean): boolean
@@ -140,11 +139,11 @@ export class Keyboard implements OnStart, OnInit
         return keys.filter((n, i) => keys.findIndex((l) => l === n) === i).every((k) => allValidPressedKeys.includes(k));
     }
 
-    public readonly keyDown = new EventEmitter<[keyPressed: Enum.KeyCode]>();
+    public readonly keyDown = new Signal<(keyPressed: Enum.KeyCode) => void>();
 
-    public readonly keyUp = new EventEmitter<[keyPressed: Enum.KeyCode]>();
+    public readonly keyUp = new Signal<(keyPressed: Enum.KeyCode) => void>();
 
-    public readonly keyHeld = new EventEmitter<[keyPressed: Enum.KeyCode, durationPressed: number]>();
+    public readonly keyHeld = new Signal<(keyPressed: Enum.KeyCode, durationPressed: number) => void>();
 
     private readonly allHeldKeys = new Set<Enum.KeyCode>();
 

@@ -1,8 +1,8 @@
 import { Controller, OnInit, OnStart } from "@flamework/core";
 import { Players, TweenService, UserInputService } from "@rbxts/services";
+import { Mouse, MouseButton, MouseMovement, OnMouseButton, OnMouseMove } from "client/controllers/mouse.controller";
 import { InputMode } from "shared/util/input";
 import { ConvertPercentageToNumber } from "shared/util/lib";
-import { Mouse, MouseButton, MouseMovement, OnMouseButton, OnMouseMove } from "./mouse.controller";
 
 export enum CursorMode
 {
@@ -10,7 +10,6 @@ export enum CursorMode
     Default,
 }
 
-@Controller({})
 export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
 {
     constructor(private mouse: Mouse)
@@ -25,9 +24,7 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
     onMouseMove({ position, delta }: MouseMovement): void
     {
         if (this.CursorMode === CursorMode.Scriptable)
-        {
             return;
-        }
 
         this.SetPosition(position);
     }
@@ -35,13 +32,9 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
     onMouseButton(mouseButton: MouseButton, inputMode: InputMode): void
     {
         if (this.mouse.GetPressedButtons().isEmpty())
-        {
             this.InterpolateSize(undefined, this.baseSize);
-        }
         else
-        {
             this.InterpolateSize(undefined, this.baseSize * 0.85);
-        }
     }
 
     onInit()
@@ -70,12 +63,12 @@ export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
         this.SetSize();
     }
 
-    public SetPosition(position: readonly [xPx: number, yPx: number] = [0, 0])
+    public SetPosition(position: readonly [xPx: number, yPx: number] = [ 0, 0 ])
     {
         this.CursorInstance.Position = new UDim2(0, position[0], 0, position[1]);
     }
 
-    public InterpolatePosition(tweenInfo = this.interpInfo, position: readonly [xPx: number, yPx: number] = [0, 0])
+    public InterpolatePosition(tweenInfo = this.interpInfo, position: readonly [xPx: number, yPx: number] = [ 0, 0 ])
     {
         const interpolationTween = TweenService.Create(this.CursorInstance, tweenInfo, {
             Position: UDim2.fromOffset(...position),

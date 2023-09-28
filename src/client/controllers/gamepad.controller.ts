@@ -3,7 +3,7 @@ import { FunctionParameters } from "@flamework/networking/out/types";
 import { Gamepad as ClackGamepad } from "@rbxts/clack";
 import { InputMode, InputProcessed, InputResult } from "shared/util/input";
 
-import EventEmitter from "@rbxts/task-event-emitter";
+import Signal from "@rbxts/signal";
 
 export interface OnGamepadInput
 {
@@ -57,11 +57,11 @@ export class Gamepad implements OnStart
     {
         this.clackGamepadInstance.buttonDown.Connect((pressedButton, wasProcessed) =>
         {
-            this.buttonDown.emit(pressedButton);
+            this.buttonDown.Fire(pressedButton);
         });
         this.clackGamepadInstance.buttonUp.Connect((pressedButton, wasProcessed) =>
         {
-            this.buttonUp.emit(pressedButton);
+            this.buttonUp.Fire(pressedButton);
             this.gamepadListeners.forEach((gamepadInputObject) =>
             {
                 if (wasProcessed)
@@ -76,9 +76,9 @@ export class Gamepad implements OnStart
         });
     }
 
-    public ButtonHeldFor(buttonToPress: GamepadButtons, duration: number): EventEmitter<[]>
+    public ButtonHeldFor(buttonToPress: GamepadButtons, duration: number): Signal<() => void>
     {
-        const returnedEmitter = new EventEmitter();
+        const returnedEmitter = new Signal();
         let buttonPressInitTime: number | undefined;
 
         const _cn = this.clackGamepadInstance.buttonDown.Connect((con) =>
@@ -89,16 +89,16 @@ export class Gamepad implements OnStart
         const _dn = this.clackGamepadInstance.buttonUp.Connect((con) =>
         {
             if (typeIs(buttonPressInitTime, "nil"))
-            {
                 return;
-            }
+
             if (buttonPressInitTime! >= duration)
             {
                 _dn.Disconnect();
                 _cn.Disconnect();
 
-                returnedEmitter.emit();
+                returnedEmitter.Fire();
             }
+
             buttonPressInitTime = undefined;
         });
 
@@ -108,13 +108,9 @@ export class Gamepad implements OnStart
     public Puppeteer(buttonToPress: GamepadButtons, inputMode: InputMode, isProcessed?: boolean): boolean
     {
         if (inputMode === InputMode.Release)
-        {
             this.clackGamepadInstance.buttonUp.Fire(buttonToPress, !!isProcessed);
-        }
         else
-        {
             this.clackGamepadInstance.buttonDown.Fire(buttonToPress, !!isProcessed);
-        }
 
         return true;
     }
@@ -122,22 +118,22 @@ export class Gamepad implements OnStart
     public areButtonsDown(buttons: GamepadButtons[], processFiltering = InputProcessed.Either): boolean
     {
         const allValidPressedButtons = [
-            ...[...this.allHeldButtons].map((k) => [k, false] as const),
-            ...[...this.allHeldButtonsProcessed].map((k) => [k, true] as const),
-        ].filter(([key, isProcessed]) =>
+            ...[ ...this.allHeldButtons ].map((k) => [ k, false ] as const),
+            ...[ ...this.allHeldButtonsProcessed ].map((k) => [ k, true ] as const),
+        ].filter(([ key, isProcessed ]) =>
         {
             return (processFiltering === InputProcessed.Either) || (processFiltering === InputProcessed.Processed && isProcessed)
                 || (processFiltering === InputProcessed.Unprocessed && !isProcessed);
-        }).map(([k]) => k);
+        }).map(([ k ]) => k);
 
         return buttons.filter((n, i) => buttons.findIndex((l) => l === n) === i).every((k) => allValidPressedButtons.includes(k));
     }
 
-    public readonly buttonDown = new EventEmitter<[buttonPressed: GamepadButtons]>();
+    public readonly buttonDown = new Signal<(buttonPressed: GamepadButtons) => void>();
 
-    public readonly buttonUp = new EventEmitter<[buttonPressed: GamepadButtons]>();
+    public readonly buttonUp = new Signal<(buttonPressed: GamepadButtons) => void>();
 
-    public readonly buttonHeld = new EventEmitter<[buttonPressed: GamepadButtons, durationPressed: number]>();
+    public readonly buttonHeld = new Signal<(buttonPressed: GamepadButtons, durationPressed: number) => void>();
 
     private readonly allHeldButtons = new Set<Enum.KeyCode>();
 

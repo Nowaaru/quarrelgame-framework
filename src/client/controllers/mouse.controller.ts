@@ -1,10 +1,8 @@
-import { BaseComponent, Component } from "@flamework/components";
 import { Controller, Modding, OnInit, OnStart, Reflect } from "@flamework/core";
 import { Mouse as ClackMouse } from "@rbxts/clack";
 import { Players, UserInputService } from "@rbxts/services";
-import EventEmitter from "@rbxts/task-event-emitter";
+import { Cursor } from "client/module/extra/cursor";
 import { InputMode } from "shared/util/input";
-import { Cursor } from "./cursor.controller";
 
 export enum MouseButton
 {
@@ -66,7 +64,7 @@ export class Mouse implements OnStart, OnInit
 
         Players.LocalPlayer.CharacterAdded.Connect(() =>
         {
-            this.mouseRaycastParams.AddToFilter([Players.LocalPlayer.Character!]);
+            this.mouseRaycastParams.AddToFilter([ Players.LocalPlayer.Character! ]);
         });
     }
 
@@ -84,19 +82,15 @@ export class Mouse implements OnStart, OnInit
 
         const mouseButtonHandler = (key: InputObject, mode: InputMode) =>
         {
-            switch (key.UserInputType)
+            switch ( key.UserInputType )
             {
                 case Enum.UserInputType.MouseButton1:
                     for (const listener of this.buttonListeners)
                     {
                         if (mode === InputMode.Down)
-                        {
                             this.pressedButtons.add(MouseButton.Left);
-                        }
                         else
-                        {
                             this.pressedButtons.delete(MouseButton.Left);
-                        }
 
                         Promise.try(() => listener.onMouseButton?.(MouseButton.Left, mode));
                     }
@@ -105,13 +99,9 @@ export class Mouse implements OnStart, OnInit
                     for (const listener of this.buttonListeners)
                     {
                         if (mode === InputMode.Down)
-                        {
                             this.pressedButtons.add(MouseButton.Right);
-                        }
                         else
-                        {
                             this.pressedButtons.delete(MouseButton.Right);
-                        }
 
                         Promise.try(() => listener.onMouseButton?.(MouseButton.Right, mode));
                     }
@@ -120,13 +110,9 @@ export class Mouse implements OnStart, OnInit
                     for (const listener of this.buttonListeners)
                     {
                         if (mode === InputMode.Down)
-                        {
                             this.pressedButtons.add(MouseButton.Middle);
-                        }
                         else
-                        {
                             this.pressedButtons.delete(MouseButton.Middle);
-                        }
 
                         Promise.try(() => Promise.try(() => listener.onMouseButton?.(MouseButton.Middle, mode)));
                     }
@@ -143,8 +129,8 @@ export class Mouse implements OnStart, OnInit
                 {
                     Promise.try(() =>
                         listener.onMouseMove?.({
-                            delta: [key.Delta.X, key.Delta.Y] as const,
-                            position: [key.Position.X, key.Position.Y] as const,
+                            delta: [ key.Delta.X, key.Delta.Y ] as const,
+                            position: [ key.Position.X, key.Position.Y ] as const,
                         })
                     );
                 }
@@ -174,20 +160,16 @@ export class Mouse implements OnStart, OnInit
     public Destroy()
     {
         if (this.isMouseLocked)
-        {
             this.clackInstance.unlockAndDestroy();
-        }
         else
-        {
             this.clackInstance.destroy();
-        }
     }
 
     public Position(): [x: number, y: number]
     {
         const currentPosition = this.clackInstance.getPosition();
 
-        return [currentPosition.X, currentPosition.Y];
+        return [ currentPosition.X, currentPosition.Y ];
     }
 
     public Lock(lockType = LockType.Center)
@@ -196,9 +178,7 @@ export class Mouse implements OnStart, OnInit
         {
             this.isMouseLocked = true;
             if (lockType === LockType.Center)
-            {
                 return this.clackInstance.lockCenter();
-            }
 
             return this.clackInstance.lock();
         }

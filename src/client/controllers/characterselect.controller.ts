@@ -14,6 +14,8 @@ export class CharacterSelectController implements OnStart, OnInit
 {
     private currentCharacterSelect?: Roact.Tree;
 
+    private characterSelectConstructor?: Roact.Element;
+
     private characterSelectScreenGui: ScreenGui;
 
     private currentlySelectedCharacter?: Character.Character;
@@ -35,9 +37,11 @@ export class CharacterSelectController implements OnStart, OnInit
     onStart()
     {
         if (!this.client.player.GetAttribute("SelectedCharacter"))
-        {
             this.OpenCharacterSelect();
-        }
+    }
+
+    public BindCharacterSelectInstance()
+    {
     }
 
     public OpenCharacterSelect()
@@ -70,9 +74,7 @@ export class CharacterSelectController implements OnStart, OnInit
     public CloseCharacterSelect()
     {
         if (this.currentCharacterSelect !== undefined)
-        {
             Roact.unmount(this.currentCharacterSelect);
-        }
 
         print("closed character select");
     }

@@ -3,8 +3,7 @@ import { Controller, Dependency, Modding, OnInit, OnStart } from "@flamework/cor
 import { Clack, Gamepad as ClackGamepad, Prefer } from "@rbxts/clack";
 import { Players } from "@rbxts/services";
 
-import { Signal, SignalCallback, SignalParams, SignalWait } from "@rbxts/beacon";
-import EventEmitter from "@rbxts/task-event-emitter";
+import Signal from "@rbxts/signal";
 import { Gamepad, type GamepadButtons, OnGamepadInput } from "client/controllers/gamepad.controller";
 import { Keyboard, OnKeyboardInput } from "client/controllers/keyboard.controller";
 import { Mouse } from "client/controllers/mouse.controller";
@@ -52,16 +51,16 @@ export class Input implements OnStart, OnInit, OnGamepadInput
     {
         this.prefer.observePreferredInput((newInputType) =>
         {
-            switch (newInputType)
+            switch ( newInputType )
             {
                 case Clack.InputType.Gamepad:
-                    this.InputTypeChanged.emit(InputType.Gamepad);
+                    this.InputTypeChanged.Fire(InputType.Gamepad);
                     break;
 
                 default:
                     /* falls through */
                 case Clack.InputType.MouseKeyboard:
-                    this.InputTypeChanged.emit(InputType.MouseKeyboard);
+                    this.InputTypeChanged.Fire(InputType.MouseKeyboard);
                     break;
             }
         });
@@ -69,12 +68,10 @@ export class Input implements OnStart, OnInit, OnGamepadInput
         Modding.onListenerAdded<OnInputTypeChange>((object) => this.inputChangedListeners.add(object));
         Modding.onListenerRemoved<OnInputTypeChange>((object) => this.inputChangedListeners.delete(object));
 
-        this.InputTypeChanged.subscribe((newInputType) =>
+        this.InputTypeChanged.Connect((newInputType) =>
         {
             for (const inputChangedListener of this.inputChangedListeners)
-            {
                 inputChangedListener.onInputTypeChange(newInputType);
-            }
         });
     }
 
@@ -83,7 +80,7 @@ export class Input implements OnStart, OnInit, OnGamepadInput
         return this.prefer.getPreferredInput() === Clack.InputType.Gamepad ? InputType.Gamepad : InputType.MouseKeyboard;
     }
 
-    public InputTypeChanged = new EventEmitter<[NewInput: InputType]>();
+    public InputTypeChanged = new Signal<(NewInput: InputType) => void>();
 
     private prefer!: Prefer;
 }
