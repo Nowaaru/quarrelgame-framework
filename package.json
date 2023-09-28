@@ -1,25 +1,29 @@
 {
-  "name": "untitled-physical-quarrel-game",
-  "version": "0.0.1",
-  "description": "",
-  "main": "index.js",
+  "name": "combatgame-framework",
+  "version": "1.0.0",
+  "description": "A flamework-based framework dedicated to making combat games easier to produce.",
+  "main": "out/init.lua",
   "scripts": {
     "build": "rbxtsc",
-    "watch": "rbxtsc -w"
+    "watch": "rbxtsc -w",
+    "prepublishOnly": "yarn run build"
   },
-  "lint-staged": {
-    "*.ts": [
-      ""
-    ]
+  "types": "out/index.d.ts",
+  "files": [
+    "out",
+    "!**/*.tsbuildinfo"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["fighting", "combat", "game", "framework", "flamework"],
+  "author": "Nowaaru",
   "license": "ISC",
   "devDependencies": {
     "@rbxts/compiler-types": "^2.1.1-types.0",
     "@rbxts/flipper": "^2.0.1",
     "@rbxts/raycast-hitbox": "^4.0.1-ts.0",
-    "@rbxts/types": "^1.0.642",
+    "@rbxts/types": "^1.0.716",
     "@typescript-eslint/eslint-plugin": "^6.6.0",
     "@typescript-eslint/parser": "^6.6.0",
     "eslint": "^8.49.0",
