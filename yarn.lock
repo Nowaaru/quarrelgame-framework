@@ -307,10 +307,15 @@
   resolved "https://registry.yarnpkg.com/@rbxts/trove/-/trove-1.3.0.tgz#c0bb5478e17435bc16a19a4fe3fba7626650d17b"
   integrity sha512-Ibekh0xr2G0WTWlUhbIaybWZvKF0C4flaBJBhJOuyS/sp6qyyn9l3pWWbSI4zrIExuOIswwKQ7O1BJj2bIJYCA==
 
-"@rbxts/types@^1.0.537", "@rbxts/types@^1.0.642":
+"@rbxts/types@^1.0.537":
   version "1.0.709"
   resolved "https://registry.yarnpkg.com/@rbxts/types/-/types-1.0.709.tgz#645bd5547ccebed748c167e1c43d3ff62a788db3"
   integrity sha512-lvglSXxGNSNgZNvccnh70USvhSn6yYO+yQTA4m0ePjNjyJ8DueVLfuT5Ge0NDFYOlTtx1vJuxd2wlFqCBJAXVw==
+
+"@rbxts/types@^1.0.716":
+  version "1.0.716"
+  resolved "https://registry.yarnpkg.com/@rbxts/types/-/types-1.0.716.tgz#e17cb9a5f52b6ee5b4486215544616ec59a0b42a"
+  integrity sha512-UaPwsNDQAgq5TxDgWfSXDJkv776+rSDNI2OMmVpXoefpJawNtjLzVx2qMFE5QKCPd+Xow5BFpHK7ieqi9/NZtA==
 
 "@rbxts/validate-tree@^2.0.1":
   version "2.0.2"
