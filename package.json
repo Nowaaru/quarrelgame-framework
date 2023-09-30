@@ -1,7 +1,7 @@
 {
-  "name": "combatgame-framework",
+  "name": "@rbxts/quarelgame-framework",
   "version": "1.0.0",
-  "description": "A flamework-based framework dedicated to making combat games easier to produce.",
+  "description": "A flamework-based flamework for combat game development.",
   "main": "out/init.lua",
   "scripts": {
     "build": "rbxtsc",

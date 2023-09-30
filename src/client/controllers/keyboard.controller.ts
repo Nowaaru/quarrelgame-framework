@@ -7,7 +7,7 @@ import { InputMode, InputProcessed, InputResult } from "shared/util/input";
 export interface OnKeyboardInput
 {
     onKeyboardInput?(buttonPressed: Enum.KeyCode, inputMode: InputMode): InputResult | boolean | (() => boolean | InputResult);
-    onProcessedKeyboardInput?(...args: FunctionParameters<OnKeyboardInput["onKeyboardInput"]>): ReturnType<OnKeyboardInput["onKeyboardInput"]>;
+    onProcessedKeyboardInput?: OnKeyboardInput["onKeyboardInput"];
 }
 
 @Controller({

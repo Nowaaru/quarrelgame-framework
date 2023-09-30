@@ -8,7 +8,7 @@ import Signal from "@rbxts/signal";
 export interface OnGamepadInput
 {
     onGamepadInput?(buttonPressed: GamepadButtons, inputMode: InputMode): InputResult | boolean | (() => boolean | InputResult);
-    onProcessedGamepadInput?(...args: FunctionParameters<OnGamepadInput["onGamepadInput"]>): ReturnType<OnGamepadInput["onGamepadInput"]>;
+    onProcessedGamepadInput?: OnGamepadInput["onGamepadInput"];
 }
 
 export type GamepadButtons =

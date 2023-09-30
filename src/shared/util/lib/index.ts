@@ -228,7 +228,7 @@ export const Jump = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BaseP
         }
     });
 
-    return Promise.resolve();
+    return Promise.resolve(true);
 };
 
 export { getEnumValues } from "shared/util/lib/other/enum";

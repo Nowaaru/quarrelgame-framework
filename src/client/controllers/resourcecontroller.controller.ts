@@ -39,7 +39,7 @@ export class ResourceController implements OnAssetLoad
 
     private assetLoadedHandler(assetId: string, assetFetchStatus: Enum.AssetFetchStatus, instance?: Instance): Enum.AssetFetchStatus | void
     {
-        switch (assetFetchStatus)
+        switch ( assetFetchStatus )
         {
             case Enum.AssetFetchStatus.Failure:
                 this.assetLoadListeners.forEach((object) => object.onAssetLoadFailed?.(assetId, "Asset fetch failed."));
@@ -49,9 +49,7 @@ export class ResourceController implements OnAssetLoad
             case Enum.AssetFetchStatus.Success:
                 this.assetLoadListeners.forEach((object) => object.onAssetLoaded?.(assetId));
                 if (instance)
-                {
-                    this.loadedInstanceMap.set(assetId, this.loadedInstanceMap.get(assetId)?.add(instance) ?? new Set([instance]));
-                }
+                    this.loadedInstanceMap.set(assetId, this.loadedInstanceMap.get(assetId)?.add(instance) ?? new Set([ instance ]));
 
                 return assetFetchStatus;
 
@@ -72,10 +70,12 @@ export class ResourceController implements OnAssetLoad
 
     public requestPreloadInstance<T extends Instance>(instance: T): Promise<void>
     {
-        return new Promise((res, rej) =>
+        return new Promise<void>((res, rej) =>
         {
-            ContentProvider.PreloadAsync([instance], (contentId, fetchStatus) =>
+            ContentProvider.PreloadAsync([ instance ], (contentId, fetchStatus) =>
             {
+                this.assetLoadedHandler(contentId, fetchStatus);
+                return res();
             });
         }) as never;
     }
@@ -95,12 +95,9 @@ export class ResourceController implements OnAssetLoad
 
     public requestPreloadAsset(assetId: string)
     {
-        if (this.preloadQueue.has(assetId))
-        {
-            return Promise.resolve();
-        }
+        const alreadyLoadingAsset = this.preloadQueue.has(assetId);
 
-        return new Promise((res, rej) =>
+        return new Promise<void>((res, rej) =>
         {
             this.preloadQueue.add(assetId);
 
@@ -110,6 +107,7 @@ export class ResourceController implements OnAssetLoad
                 if (assetLoadResult !== undefined)
                 {
                     fetchLoadedSignal.Disconnect();
+                    res();
                 }
             });
         });

@@ -587,9 +587,9 @@ export class MatchService implements OnStart, OnInit
         ServerFunctions.GetCurrentMatch.setCallback((player) =>
         {
             const thisParticipant = Dependency<QuarrelGame>().GetParticipant(player);
-            assert(thisParticipant, `participant for ${player} does not exist.`);
+            assert(thisParticipant, `participant for ${player} does not exist`);
             if (!thisParticipant.attributes.MatchId)
-                return Promise.resolve(undefined);
+                return new Promise<void>((_, rej) => rej("participant does not have a match id")) as never;
 
             const serializedMatch = this.SerializeMatch(thisParticipant, thisParticipant.attributes.MatchId);
             if (serializedMatch)
