@@ -1,25 +1,32 @@
-import { OnInit, OnStart, Service } from "@flamework/core";
+import { Modding, OnInit, OnStart } from "@flamework/core";
 import { Cmdr } from "@rbxts/cmdr";
-import { ReplicatedStorage, ServerScriptService } from "@rbxts/services";
-import { quarrelAssets, quarrelCommands, quarrelGame } from "shared/util/lib";
+import { QuarrelCommands } from "shared/util/lib";
 
-@Service({
-    loadOrder: -1,
-})
-export class CmdrService implements OnStart, OnInit
+interface OnCmdrLoaded
 {
+    onCmdrLoaded(): void;
+}
+
+export class CommandService implements OnStart, OnInit
+{
+    private onCmdrLoadedHandler: Set<OnCmdrLoaded> = new Set();
+
+    constructor(private _script: LuaSourceContainer)
+    {}
+
     onInit()
     {
-        const commandHandlers = script.WaitForChild("handler").GetChildren() as ModuleScript[];
+        Modding.onListenerAdded<OnCmdrLoaded>((l) => this.onCmdrLoadedHandler.add(l));
+        Modding.onListenerRemoved<OnCmdrLoaded>((l) => this.onCmdrLoadedHandler.delete(l));
+
+        const commandHandlers = this._script.WaitForChild("handler").GetChildren() as ModuleScript[];
         let failedCommand: Instances[keyof Omit<Instances, "ModuleScript">];
         assert(commandHandlers.every((c) => (!c.IsA("ModuleScript") ? !!(failedCommand = c) : true)), `instance ${failedCommand!} is not a module script`);
 
         for (const command of commandHandlers)
-        {
-            Cmdr.RegisterCommand(quarrelCommands[command.Name.gsub("handler", "command") as never], command);
-        }
+            Cmdr.RegisterCommand(QuarrelCommands[command.Name.gsub("handler", "command") as never], command);
 
-        Cmdr.RegisterHooksIn(script.WaitForChild("hook"));
+        Cmdr.RegisterHooksIn(this._script.WaitForChild("hook"));
     }
 
     onStart()

@@ -1,73 +1,140 @@
-import { CharacterSelectController } from "client/controllers/characterselect.controller";
-import { CmdrController } from "client/controllers/cmdr.controller";
+import { Flamework } from "@flamework/core";
+import { Players, ReplicatedStorage, RunService } from "@rbxts/services";
 
-import { Gamepad as _Gamepad } from "client/controllers/gamepad.controller";
-import { Input as _Input } from "client/controllers/input.controller";
-import { Keyboard as _Keyboard } from "client/controllers/keyboard.controller";
+export * from "client/controllers/client.controller";
+export * from "client/controllers/match.controller";
+export * from "client/controllers/motioninput.controller";
 
-import { Client as _Client } from "client/controllers/client.controller";
-import { Match as _Match } from "server/services/matchservice.service";
+export * from "client/module/camera/camera2d";
+export * from "client/module/character/controller2d";
+export * from "client/module/combat/combat2d";
 
-import { MotionInput } from "client/controllers/motioninput.controller";
-import { CameraController2D } from "client/module/camera/camera2d";
-import { CameraController3D } from "client/module/camera/camera3d";
+export * from "client/module/camera/camera3d";
+export * from "client/module/character/controller3d";
+export * from "client/module/combat/combat3d";
 
-import { CombatController2D } from "client/module/combat/combat2d";
-import { CombatController3D } from "client/module/combat/combat3d";
+export * from "client/controllers/characterselect.controller";
+export * from "client/controllers/cmdr.controller";
+export * from "client/module/camera";
+export * from "client/module/character";
+export * from "client/module/combat";
+export * from "client/module/extra/cursor";
+export * from "client/module/extra/hud";
 
-import { Cursor as _Cursor } from "client/module/extra/cursor";
-import { HudController } from "client/module/extra/hud";
+export * from "server/services/cmdr.service.ts";
+export * from "server/services/combat.service";
+export * from "server/services/effects.service";
+export * from "server/services/matchservice.service";
+export * from "server/services/movement.service";
+export * from "server/services/quarrelgame.service";
+export * from "server/services/resolver.service";
+export * from "server/services/scheduler.service";
 
-import { Animation as _Animation } from "shared/util/animation";
-import { Boundary as _Boundary } from "shared/util/boundary";
-import { Character as _Character, Skill as _Skill } from "shared/util/character";
-import { Hitbox as _Hitbox } from "shared/util/hitbox";
-import { Input as _InputUtility } from "shared/util/input";
-import * as _Lib from "shared/util/lib/index";
-import { Model as _Model } from "shared/util/model";
+export * from "client/lib/player";
+export * from "shared/util/animation";
+export * from "shared/util/boundary";
+export * from "shared/util/character";
+export * from "shared/util/hitbox";
+export * from "shared/util/identifier";
+export * from "shared/util/lib";
+export * from "shared/util/model";
+export * from "shared/util/story";
 
-export namespace UserInterface
+export * from "shared/components/animator.component";
+export * from "shared/components/rotator.component";
+export * from "shared/components/state.component";
+
+export * from "server/components/entity.component";
+export * from "server/components/map.component";
+export * from "server/components/participant.component";
+
+export { Entity as EntityBase, EntityAttributes } from "shared/components/entity.component";
+export { ClientEvents, ClientFunctions, ServerEvents, ServerFunctions } from "shared/network";
+export { CommandNormal, ConvertMoveDirectionToMotion, Input, InputMode, InputProcessed, InputResult, InputType, Motion } from "shared/util/input";
+
+function addPath(path: string[])
 {
-    export const CharacterSelect = CharacterSelectController;
-    export const Command = CmdrController;
-    export const Cursor = _Cursor;
-    export const Hud = HudController;
+    print("path:", path);
+    const preloadPaths = new Array<Instance>();
+    const service = path.shift();
+    let currentPath: Instance = game.GetService(service as keyof Services);
+    if (service === "StarterPlayer")
+    {
+        if (path[0] !== "StarterPlayerScripts")
+            throw "StarterPlayer only supports StarterPlayerScripts";
+        if (!RunService.IsClient())
+            throw "The server cannot load StarterPlayer content";
+        currentPath = Players.LocalPlayer.WaitForChild("PlayerScripts");
+        path.shift();
+    }
+    for (let i = 0; i < path.size(); i++)
+        currentPath = currentPath.WaitForChild(path[i]);
+
+    preloadPaths.push(currentPath);
+
+    const global = _G as Map<unknown, unknown>;
+    const preload = (moduleScript: ModuleScript) =>
+    {
+        global.set(moduleScript, global.get(script));
+        const start = os.clock();
+        const [ success, value ] = pcall(require, moduleScript);
+        const endTime = math.floor((os.clock() - start) * 1000);
+        if (!success)
+            throw `${moduleScript.GetFullName()} failed to preload (${endTime}ms): ${value}`;
+    };
+
+    for (const path of preloadPaths)
+    {
+        if (path.IsA("ModuleScript"))
+            preload(path);
+        for (const instance of path.GetDescendants())
+        {
+            if (instance.IsA("ModuleScript"))
+                preload(instance);
+        }
+    }
+}
+class QuarrelGameFramework
+{
+    private static _executed = false;
+    public Initialize()
+    {
+        assert(QuarrelGameFramework._executed === false, "QuarrelGameFramework.Initialize() should only be called once.");
+        assert(Flamework.isInitialized === false, "QuarrelGameFramework.Initialize() should be called before Flamework.ignite().");
+        print(RunService.IsServer(), RunService.IsClient());
+
+        const thisScriptTree = (_script: LuaSourceContainer = script) =>
+        {
+            let last: Instance | undefined = _script;
+            const out = [];
+
+            while (last)
+            {
+                const servExists = pcall(() => game.GetService(last?.Name as never));
+                out.unshift(last.Name);
+
+                if (servExists)
+                    break;
+
+                last = last.Parent;
+            }
+
+            return out;
+        };
+
+        print("this script tree:", thisScriptTree);
+        const a = [ ...thisScriptTree(), "server", "services" ];
+        const b = [ ...thisScriptTree(), "client", "controllers" ];
+        print("a:", a, "b:", b);
+        if (RunService.IsServer())
+            addPath(a);
+        else
+            addPath(b);
+
+        QuarrelGameFramework._executed = true;
+
+        return Promise.resolve();
+    }
 }
 
-export namespace UserControls
-{
-    export const Keyboard = _Keyboard;
-    export const Gamepad = _Gamepad;
-    export const Input = _Input;
-}
-
-export namespace Game
-{
-    export const Client = _Client;
-    export const Match = _Match;
-}
-
-export namespace Fighter3D
-{
-    export const Camera = CameraController3D;
-    export const Combat = CombatController3D;
-}
-
-export namespace Fighter2D
-{
-    export const Motion = MotionInput;
-    export const Camera = CameraController2D;
-    export const Combat = CombatController2D;
-}
-
-export namespace Utility
-{
-    export const Character = _Character;
-    export const Skill = _Skill;
-    export const Model = _Model;
-    export const Boundary = _Boundary;
-    export const Input = _InputUtility;
-    export const Hitbox = _Hitbox;
-    export const Lib = _Lib;
-    export const Animation = _Animation;
-}
+export default new QuarrelGameFramework();

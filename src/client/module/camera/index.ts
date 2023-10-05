@@ -2,7 +2,7 @@ import { Controller, OnInit, OnStart } from "@flamework/core";
 import { Players, Workspace } from "@rbxts/services";
 
 import { OnRespawn } from "client/controllers/client.controller";
-import { BaseCamera, CameraUtils, PlayerModule } from "shared/util/player";
+import { BaseCamera, CameraUtils, PlayerModule } from "client/lib/player";
 
 export enum CameraFacing
 {

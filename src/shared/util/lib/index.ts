@@ -6,36 +6,24 @@ import type { Entity } from "server/components/entity.component";
 import type { SchedulerService } from "server/services/scheduler.service";
 import type Character from "../character";
 
-interface QuarrelAssets extends Folder
+export const QuarrelGameFolder = ReplicatedStorage.WaitForChild("QuarrelGame") as Folder;
+export const QuarrelCommands = QuarrelGameFolder.WaitForChild("QuarrelGame/cmdr") as Folder;
+export const QuarrelAssets = <T extends Record<string, Character.CharacterRig>>() => QuarrelGameFolder.WaitForChild("QuarrelGame/assets") as QuarrelAssets<T>;
+export const QuarrelModels = <T extends Record<string, Character.CharacterRig>>() => QuarrelAssets<T>().model;
+export const QuarrelMaps = QuarrelAssets().model.map;
+
+interface CharacterModel
+{}
+
+export interface QuarrelAssets<CharacterModels extends CharacterModel> extends Folder
 {
     model: Folder & {
         map: Folder;
 
         character: {
-            [key in keyof typeof Character.CharacterModel]: Character.CharacterRig;
+            [key in keyof CharacterModels]: Character.CharacterRig;
         };
     };
-}
-
-export const quarrelGame = ReplicatedStorage.WaitForChild("QuarrelGame") as Folder;
-export const quarrelAssets = quarrelGame.WaitForChild("QuarrelGame/assets") as QuarrelAssets;
-export const quarrelModels = quarrelAssets.model;
-export const quarrelCommands = quarrelGame.WaitForChild("QuarrelGame/cmdr") as Folder;
-export const quarrelMaps = quarrelModels.map;
-
-declare global
-{
-    class Error
-    {
-        public readonly why: string;
-
-        public ToString(): string;
-    }
-
-    interface ErrorKind
-    {
-        why: string;
-    }
 }
 
 export enum SprintState

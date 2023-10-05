@@ -19,11 +19,20 @@ export namespace Server
 {
     interface MovementFunctions
     {
+        /**
+         * Make the player crouch.
+         */
         Crouch(crouchState: EntityState.Crouch | EntityState.Idle): boolean;
+        /**
+         * Make the player jump.
+         */
         Jump(): boolean;
     }
 
     type InputFunctions = {
+        /**
+         * Execute an input.
+         */
         [key in Input]: (this: InputFunctions) => boolean;
     };
 
@@ -35,6 +44,10 @@ export namespace Server
      */
     interface CombatFunctions extends InputFunctions
     {
+        /**
+         * Submit a motion input to the server.
+         * Especially useful in 2D fighters.
+         */
         SubmitMotionInput(motionInput: MotionInput): boolean;
     }
 
@@ -171,7 +184,9 @@ export namespace Server
     }
 
     export interface Events extends MatchEvents
-    {}
+    {
+        Test(): void;
+    }
 
     export interface Functions extends GameFunctions
     {
@@ -191,13 +206,13 @@ export namespace Server
 
 /**
  * Functions that can only have callbacks defined on the client,
- * but can be executed on the server.
+ * but can be called the server.
  *
  * 📝 Execution of these functions translate to the correlating
  * event or function being fired/invoked.
  *
- * ⚠️ As such, functions defined here should be used sparingly
- * as they can be easily abused and lead to the server being overloaded. It
+ * ⚠️  As such, functions defined here should be used sparingly
+ * as they can be easily abused and lead to the server hanging. It
  * is advised to instead use events to communicate between the client and server
  * unless absolutely necessary.
  */
@@ -205,18 +220,41 @@ export namespace Client
 {
     interface MatchEvents
     {
+        /**
+         * Fired when the arena is changed,
+         * usually through wall-breaks, finishers,
+         * or cutscenes.
+         */
         ArenaChanged(mapId: string, arenaId: string | number): void;
+        /**
+         * Fired when a participant has respawned back into the arena.
+         */
         MatchParticipantRespawned(characterModel: Model): void;
+        /**
+         * Fired when a participant joins a match.
+         */
         MatchJoined(matchId: string, matchData: ReturnType<Server.Functions["GetCurrentMatch"]>): void;
+        /**
+         * Fired when a match is started.
+         */
         MatchStarted(matchId: string, matchData: ReturnType<Server.Functions["GetCurrentMatch"]>): void;
     }
 
     export interface Events extends MatchEvents
     {
+        /**
+         * Let a client know that a Game frame has passed.
+         */
         Tick(frameTime: number, tickRate: number): number;
+        /**
+         * Make the character jump.
+         */
         Jump(
             character: Model & { Humanoid: Humanoid; PrimaryPart: BasePart; },
         ): void;
+        /**
+         * Change the combat mode that the player is in.
+         */
         SetCombatMode(combatMode: CombatMode): void;
     }
 
@@ -234,6 +272,9 @@ export namespace Client
 
     export interface Functions
     {
+        /**
+         * Request the client to load a Map.
+         */
         RequestLoadMap(mapId: string): boolean;
     }
 }

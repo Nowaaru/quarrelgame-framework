@@ -2,7 +2,6 @@ import Make from "@rbxts/make";
 import Roact from "@rbxts/roact";
 
 import CharacterSelect from "client/ui/characterselect";
-import Characters from "shared/data/character";
 
 import { Controller, OnInit, OnStart } from "@flamework/core";
 import { ClientFunctions } from "shared/network";
@@ -19,6 +18,8 @@ export class CharacterSelectController implements OnStart, OnInit
     private characterSelectScreenGui: ScreenGui;
 
     private currentlySelectedCharacter?: Character.Character;
+
+    private characters = new ReadonlyMap<string, Character.Character>();
 
     constructor(private readonly client: Client)
     {
@@ -40,6 +41,11 @@ export class CharacterSelectController implements OnStart, OnInit
             this.OpenCharacterSelect();
     }
 
+    public SetCharacters(characters: ReadonlyMap<string, Character.Character>)
+    {
+        this.characters = characters;
+    }
+
     public BindCharacterSelectInstance()
     {
     }
@@ -50,7 +56,7 @@ export class CharacterSelectController implements OnStart, OnInit
         {
             this.currentCharacterSelect = Roact.mount(
                 Roact.createElement(CharacterSelect, {
-                    Characters,
+                    Characters: this.characters,
                     OnSelect: (selectedCharacter: Character.Character) =>
                     {
                         if (this.currentlySelectedCharacter && selectedCharacter === this.currentlySelectedCharacter)

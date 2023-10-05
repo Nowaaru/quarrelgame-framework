@@ -27,10 +27,8 @@ export class TestService implements OnStart, OnInit
     public deployJaneModel()
     {
         if (true)
-        {
             return false;
-        }
-
+        /*
         const janeModel = Character.CharacterModel.jane.Clone();
         janeModel.SetAttribute("CharacterId", "Vannagio");
         janeModel.PivotTo(new CFrame(Vector3.FromAxis(Enum.Axis.Z).mul(5)));
@@ -53,6 +51,7 @@ export class TestService implements OnStart, OnInit
                 janeRotator.RotateTowards(targetPlayer.PrimaryPart);
             }
         });
+        */
     }
 
     public tryMatchTest()
@@ -71,9 +70,7 @@ export class TestService implements OnStart, OnInit
             });
 
             if (match)
-            {
                 match.StartMatch(participant);
-            }
         });
 
         return true;

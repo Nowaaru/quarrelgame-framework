@@ -1,0 +1,7 @@
+{
+  "name": "quarrelgame-framework",
+  "globIgnorePaths": ["**/package.json", "**/tsconfig.json"],
+  "tree": {
+    "$path": "out"
+  }
+}

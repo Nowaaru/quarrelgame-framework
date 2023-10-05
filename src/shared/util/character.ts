@@ -30,32 +30,22 @@ export namespace Character
         HumanoidDescription,
     }
 
-    interface CharacterModel
-    {
-        jane: CharacterRig;
-        roblox: CharacterRig;
-        shedletsky: CharacterRig;
-        dusek: CharacterRig;
-        brighteyes: CharacterRig;
-        death: CharacterRig;
-    }
+    export const GetCharacterModel = <CharacterModels>() =>
+        table.freeze(setmetatable({}, {
+            __index: (_, index) =>
+            {
+                assert(typeIs(index, "string"), "index is not a string.");
 
-    export const CharacterModel: CharacterModel = table.freeze(setmetatable({}, {
-        __index: (_, index) =>
-        {
-            assert(typeIs(index, "string"), "index is not a string.");
+                const quarrelGame = ReplicatedStorage.WaitForChild("QuarrelGame") as Folder;
+                const quarrelAssets = quarrelGame.WaitForChild("QuarrelGame/assets") as Folder;
+                const quarrelModels = quarrelAssets.WaitForChild("model") as Folder;
+                const characterModels = quarrelModels.WaitForChild("character") as Folder;
 
-            const quarrelGame = ReplicatedStorage.WaitForChild("QuarrelGame") as Folder;
-            const quarrelAssets = quarrelGame.WaitForChild("QuarrelGame/assets") as Folder;
-            const quarrelModels = quarrelAssets.WaitForChild("model") as Folder;
-            const characterModels = quarrelModels.WaitForChild("character") as Folder;
+                assert(characterModels.FindFirstChild(index), `character model of name ${index} does not exist.`);
 
-            assert(characterModels.FindFirstChild(index), `character model of name ${index} does not exist.`);
-
-            return characterModels[index as never] as unknown as CharacterRig;
-        },
-    })) as CharacterModel;
-
+                return characterModels[index as never] as unknown as Character.CharacterRig;
+            },
+        })) as CharacterModels;
     export enum Archetype
     {
         WellRounded = "Well-Rounded",
@@ -415,9 +405,7 @@ export namespace Skill
                     .find((t) => t.Animation?.AnimationId === cachedPreviousSkill.FrameData.Animation.assetId);
 
                 if (lastSkillAnimation)
-                {
                     lastSkillAnimation.Stop(0);
-                }
             }
 
             entity.attributes.PreviousSkill = skill.Id;
@@ -434,9 +422,7 @@ export namespace Skill
                     {
                         entity.SetState(EntityState.Startup);
                         for (let i = 0; i < this.StartupFrames; i++)
-                        {
                             await schedulerService.WaitForNextTick();
-                        }
                     }
 
                     let attackDidLand = HitResult.Whiffed;
@@ -458,16 +444,12 @@ export namespace Skill
                                 if (result === HitResult.Counter)
                                 {
                                     if (!skill.CanCounter)
-                                    {
                                         return HitResult.Contact;
-                                    }
                                 }
                                 else if (result === HitResult.Contact)
                                 {
                                     if (Attacked.CanCounter())
-                                    {
                                         return setLandState(HitResult.Counter);
-                                    }
                                 }
 
                                 return result;
@@ -513,23 +495,15 @@ export namespace Skill
                             }
 
                             if (Attacker.IsState(EntityState.Crouch))
-                            {
                                 Attacker.SetState(EntityState.HitstunCrouching);
-                            }
                             else
-                            {
                                 Attacker.SetState(EntityState.Hitstun);
-                            }
 
                             setLandState(HitResult.Contact);
                             if (attackDidLand === HitResult.Counter)
-                            {
                                 Attacked.Counter(Attacker);
-                            }
                             else
-                            {
                                 print("no Attacked");
-                            }
 
                             return res({
                                 hitResult: attackDidLand,
@@ -539,9 +513,7 @@ export namespace Skill
                         });
 
                         for (let i = 0; i < this.ActiveFrames; i++)
-                        {
                             await schedulerService.WaitForNextTick();
-                        }
 
                         activeHitbox.Stop();
                     }
@@ -553,9 +525,7 @@ export namespace Skill
                         {
                             let addedFrames = 0;
                             if (attackDidLand === HitResult.Blocked)
-                            {
                                 addedFrames += this.BlockStunFrames;
-                            }
 
                             res({
                                 hitResult: attackDidLand,
@@ -568,9 +538,7 @@ export namespace Skill
                         }
 
                         for (let i = 0; i < this.RecoveryFrames; i++)
-                        {
                             await schedulerService.WaitForNextTick();
-                        }
                     }
 
                     entity.SetState(EntityState.Idle);
@@ -838,9 +806,7 @@ export namespace Skill
             skills.forEach((skill) =>
             {
                 if (!this.GatlingsInto.has(skill.Id))
-                {
                     this.GatlingsInto.add(skill.Id);
-                }
             });
 
             return this;
@@ -922,13 +888,9 @@ export namespace Skill
         public SetFrameData(frameData: FrameData | FrameDataBuilder)
         {
             if ("SetStartup" in frameData)
-            {
                 this.frameData = frameData.Construct();
-            }
             else
-            {
                 this.frameData = frameData;
-            }
 
             return this;
         }
@@ -952,9 +914,7 @@ export namespace Skill
         public SetFollowUp(input: Input, skill: Skill.Skill)
         {
             if (this.followUps.has(input))
-            {
                 warn(`Skill ${this.name} already has a follow up input (${input}). Overwriting.`);
-            }
 
             this.followUps.set(input, skill);
 

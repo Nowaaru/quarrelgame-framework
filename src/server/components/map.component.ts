@@ -1,14 +1,12 @@
 import { BaseComponent, Component, Components } from "@flamework/components";
 import { Dependency, OnStart } from "@flamework/core";
 import Make from "@rbxts/make";
-import { Players } from "@rbxts/services";
+import { Entity as ServerEntity } from "server/components/entity.component";
 import { QuarrelGame } from "server/services/quarrelgame.service";
+import { Entity } from "shared/components/entity.component";
 import { ServerEvents } from "shared/network";
 import { Identifier } from "shared/util/identifier";
-import { quarrelMaps } from "shared/util/lib";
 import { Model } from "shared/util/model";
-import { Entity } from "../../shared/components/entity.component";
-import { Entity as ServerEntity } from "./entity.component";
 
 namespace _Map
 {
@@ -400,4 +398,5 @@ namespace _Map
     }
 }
 
+export { _Map as Map };
 export default _Map;
