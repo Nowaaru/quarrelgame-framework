@@ -5,13 +5,13 @@ import { Components } from "@flamework/components";
 import { Players } from "@rbxts/services";
 import { Entity } from "server/components/entity.component";
 import { Physics } from "server/components/physics";
-import Characters from "shared/data/character";
 import { ServerFunctions } from "shared/network";
 import { Character, Skill } from "shared/util/character";
 import { Hitbox } from "shared/util/hitbox";
 import { Input, Motion } from "shared/util/input";
 import { ConvertPercentageToNumber, EntityState, getEnumValues, HitboxRegion, HitResult } from "shared/util/lib";
 import { EffectsService } from "./effects.service";
+import { CharacterSelectController } from "client/controllers/characterselect.controller";
 export interface OnHit
 {
     onHit(contactData: Hitbox.Contact): void;
@@ -119,7 +119,7 @@ export class CombatService implements OnStart, OnInit
         });
 
         // read input enums and setup events
-        getEnumValues(Input).forEach(([inputName, inputTranslation]) =>
+        getEnumValues(Input).forEach(([ inputName, inputTranslation ]) =>
         {
             if (!(`${inputTranslation}` as Input in ServerFunctions))
             {
@@ -146,13 +146,9 @@ export class CombatService implements OnStart, OnInit
                     let attackSkill: Skill.Skill | undefined;
 
                     if (typeIs(selectedCharacter.Attacks[inputTranslation], "function"))
-                    {
                         attackSkill = (selectedCharacter.Attacks[inputTranslation] as (() => Skill.Skill) | undefined)?.();
-                    }
                     else
-                    {
                         attackSkill = selectedCharacter.Attacks[inputTranslation] as Skill.Skill | undefined;
-                    }
 
                     if (attackSkill)
                     {
@@ -177,13 +173,9 @@ export class CombatService implements OnStart, OnInit
                             if (skillDoesGatling)
                             {
                                 if (attackDidLand)
-                                {
                                     print("ooh that does gattle fr");
-                                }
                                 else
-                                {
                                     print("attack does gattle, but it didn't land!");
-                                }
                             }
                             else
                             {
@@ -200,13 +192,9 @@ export class CombatService implements OnStart, OnInit
                             return this.executeFrameData(attackFrameData, combatantComponent, attackSkill, currentLastSkillTime).tap(() =>
                             {
                                 if (currentLastSkillTime === lastSkillTime)
-                                {
                                     combatantComponent.ResetState();
-                                }
                                 else
-                                {
                                     print("state seems to have changed");
-                                }
                             });
                         }
                         else if (!skillDoesGatling)
@@ -277,7 +265,7 @@ export class CombatService implements OnStart, OnInit
 
         assert(characterId, `character ${characterId} is not found`);
 
-        return Characters.get(characterId as string);
+        return Dependency<CharacterSelectController>().characters.get(characterId as string);
     }
 
     public ApplyImpulse(impulseTarget: Model)

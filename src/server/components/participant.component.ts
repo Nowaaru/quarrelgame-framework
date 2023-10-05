@@ -2,11 +2,9 @@ import { BaseComponent, Component, Components } from "@flamework/components";
 import { Dependency, OnStart } from "@flamework/core";
 import { HttpService, Workspace } from "@rbxts/services";
 import { Entity } from "./entity.component";
-import { Physics } from "./physics";
 
 import { MatchService } from "server/services/matchservice.service";
-import Characters from "shared/data/character";
-import { ClientEvents, ServerEvents, ServerFunctions } from "shared/network";
+import type { QuarrelGame } from "server/services/quarrelgame.service";
 
 export interface ParticipantAttributes
 {
@@ -41,9 +39,7 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
             for (const match of Dependency<MatchService>().GetOngoingMatches())
             {
                 if (match.GetParticipants().has(this))
-                {
                     return match.RespawnParticipant(this);
-                }
             }
         }
 
@@ -57,8 +53,10 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
 
     public async SelectCharacter(characterId: string): Promise<boolean>
     {
+        const characters = Dependency<QuarrelGame>().characters;
+
         assert(
-            Characters.has(characterId),
+            characters.has(characterId),
             `Character of ID ${characterId} does not exist.`,
         );
         this.instance.SetAttribute("SelectedCharacter", characterId);
@@ -78,30 +76,28 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
         matchId = this.instance.GetAttribute("MatchId") as string,
     }: CombatantLoader)
     {
+        const characters = Dependency<QuarrelGame>().characters;
+
         assert(
             characterId,
             "no character ID was provided, nor does the participant have a selected character.",
         );
-        const thisMatch = [...Dependency<MatchService>().GetOngoingMatches()].find(
+        const thisMatch = [ ...Dependency<MatchService>().GetOngoingMatches() ].find(
             (match) => match.matchId === matchId,
         );
         if (thisMatch)
-        {
             this.instance.SetAttribute("MatchId", matchId);
-        }
         else
-        {
             error(`match of ID ${matchId} does not exist.`);
-        }
 
         return new Promise<Entity.PlayerCombatant<A>>((res) =>
         {
             assert(
-                Characters.has(characterId),
+                characters.has(characterId),
                 `character of ID ${characterId} does not exist.`,
             );
 
-            const newCharacter = Characters.get(characterId)!;
+            const newCharacter = characters.get(characterId)!;
             const newCharacterModel = newCharacter.Model.Clone();
             newCharacterModel.Parent = Workspace;
             print("character id:", characterId);
@@ -114,9 +110,7 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
             let _conn: RBXScriptConnection | void = this.instance.CharacterAdded.Connect((character) =>
             {
                 if (character !== newCharacterModel)
-                {
                     return print(character, "!==", newCharacterModel);
-                }
 
                 print(`character ${character.Name} is now the participant's character.`);
                 _conn = _conn?.Disconnect();
@@ -136,9 +130,7 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
             task.delay(2.5, () =>
             {
                 if (_conn)
-                {
                     return _conn = _conn.Disconnect();
-                }
             });
         });
     }

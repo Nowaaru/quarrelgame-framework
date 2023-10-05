@@ -1,6 +1,7 @@
+import { Dependency } from "@flamework/core";
 import Object from "@rbxts/object-utils";
 import Roact, { useState } from "@rbxts/roact";
-import CharactersList from "shared/data/character";
+import { CharacterSelectController } from "client/controllers/characterselect.controller";
 import { Character } from "shared/util/character";
 import { EntityState } from "shared/util/lib";
 import CharacterData from "./characterdata";
@@ -17,9 +18,10 @@ export const ChainsImage = "rbxassetid://137751994";
 
 export const DotsImage = "rbxassetid://4376776276";
 
-export default function CharacterSelect(characterSelectProps: CharacterSelectProps = { Characters: CharactersList })
+export default function CharacterSelect(characterSelectProps: CharacterSelectProps = { Characters: Dependency<CharacterSelectController>().characters })
 {
-    const { Characters, OnSelect } = characterSelectProps ?? { Characters: CharactersList };
+                            /* don't know why this implementation is here but it's here for a reason so i'm keeping it lest i break something and cry */
+    const { Characters, OnSelect } = characterSelectProps ?? { Characters: Dependency<CharacterSelectController>().characters };
     const [selectedCharacter, setSelectedCharacter] = useState<Character.Character | undefined>();
 
     const chains = (

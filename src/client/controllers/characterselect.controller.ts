@@ -19,7 +19,7 @@ export class CharacterSelectController implements OnStart, OnInit
 
     private currentlySelectedCharacter?: Character.Character;
 
-    private characters = new ReadonlyMap<string, Character.Character>();
+    public readonly characters = new Map<string, Character.Character>();
 
     constructor(private readonly client: Client)
     {
@@ -43,7 +43,9 @@ export class CharacterSelectController implements OnStart, OnInit
 
     public SetCharacters(characters: ReadonlyMap<string, Character.Character>)
     {
-        this.characters = characters;
+        this.characters.clear();
+        for (const [ charname, char ] of characters)
+            this.characters.set(charname, char);
     }
 
     public BindCharacterSelectInstance()

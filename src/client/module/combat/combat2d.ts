@@ -4,13 +4,12 @@ import { MotionInput } from "client/controllers/motioninput.controller";
 import { CombatController } from "client/module/combat";
 import { Animator } from "shared/components/animator.component";
 import { Client, ClientEvents, ClientFunctions } from "shared/network";
-import { Character } from "shared/util/character";
 import { Input, InputMode, InputResult } from "shared/util/input";
 import { EntityState } from "shared/util/lib";
 
 import { Players } from "@rbxts/services";
-import Characters from "shared/data/character";
 import { CameraController2D } from "../camera/camera2d";
+import { CharacterSelectController } from "client/controllers/characterselect.controller";
 export class CombatController2D extends CombatController implements OnInit
 {
     constructor(protected readonly motionInputController: MotionInput.MotionInputController, protected readonly cameraController2D: CameraController2D)
@@ -42,6 +41,7 @@ export class CombatController2D extends CombatController implements OnInit
 
     protected handleOffensiveInput(buttonPressed: Enum.KeyCode)
     {
+        const Characters = Dependency<CharacterSelectController>().characters;
         const buttonType = this.keybindMap.get(buttonPressed);
         if (!this.character)
             return InputResult.Fail;

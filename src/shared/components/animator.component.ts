@@ -1,14 +1,16 @@
 import { BaseComponent, Component } from "@flamework/components";
-import { OnStart } from "@flamework/core";
+import { Dependency, OnStart } from "@flamework/core";
 
-import { HttpService, Players } from "@rbxts/services";
+import { HttpService, Players, RunService } from "@rbxts/services";
 import { Animation } from "shared/util/animation";
 import { EntityState, GetTickRate } from "shared/util/lib";
 import { StateAttributes } from "./state.component";
 
 import Make from "@rbxts/make";
 import Signal from "@rbxts/signal";
-import Characters from "shared/data/character";
+import { CharacterSelectController } from "client/controllers/characterselect.controller";
+import { QuarrelGame } from "server/services/quarrelgame.service";
+
 export namespace Animator
 {
     interface AnimatorProps
@@ -71,9 +73,7 @@ export namespace Animator
         onStart(): void
         {
             while (!this.instance.Parent)
-            {
                 task.wait();
-            }
 
             this.GetAnimator()
                 .GetPlayingAnimationTracks()
@@ -85,6 +85,8 @@ export namespace Animator
 
         private async onStateChanged(newState: AttributeValue)
         {
+            const Characters = RunService.IsServer() ? Dependency<QuarrelGame>().characters : Dependency<CharacterSelectController>().characters;
+            print(this.instance.GetAttribute("CharacterId"), Characters);
             const selectedCharacter = Characters.get(
                 this.instance.GetAttribute("CharacterId") as string,
             );
@@ -94,9 +96,7 @@ export namespace Animator
             );
 
             if (this.paused)
-            {
                 return;
-            }
 
             if (typeIs(newState, "number"))
             {
@@ -152,14 +152,10 @@ export namespace Animator
             {
                 this.Unpaused.Fire();
                 if (this.currentLoadedAnimation?.IsPaused())
-                {
                     this.currentLoadedAnimation?.Resume();
-                }
 
                 if (this.attributes.State !== this.pausedState)
-                {
                     this.onStateChanged(this.attributes.State);
-                }
             }
             else
             {

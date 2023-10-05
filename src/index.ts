@@ -4,6 +4,7 @@ import { Players, ReplicatedStorage, RunService } from "@rbxts/services";
 export * from "client/controllers/client.controller";
 export * from "client/controllers/match.controller";
 export * from "client/controllers/motioninput.controller";
+export * from "client/controllers/resourcecontroller.controller";
 
 export * from "client/module/camera/camera2d";
 export * from "client/module/character/controller2d";
@@ -94,6 +95,7 @@ function addPath(path: string[])
         }
     }
 }
+
 class QuarrelGameFramework
 {
     private static _executed = false;
@@ -101,7 +103,6 @@ class QuarrelGameFramework
     {
         assert(QuarrelGameFramework._executed === false, "QuarrelGameFramework.Initialize() should only be called once.");
         assert(Flamework.isInitialized === false, "QuarrelGameFramework.Initialize() should be called before Flamework.ignite().");
-        print(RunService.IsServer(), RunService.IsClient());
 
         const thisScriptTree = (_script: LuaSourceContainer = script) =>
         {
@@ -122,14 +123,10 @@ class QuarrelGameFramework
             return out;
         };
 
-        print("this script tree:", thisScriptTree);
-        const a = [ ...thisScriptTree(), "server", "services" ];
-        const b = [ ...thisScriptTree(), "client", "controllers" ];
-        print("a:", a, "b:", b);
         if (RunService.IsServer())
-            addPath(a);
+            addPath([ ...thisScriptTree(), "server", "services" ]);
         else
-            addPath(b);
+            addPath([ ...thisScriptTree(), "client", "controllers" ]);
 
         QuarrelGameFramework._executed = true;
 

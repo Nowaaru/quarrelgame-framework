@@ -7,7 +7,7 @@ interface OnCmdrLoaded
     onCmdrLoaded(): void;
 }
 
-export class CommandService implements OnStart, OnInit
+export class CommandHandler implements OnStart, OnInit
 {
     private onCmdrLoadedHandler: Set<OnCmdrLoaded> = new Set();
 

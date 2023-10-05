@@ -26,6 +26,10 @@ export interface QuarrelAssets<CharacterModels extends CharacterModel> extends F
     };
 }
 
+/**
+ * Whether a character is
+ * sprinting or walking.
+ */
 export enum SprintState
 {
     Walking,
@@ -151,6 +155,9 @@ export enum HitResult
     Counter,
 }
 
+/**
+ * Results of an offensive interaction.
+ */
 export interface HitData<Attacked extends Entity.EntityAttributes, Attacker extends Entity.CombatantAttributes>
 {
     hitResult: HitResult | Promise<HitResult>;
@@ -182,6 +189,9 @@ export enum HitboxRegion
     Overhead,
 }
 
+/**
+ * Methods of blocking.
+ */
 export enum BlockMode
 {
     /**
@@ -196,14 +206,23 @@ export enum BlockMode
     Orientation,
 }
 
+/**
+ *  Convert a percentage string to a number.
+ */
 export const ConvertPercentageToNumber = (percentage: string) => tonumber(percentage.match("(%d+)%%$")[0]);
+/**
+ * Get the tick rate.
+ */
 export const GetTickRate =
     () => (RunService.IsServer() ? Dependency<SchedulerService>().GetTickRate() : (ClientFunctions.GetGameTickRate().await()[1] as number | undefined));
 
-export const Jump = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BasePart; }) =>
+/**
+ * Make a character jump.
+ */
+export const Jump = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BasePart; }, JumpDistance = 56) =>
 {
     const { X, Y, Z } = Character.Humanoid.MoveDirection;
-    const thisImpulse = new Vector3(math.sign(X), 1, math.sign(Z)).mul(Character.PrimaryPart.AssemblyMass * 56);
+    const thisImpulse = new Vector3(math.sign(X), 1, math.sign(Z)).mul(Character.PrimaryPart.AssemblyMass * JumpDistance);
     Character.PrimaryPart.ApplyImpulse(thisImpulse);
     Character.Humanoid.SetAttribute("JumpDirection", Character.Humanoid.MoveDirection);
 

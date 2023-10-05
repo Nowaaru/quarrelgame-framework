@@ -2,7 +2,7 @@ import { Controller, OnInit, OnStart } from "@flamework/core";
 import { CmdrClient } from "@rbxts/cmdr";
 
 @Controller({})
-export class CmdrController implements OnInit
+export class CommandController implements OnInit
 {
     private activationKeys: Enum.KeyCode[] = new Array<Enum.KeyCode>();
 
@@ -19,5 +19,6 @@ export class CmdrController implements OnInit
     public SetKeys(...keys: Enum.KeyCode[])
     {
         this.activationKeys = keys;
+        this.applyActivationKeys();
     }
 }

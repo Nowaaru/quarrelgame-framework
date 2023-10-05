@@ -8,7 +8,7 @@ export interface OnRespawn
 }
 
 @Controller({})
-export class Client implements OnStart, OnInit
+export class Client implements OnInit
 {
     private respawnTrackers: Set<OnRespawn> = new Set();
 
@@ -16,14 +16,6 @@ export class Client implements OnStart, OnInit
     {}
 
     onInit()
-    {
-        Players.LocalPlayer.CameraMinZoomDistance = 8;
-        Players.LocalPlayer.CameraMaxZoomDistance = Players.LocalPlayer.CameraMinZoomDistance;
-
-        StarterGui.SetCoreGuiEnabled(Enum.CoreGuiType.All, false);
-    }
-
-    onStart()
     {
         Modding.onListenerAdded<OnRespawn>((a) => this.respawnTrackers.add(a));
         Modding.onListenerRemoved<OnRespawn>((a) => this.respawnTrackers.delete(a));

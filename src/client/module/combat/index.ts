@@ -4,9 +4,8 @@ import { Character } from "shared/util/character";
 
 import { Components } from "@flamework/components";
 import { Dependency } from "@flamework/core";
-import { Animator } from "shared/components/animator.component";
-import Characters from "shared/data/character";
 import { Input, InputMode, InputResult } from "shared/util/input";
+import { CharacterSelectController } from "client/controllers/characterselect.controller";
 
 export abstract class CombatController implements OnRespawn
 {
@@ -31,6 +30,7 @@ export abstract class CombatController implements OnRespawn
 
         if (Players.LocalPlayer.GetAttribute("MatchId"))
         {
+            const Characters = Dependency<CharacterSelectController>().characters;
             this.selectedCharacter = Characters.get(Players.LocalPlayer.GetAttribute("SelectedCharacter") as string);
             assert(this.selectedCharacter, `no selected character found (${Players.LocalPlayer.GetAttribute("SelectedCharacter")})`);
         }

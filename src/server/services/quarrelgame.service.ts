@@ -5,12 +5,18 @@ import { Players, ReplicatedStorage, StarterPlayer, Workspace } from "@rbxts/ser
 import { Participant } from "server/components/participant.component";
 
 import { ServerFunctions } from "shared/network";
+import Character from "shared/util/character";
 import { BlockMode } from "shared/util/lib";
 import { MatchService } from "./matchservice.service";
 
 export interface OnParticipantAdded
 {
     onParticipantAdded(participant: Participant): void;
+}
+
+export interface OnCharacterListChanged
+{
+    onCharacterListChanged(newCharactersList: ReadonlyMap<string, Character.Character>): void;
 }
 
 @Service({
@@ -30,7 +36,21 @@ export class QuarrelGame implements OnStart, OnInit
         Name: "MapContainer",
     });
 
+    public readonly characters: Map<string, Character.Character> = new Map();
+
+    private readonly characterListChangedHandler = new Set<OnCharacterListChanged>();
+
     private readonly participantAddedHandler = new Set<OnParticipantAdded>();
+
+    public SetCharacters(characters: ReadonlyMap<string, Character.Character>)
+    {
+        this.characters.clear();
+        for (const [k, v] of characters)
+            this.characters.set(k, v);
+
+        for (const listener of this.characterListChangedHandler)
+            listener.onCharacterListChanged(characters);
+    }
 
     onInit()
     {
@@ -40,6 +60,9 @@ export class QuarrelGame implements OnStart, OnInit
 
         Modding.onListenerAdded<OnParticipantAdded>((l) => this.participantAddedHandler.add(l));
         Modding.onListenerRemoved<OnParticipantAdded>((l) => this.participantAddedHandler.delete(l));
+
+        Modding.onListenerAdded<OnCharacterListChanged>((l) => this.characterListChangedHandler.add(l));
+        Modding.onListenerRemoved<OnCharacterListChanged>((l) => this.characterListChangedHandler.delete(l));
 
         print("Quarrel Game is ready.");
     }
@@ -58,20 +81,14 @@ export class QuarrelGame implements OnStart, OnInit
             const newParticipant = components.addComponent(player, Participant);
             this.participants.push(newParticipant);
             for (const participant of this.participantAddedHandler)
-            {
                 participant.onParticipantAdded(newParticipant);
-            }
 
             player.CharacterAdded.Connect((character) =>
             {
                 if (!character.Parent)
-                {
                     character.AncestryChanged.Once(() => reparentCharacter(character));
-                }
                 else
-                {
                     reparentCharacter(character);
-                }
 
                 if (!character.FindFirstChild("Humanoid")?.FindFirstChild("Animator"))
                 {
@@ -84,12 +101,10 @@ export class QuarrelGame implements OnStart, OnInit
 
         Players.PlayerRemoving.Connect((player) =>
         {
-            for (const [i, participant] of pairs(this.participants))
+            for (const [ i, participant ] of pairs(this.participants))
             {
                 if (participant.instance === player)
-                {
                     this.participants.remove(i);
-                }
             }
         });
 
@@ -155,7 +170,7 @@ export class QuarrelGame implements OnStart, OnInit
 
     public GetAllParticipants()
     {
-        return [...this.participants];
+        return [ ...this.participants ];
     }
 
     public GetParticipantFromCharacter(
@@ -163,9 +178,7 @@ export class QuarrelGame implements OnStart, OnInit
     ): Participant | undefined
     {
         if (!item)
-        {
             return undefined;
-        }
 
         const components = Dependency<Components>();
         const player = Players.GetPlayerFromCharacter(item);
