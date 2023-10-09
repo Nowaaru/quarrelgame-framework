@@ -1,3 +1,4 @@
+import Make from "@rbxts/make";
 import { ContextActionService, Players } from "@rbxts/services";
 import { OnMatchRespawn } from "client/controllers/client.controller";
 import { Gamepad, GamepadButtons, OnGamepadInput } from "client/controllers/gamepad.controller";
@@ -5,6 +6,7 @@ import { Keyboard } from "client/controllers/keyboard.controller";
 import { MatchController } from "client/controllers/match.controller";
 import { Mouse } from "client/controllers/mouse.controller";
 import { InputMode, InputResult } from "shared/util/input";
+import { HumanoidController } from "./humanoid";
 
 export abstract class CharacterController implements OnGamepadInput, OnMatchRespawn
 {
@@ -19,6 +21,7 @@ export abstract class CharacterController implements OnGamepadInput, OnMatchResp
         protected readonly keyboard: Keyboard,
         protected readonly mouse: Mouse,
         protected readonly gamepad: Gamepad,
+        protected readonly humanoidController: HumanoidController,
     )
     {}
 
@@ -100,6 +103,7 @@ export abstract class CharacterController implements OnGamepadInput, OnMatchResp
     {
         print("on respawnded!!");
         this.character = character;
+
         if (this.theseMovementActions)
             this.EnableRobloxMovement();
     }

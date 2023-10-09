@@ -32,11 +32,11 @@ export abstract class CharacterController2D extends CharacterController implemen
     protected _arena?: _Map.Arena;
 
     constructor(
-        private readonly combatController: CombatController2D,
-        private readonly motionInputController: MotionInput.MotionInputController,
+        protected readonly combatController: CombatController2D,
+        protected readonly motionInputController: MotionInput.MotionInputController,
+        protected readonly humanoidController: HumanoidController,
     )
     {
-        super(Dependency<MatchController>(), Dependency<Keyboard>(), Dependency<Mouse>(), Dependency<Gamepad>());
         super(Dependency<MatchController>(), Dependency<Keyboard>(), Dependency<Mouse>(), Dependency<Gamepad>(), humanoidController);
     }
 

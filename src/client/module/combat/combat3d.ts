@@ -5,7 +5,7 @@ import { Client, ClientEvents, ClientFunctions } from "shared/network";
 import { Input } from "shared/util/input";
 import { CameraController3D } from "../camera/camera3d";
 
-export class CombatController3D extends CombatController
+export abstract class CombatController3D extends CombatController
 {
     constructor(private readonly hudController: HudController, private readonly cameraController3D: CameraController3D)
     {
@@ -21,6 +21,9 @@ export class CombatController3D extends CombatController
     private lockOnTracker?: RBXScriptConnection;
     public LockOn(target?: Model & { PrimaryPart: Instance; }, doFX?: boolean)
     {
+        if (!this.IsEnabled())
+            return false;
+
         if (target)
         {
             const primaryPart = target?.PrimaryPart;
@@ -44,6 +47,15 @@ export class CombatController3D extends CombatController
                 return;
             }
         }
+
+        this.cameraController3D.SetLockOnTarget(undefined);
+        this.hudController.SetLockOnTarget(undefined);
+        this.hudController.SetLockOnEffectEnabled(false);
+    }
+
+    public Disable(): void
+    {
+        super.Disable();
 
         this.cameraController3D.SetLockOnTarget(undefined);
         this.hudController.SetLockOnTarget(undefined);

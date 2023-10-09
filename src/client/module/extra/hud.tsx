@@ -11,7 +11,7 @@ interface WidescreenInterface
     Bottom: Frame;
 }
 
-export class HudController implements OnStart, OnInit
+export abstract class HudController implements OnStart, OnInit
 {
     constructor(
         private readonly camera: CameraController3D,

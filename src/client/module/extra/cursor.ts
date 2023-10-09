@@ -10,7 +10,7 @@ export enum CursorMode
     Default,
 }
 
-export class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
+export abstract class Cursor implements OnStart, OnInit, OnMouseMove, OnMouseButton
 {
     constructor(private mouse: Mouse)
     {}

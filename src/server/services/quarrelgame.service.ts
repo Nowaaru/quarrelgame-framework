@@ -1,5 +1,5 @@
 import { Components } from "@flamework/components";
-import { Dependency, Modding, OnInit, OnStart, Service } from "@flamework/core";
+import { Controller, Dependency, Modding, OnInit, OnStart, Service } from "@flamework/core";
 import Make from "@rbxts/make";
 import { Players, ReplicatedStorage, StarterPlayer, Workspace } from "@rbxts/services";
 import { Participant } from "server/components/participant.component";
@@ -45,7 +45,7 @@ export class QuarrelGame implements OnStart, OnInit
     public SetCharacters(characters: ReadonlyMap<string, Character.Character>)
     {
         this.characters.clear();
-        for (const [k, v] of characters)
+        for (const [ k, v ] of characters)
             this.characters.set(k, v);
 
         for (const listener of this.characterListChangedHandler)
@@ -96,6 +96,48 @@ export class QuarrelGame implements OnStart, OnInit
                         Parent: character.WaitForChild("Humanoid"),
                     });
                 }
+
+                character.FindFirstChildWhichIsA("Humanoid")!.EvaluateStateMachine = false;
+                const ControllerManager = Make("ControllerManager", {
+                    RootPart: character.FindFirstChildWhichIsA("Humanoid")!.RootPart,
+                });
+
+                const GroundController = Make("GroundController", {
+                    Parent: ControllerManager,
+                });
+
+                const ClimbController = Make("ClimbController", {
+                    Parent: ControllerManager,
+                });
+
+                const AirController = Make("AirController", {
+                    Parent: ControllerManager,
+                });
+
+                const SwimController = Make("SwimController", {
+                    Parent: ControllerManager,
+                });
+
+                const ClimbSensor = Make("ControllerPartSensor", {
+                    Name: "ClimbSensor",
+                });
+
+                const GroundSensor = Make("ControllerPartSensor", {
+                    Name: "GroundSensor",
+                });
+
+                const SwimSensor = Make("BuoyancySensor", {
+                    Name: "SwimSensor",
+                });
+
+                ControllerManager.GroundSensor = GroundSensor;
+                ControllerManager.ClimbSensor = ClimbSensor;
+
+                SwimSensor.Parent = ControllerManager.RootPart;
+                ClimbSensor.Parent = ControllerManager.RootPart;
+                GroundSensor.Parent = ControllerManager.RootPart;
+
+                ControllerManager.Parent = character;
             });
         });
 

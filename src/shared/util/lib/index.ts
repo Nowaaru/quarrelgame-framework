@@ -219,12 +219,18 @@ export const GetTickRate =
 /**
  * Make a character jump.
  */
-export const Jump = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BasePart; }, JumpDistance = 56) =>
+export const Jump = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BasePart; }, JumpDistance = 26) =>
 {
     const { X, Y, Z } = Character.Humanoid.MoveDirection;
     const thisImpulse = new Vector3(math.sign(X), 1, math.sign(Z)).mul(Character.PrimaryPart.AssemblyMass * JumpDistance);
     Character.PrimaryPart.ApplyImpulse(thisImpulse);
     Character.Humanoid.SetAttribute("JumpDirection", Character.Humanoid.MoveDirection);
+
+    do
+    {
+        task.wait();
+    }
+    while (Character.Humanoid.FloorMaterial !== Enum.Material.Air);
 
     const _conn = Character.Humanoid.GetPropertyChangedSignal("FloorMaterial").Connect(() =>
     {

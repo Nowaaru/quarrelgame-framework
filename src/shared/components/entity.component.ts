@@ -64,9 +64,7 @@ export class Entity<
         this.onAttributeChanged("EntityId", () =>
         {
             if (this.attributes.EntityId !== this.id)
-            {
                 this.attributes.EntityId = this.id;
-            }
         });
 
         this.onAttributeChanged("Health", (newHealth, oldHealth) =>
@@ -74,11 +72,13 @@ export class Entity<
             if (newHealth !== oldHealth)
             {
                 if (newHealth <= 0)
-                {
                     this.Died.Fire(undefined as never); // TODO: add killer dogtags
-                }
             }
         });
+
+        const leftLeg = this.instance.FindFirstChild("Left Leg") as BasePart;
+        if (this.humanoid.HipHeight <= 0 && leftLeg)
+            this.SetHipHeight(leftLeg.Size.Y);
     }
 
     private tickDowns: Set<defined> = new Set();
@@ -104,9 +104,7 @@ export class Entity<
         if (this.tickDowns.has(attributeKey))
         {
             if (attributeValue > 0)
-            {
                 this.setAttribute(attributeKey, (attributeValue - 1) as never);
-            }
             else if (attributeValue !== -1)
             {
                 this.tickDowns.delete(attributeKey);
@@ -135,9 +133,7 @@ export class Entity<
         {
             const playerFromCharacter = Players.GetPlayerFromCharacter(this.instance);
             if (playerFromCharacter)
-            {
                 return ServerEvents.Jump(playerFromCharacter, this.instance);
-            }
 
             lib.Jump(this.instance);
 
@@ -149,9 +145,7 @@ export class Entity<
     {
         const isPhysicallyGrounded = this.humanoid.FloorMaterial !== Enum.Material.Air;
         if (isPhysicallyGrounded)
-        {
             return true;
-        }
 
         const characterPosition = this.instance.GetPivot();
         const raycastParams = new RaycastParams();
@@ -168,9 +162,7 @@ export class Entity<
         );
 
         if (boxResult)
-        {
             return true;
-        }
 
         return false;
     }
@@ -185,6 +177,11 @@ export class Entity<
         assert(this.instance.PrimaryPart, "primary part not found");
 
         return this.instance.PrimaryPart;
+    }
+
+    public SetHipHeight(hipheight: number)
+    {
+        this.humanoid.HipHeight = hipheight;
     }
 
     public readonly humanoid = this.instance.WaitForChild("Humanoid") as Humanoid;

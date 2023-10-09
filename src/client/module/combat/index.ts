@@ -4,11 +4,17 @@ import { Character } from "shared/util/character";
 
 import { Components } from "@flamework/components";
 import { Dependency } from "@flamework/core";
+<<<<<<< HEAD
+import { CharacterSelectController } from "client/controllers/characterselect.controller";
+=======
+>>>>>>> 8817bee (IT WORKS!! :0)
 import { Input, InputMode, InputResult } from "shared/util/input";
 import { CharacterSelectController } from "client/controllers/characterselect.controller";
 
 export abstract class CombatController implements OnMatchRespawn
 {
+    private enabled = false;
+
     protected selectedCharacter?: Character.Character;
 
     protected lockOnTarget?: Instance & { Position: Vector3; };
@@ -38,6 +44,26 @@ export abstract class CombatController implements OnMatchRespawn
         {
             this.selectedCharacter = undefined;
         }
+    }
+
+    public IsEnabled()
+    {
+        return this.enabled;
+    }
+
+    public Enable()
+    {
+        this.enabled = true;
+    }
+
+    public Disable()
+    {
+        this.enabled = false;
+    }
+
+    public Toggle(enabled = this.enabled)
+    {
+        return this.enabled ? this.Disable() : this.Enable();
     }
 
     constructor()

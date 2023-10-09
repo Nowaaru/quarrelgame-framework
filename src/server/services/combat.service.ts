@@ -11,7 +11,11 @@ import { Hitbox } from "shared/util/hitbox";
 import { Input, Motion } from "shared/util/input";
 import { ConvertPercentageToNumber, EntityState, getEnumValues, HitboxRegion, HitResult } from "shared/util/lib";
 import { EffectsService } from "./effects.service";
+<<<<<<< HEAD
+
+=======
 import { CharacterSelectController } from "client/controllers/characterselect.controller";
+>>>>>>> 8817bee (IT WORKS!! :0)
 export interface OnHit
 {
     onHit(contactData: Hitbox.Contact): void;
@@ -265,7 +269,11 @@ export class CombatService implements OnStart, OnInit
 
         assert(characterId, `character ${characterId} is not found`);
 
+<<<<<<< HEAD
+        return Dependency<QuarrelGame>().characters.get(characterId as string);
+=======
         return Dependency<CharacterSelectController>().characters.get(characterId as string);
+>>>>>>> 8817bee (IT WORKS!! :0)
     }
 
     public ApplyImpulse(impulseTarget: Model)

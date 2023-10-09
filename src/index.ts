@@ -6,6 +6,8 @@ export * from "client/controllers/match.controller";
 export * from "client/controllers/motioninput.controller";
 export * from "client/controllers/resourcecontroller.controller";
 
+export * from "client/module/character/humanoid";
+
 export * from "client/module/camera/camera2d";
 export * from "client/module/character/controller2d";
 export * from "client/module/combat/combat2d";
@@ -63,11 +65,14 @@ function addPath(path: string[])
     {
         if (path[0] !== "StarterPlayerScripts")
             throw "StarterPlayer only supports StarterPlayerScripts";
+
         if (!RunService.IsClient())
             throw "The server cannot load StarterPlayer content";
+
         currentPath = Players.LocalPlayer.WaitForChild("PlayerScripts");
         path.shift();
     }
+
     for (let i = 0; i < path.size(); i++)
         currentPath = currentPath.WaitForChild(path[i]);
 
@@ -88,6 +93,7 @@ function addPath(path: string[])
     {
         if (path.IsA("ModuleScript"))
             preload(path);
+
         for (const instance of path.GetDescendants())
         {
             if (instance.IsA("ModuleScript"))
@@ -124,9 +130,15 @@ class QuarrelGameFramework
         };
 
         if (RunService.IsServer())
+        {
+            import("server/network");
             addPath([ ...thisScriptTree(), "server", "services" ]);
+        }
         else
+        {
+            import("client/network");
             addPath([ ...thisScriptTree(), "client", "controllers" ]);
+        }
 
         QuarrelGameFramework._executed = true;
 

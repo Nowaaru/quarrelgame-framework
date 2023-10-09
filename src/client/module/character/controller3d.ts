@@ -7,12 +7,13 @@ import { Mouse } from "client/controllers/mouse.controller";
 import { CharacterController } from "client/module/character";
 import { InputMode, InputResult } from "shared/util/input";
 import { CombatController3D } from "../combat/combat3d";
+import { HumanoidController } from "./humanoid";
 
 export abstract class CharacterController3D extends CharacterController implements OnStart, OnMatchRespawn, OnInit
 {
-    constructor()
+    constructor(protected readonly combatController: CombatController3D, protected readonly humanoidController: HumanoidController)
     {
-        super(Dependency<MatchController>(), Dependency<Keyboard>(), Dependency<Mouse>(), Dependency<Gamepad>());
+        super(Dependency<MatchController>(), Dependency<Keyboard>(), Dependency<Mouse>(), Dependency<Gamepad>(), humanoidController);
     }
 
     protected keyboardDirectionMap: Map<Enum.KeyCode, Enum.NormalId> = new Map([
