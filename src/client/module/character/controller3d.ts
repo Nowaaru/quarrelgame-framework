@@ -1,13 +1,14 @@
 import { Controller, Dependency, OnInit, OnStart, OnTick } from "@flamework/core";
-import { OnRespawn } from "client/controllers/client.controller";
+import { OnMatchRespawn } from "client/controllers/client.controller";
 import { Gamepad, GamepadButtons } from "client/controllers/gamepad.controller";
 import { Keyboard } from "client/controllers/keyboard.controller";
 import { MatchController } from "client/controllers/match.controller";
 import { Mouse } from "client/controllers/mouse.controller";
 import { CharacterController } from "client/module/character";
 import { InputMode, InputResult } from "shared/util/input";
+import { CombatController3D } from "../combat/combat3d";
 
-export class CharacterController3D extends CharacterController implements OnStart, OnRespawn, OnInit
+export abstract class CharacterController3D extends CharacterController implements OnStart, OnMatchRespawn, OnInit
 {
     constructor()
     {

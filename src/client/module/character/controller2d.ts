@@ -1,7 +1,7 @@
 import { Components } from "@flamework/components";
 import { Controller, Dependency, OnPhysics, OnRender, OnStart, OnTick } from "@flamework/core";
 
-import { OnRespawn } from "client/controllers/client.controller";
+import { OnMatchRespawn } from "client/controllers/client.controller";
 import { Gamepad, GamepadButtons } from "client/controllers/gamepad.controller";
 import { Keyboard } from "client/controllers/keyboard.controller";
 import { MotionInput } from "client/controllers/motioninput.controller";
@@ -15,6 +15,7 @@ import { EntityState } from "shared/util/lib";
 import Make from "@rbxts/make";
 import { Players, Workspace } from "@rbxts/services";
 import { MatchController, OnArenaChange } from "client/controllers/match.controller";
+import { HumanoidController } from "client/module/character/humanoid";
 import type _Map from "server/components/map.component";
 import { Animator } from "shared/components/animator.component";
 import { StatefulComponent } from "shared/components/state.component";
@@ -24,7 +25,7 @@ interface ChangedSignals
     [stateName: string]: unknown;
 }
 
-export class CharacterController2D extends CharacterController implements OnStart, OnRespawn, OnRender, OnArenaChange
+export abstract class CharacterController2D extends CharacterController implements OnStart, OnMatchRespawn, OnRender, OnArenaChange
 {
     private axis?: Vector3;
 
@@ -36,6 +37,7 @@ export class CharacterController2D extends CharacterController implements OnStar
     )
     {
         super(Dependency<MatchController>(), Dependency<Keyboard>(), Dependency<Mouse>(), Dependency<Gamepad>());
+        super(Dependency<MatchController>(), Dependency<Keyboard>(), Dependency<Mouse>(), Dependency<Gamepad>(), humanoidController);
     }
 
     private invisibleWallSets = new Set<Folder>();
@@ -197,9 +199,10 @@ export class CharacterController2D extends CharacterController implements OnStar
         print("2D Character Controller started.");
     }
 
-    async onRespawn(character: Model): Promise<void>
+    async onMatchRespawn(character: Model): Promise<void>
     {
-        super.onRespawn(character);
+        super.onMatchRespawn(character);
+        print("on respawning!!!");
         const rootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
 
         this.alignPos = Make("AlignPosition", {

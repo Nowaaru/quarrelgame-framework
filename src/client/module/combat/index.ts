@@ -1,5 +1,5 @@
 import { Players } from "@rbxts/services";
-import { OnRespawn } from "client/controllers/client.controller";
+import { OnMatchRespawn } from "client/controllers/client.controller";
 import { Character } from "shared/util/character";
 
 import { Components } from "@flamework/components";
@@ -7,7 +7,7 @@ import { Dependency } from "@flamework/core";
 import { Input, InputMode, InputResult } from "shared/util/input";
 import { CharacterSelectController } from "client/controllers/characterselect.controller";
 
-export abstract class CombatController implements OnRespawn
+export abstract class CombatController implements OnMatchRespawn
 {
     protected selectedCharacter?: Character.Character;
 
@@ -24,7 +24,7 @@ export abstract class CombatController implements OnRespawn
 
     protected abstract keybindMap: Map<Enum.KeyCode, Input>;
 
-    onRespawn(character: Model): void
+    onMatchRespawn(character: Model): void
     {
         this.character = character;
 

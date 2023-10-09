@@ -1,7 +1,7 @@
 import { Controller, OnInit, OnStart } from "@flamework/core";
 import { Players, Workspace } from "@rbxts/services";
 
-import { OnRespawn } from "client/controllers/client.controller";
+import { OnMatchRespawn } from "client/controllers/client.controller";
 import { BaseCamera, CameraUtils, PlayerModule } from "client/lib/player";
 
 export enum CameraFacing
@@ -10,7 +10,7 @@ export enum CameraFacing
     Right,
 }
 
-export abstract class CameraController implements OnRespawn
+export abstract class CameraController implements OnMatchRespawn
 {
     protected readonly BaseFOV = 72;
 
@@ -37,7 +37,7 @@ export abstract class CameraController implements OnRespawn
         this.camera.CameraSubject = targetSubject ?? this.character?.WaitForChild("Humanoid") as Humanoid;
     }
 
-    onRespawn(character: Model): void
+    onMatchRespawn(character: Model): void
     {
         this.character = character;
     }

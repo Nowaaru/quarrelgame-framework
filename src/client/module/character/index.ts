@@ -1,12 +1,12 @@
 import { ContextActionService, Players } from "@rbxts/services";
-import { OnRespawn } from "client/controllers/client.controller";
+import { OnMatchRespawn } from "client/controllers/client.controller";
 import { Gamepad, GamepadButtons, OnGamepadInput } from "client/controllers/gamepad.controller";
 import { Keyboard } from "client/controllers/keyboard.controller";
 import { MatchController } from "client/controllers/match.controller";
 import { Mouse } from "client/controllers/mouse.controller";
 import { InputMode, InputResult } from "shared/util/input";
 
-export abstract class CharacterController implements OnGamepadInput, OnRespawn
+export abstract class CharacterController implements OnGamepadInput, OnMatchRespawn
 {
     protected character?: Model;
 
@@ -96,8 +96,9 @@ export abstract class CharacterController implements OnGamepadInput, OnRespawn
             this.DisableRobloxMovement();
     }
 
-    onRespawn(character: Model): void
+    onMatchRespawn(character: Model): void
     {
+        print("on respawnded!!");
         this.character = character;
         if (this.theseMovementActions)
             this.EnableRobloxMovement();

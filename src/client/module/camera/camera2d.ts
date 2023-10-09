@@ -1,6 +1,6 @@
 import { OnInit, OnPhysics } from "@flamework/core";
 import { Players, Workspace } from "@rbxts/services";
-import { OnRespawn } from "client/controllers/client.controller";
+import { OnMatchRespawn } from "client/controllers/client.controller";
 import { CameraController, CameraFacing } from "client/module/camera";
 import { ClientFunctions } from "shared/network";
 
@@ -16,7 +16,7 @@ export enum CameraMode2D
     Multi,
 }
 
-export abstract class CameraController2D extends CameraController implements OnInit, OnPhysics, OnRespawn, Camera2D
+export abstract class CameraController2D extends CameraController implements OnInit, OnPhysics, OnMatchRespawn, Camera2D
 {
     protected readonly cameraListeners: Set<Camera2D> = new Set<Camera2D>();
 
@@ -145,9 +145,9 @@ export abstract class CameraController2D extends CameraController implements OnI
         this.camera.CameraType = Enum.CameraType.Custom;
     }
 
-    async onRespawn(character: Model): Promise<void>
+    async onMatchRespawn(character: Model): Promise<void>
     {
-        super.onRespawn(character);
+        super.onMatchRespawn(character);
         this.allParticipants.clear();
         this.allParticipants.push(character);
 

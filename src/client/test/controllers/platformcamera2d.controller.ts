@@ -4,12 +4,12 @@ import { CameraController2D, CameraMode2D } from "client/module/camera/camera2d"
 import _Map from "server/components/map.component";
 
 import { Players } from "@rbxts/services";
-import { OnRespawn } from "client/controllers/client.controller";
+import { OnMatchRespawn } from "client/controllers/client.controller";
 import { MatchController } from "client/controllers/match.controller";
 import { ClientFunctions } from "shared/network";
 
 @Controller({})
-export class PlatformCameraController2D extends CameraController2D implements OnInit, OnPhysics, OnRespawn, OnStart
+export class PlatformCameraController2D extends CameraController2D implements OnInit, OnPhysics, OnMatchRespawn, OnStart
 {
     protected cameraDirection: CameraFacing = CameraFacing.Left;
 
