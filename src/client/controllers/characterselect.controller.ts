@@ -7,6 +7,7 @@ import { Controller, OnInit, OnStart } from "@flamework/core";
 import { ClientFunctions } from "shared/network";
 import { Character } from "shared/util/character";
 import { Client } from "./client.controller";
+import { Players } from "@rbxts/services";
 
 @Controller({})
 export class CharacterSelectController implements OnStart, OnInit
@@ -21,10 +22,10 @@ export class CharacterSelectController implements OnStart, OnInit
 
     public readonly characters = new Map<string, Character.Character>();
 
-    constructor(private readonly client: Client)
+    constructor()
     {
         this.characterSelectScreenGui = Make("ScreenGui", {
-            Parent: this.client.player.PlayerGui,
+            Parent: Players.LocalPlayer.WaitForChild("PlayerGui"),
             IgnoreGuiInset: true,
             ResetOnSpawn: false,
             ZIndexBehavior: Enum.ZIndexBehavior.Sibling,
@@ -37,7 +38,7 @@ export class CharacterSelectController implements OnStart, OnInit
 
     onStart()
     {
-        if (!this.client.player.GetAttribute("SelectedCharacter"))
+        if (!Players.LocalPlayer.GetAttribute("SelectedCharacter"))
             this.OpenCharacterSelect();
     }
 
