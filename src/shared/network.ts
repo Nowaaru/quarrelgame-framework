@@ -152,6 +152,8 @@ export namespace Server
                     instance: Model;
                     config: MapNamespace.Arena["config"];
                 };
+
+                MatchId: string;
             }
             | undefined;
     }

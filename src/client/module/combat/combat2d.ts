@@ -8,17 +8,11 @@ import { Input, InputMode, InputResult } from "shared/util/input";
 import { EntityState } from "shared/util/lib";
 
 import { Players } from "@rbxts/services";
-<<<<<<< HEAD
 import { CharacterSelectController } from "client/controllers/characterselect.controller";
 import { OnKeyboardInput } from "client/controllers/keyboard.controller";
 import { CameraController2D } from "../camera/camera2d";
 
 export abstract class CombatController2D extends CombatController implements OnInit, OnKeyboardInput
-=======
-import { CameraController2D } from "../camera/camera2d";
-import { CharacterSelectController } from "client/controllers/characterselect.controller";
-export class CombatController2D extends CombatController implements OnInit
->>>>>>> 8817bee (IT WORKS!! :0)
 {
     constructor(protected readonly motionInputController: MotionInput.MotionInputController, protected readonly cameraController2D: CameraController2D)
     {
@@ -49,15 +43,11 @@ export class CombatController2D extends CombatController implements OnInit
 
     protected handleOffensiveInput(buttonPressed: Enum.KeyCode)
     {
-<<<<<<< HEAD
         if (!this.IsEnabled())
             return false;
 
         const Characters = Dependency<CharacterSelectController>().characters;
         print("button:", buttonPressed, "character:", this.character, "sc:", this.selectedCharacter);
-=======
-        const Characters = Dependency<CharacterSelectController>().characters;
->>>>>>> 8817bee (IT WORKS!! :0)
         const buttonType = this.keybindMap.get(buttonPressed);
         if (!this.character)
             return InputResult.Fail;

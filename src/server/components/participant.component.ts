@@ -82,6 +82,8 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
             characterId,
             "no character ID was provided, nor does the participant have a selected character.",
         );
+
+        print("match id:", matchId);
         const thisMatch = [ ...Dependency<MatchService>().GetOngoingMatches() ].find(
             (match) => match.matchId === matchId,
         );

@@ -222,24 +222,24 @@ export class Match
 
     private readonly participants: Set<Participant> = new Set();
 
+    private readonly matchFolder: Folder;
+
     private matchPhase: MatchPhase = MatchPhase.Waiting;
-
-    public readonly matchId = `${this.matchSettings.Map}-${Identifier.Generate()}`;
-
-    private readonly matchFolder: Folder = Make("Folder", {
-        Name: `Match-${this.matchId}`,
-    });
 
     private matchHost;
 
     /** Signals **/
     public readonly Ended = new Signal<(postMatchData: PostMatchData) => void>();
 
-    constructor(private readonly originalMatchHost: Participant)
+    constructor(private readonly originalMatchHost: Participant, public readonly matchId = Identifier.Generate())
     {
         const { Map: matchMap } = this.matchSettings;
-        this.matchFolder.SetAttribute("MatchId", this.matchId);
         this.matchHost = originalMatchHost;
+        this.matchFolder = Make("Folder", {
+            Name: `Match-${this.matchId}`,
+        });
+
+        this.matchFolder.SetAttribute("MatchId", this.matchId);
     }
 
     /**
@@ -640,6 +640,7 @@ export class MatchService implements OnStart, OnInit
                 },
                 Map: ongoingMatch.GetMap().instance,
                 Phase: ongoingMatch.GetMatchPhase(),
+                MatchId: matchId,
             };
         }
     }

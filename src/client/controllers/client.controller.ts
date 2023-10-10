@@ -12,13 +12,9 @@ export interface OnRespawn
     onRespawn(character: Model): void;
 }
 
-<<<<<<< HEAD
 @Controller({
     loadOrder: -math.huge,
 })
-=======
-@Controller({})
->>>>>>> 8817bee (IT WORKS!! :0)
 export class Client implements OnInit
 {
     private matchRespawnTrackers: Set<OnMatchRespawn> = new Set();
@@ -27,14 +23,15 @@ export class Client implements OnInit
     constructor()
     {}
 
+    // FIXME: currently there is a massive bug where onMatchRespawn functions
+    // made for the local player runs because of other participants respawning.
+    // should be an easy fix
+
     onInit()
     {
-<<<<<<< HEAD
         Modding.onListenerAdded<OnMatchRespawn>((a) => this.matchRespawnTrackers.add(a));
         Modding.onListenerRemoved<OnMatchRespawn>((a) => this.matchRespawnTrackers.delete(a));
 
-=======
->>>>>>> 8817bee (IT WORKS!! :0)
         Modding.onListenerAdded<OnRespawn>((a) => this.respawnTrackers.add(a));
         Modding.onListenerRemoved<OnRespawn>((a) => this.respawnTrackers.delete(a));
 
@@ -62,7 +59,11 @@ export class Client implements OnInit
         });
 
         for (const Player of Players.GetPlayers())
+        {
             Player.CharacterAdded.Connect(onRespawn);
+            if (Player.Character)
+                onRespawn(Player.Character);
+        }
     }
 
     public readonly player = Players.LocalPlayer as Player & {

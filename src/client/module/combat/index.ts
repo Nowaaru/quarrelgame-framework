@@ -4,10 +4,6 @@ import { Character } from "shared/util/character";
 
 import { Components } from "@flamework/components";
 import { Dependency } from "@flamework/core";
-<<<<<<< HEAD
-import { CharacterSelectController } from "client/controllers/characterselect.controller";
-=======
->>>>>>> 8817bee (IT WORKS!! :0)
 import { Input, InputMode, InputResult } from "shared/util/input";
 import { CharacterSelectController } from "client/controllers/characterselect.controller";
 

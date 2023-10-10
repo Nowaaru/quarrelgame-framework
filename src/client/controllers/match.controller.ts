@@ -12,7 +12,7 @@ export interface OnArenaChange
 // TODO: Implement.
 export interface OnMatchStart
 {
-    onMatchStart(matchId: string, matchData: Awaited<ReturnType<typeof ClientFunctions["GetCurrentMatch"]>>): void;
+    onMatchStart(matchId: string, matchData: ReturnType<Server.Functions["GetCurrentMatch"]>): void;
 }
 
 @Controller({
@@ -22,29 +22,23 @@ export class MatchController implements OnStart, OnInit
 {
     private arenaChangedHandlers = new Set<OnArenaChange>();
 
-    private matchData: {
-        matchId: string;
-        arenaInstance: _Map.Arena;
-    } | undefined;
+    private matchData: ReturnType<Server.Functions["GetCurrentMatch"]>;
 
     onStart()
     {
-        ClientEvents.ArenaChanged.connect((matchId, arenaId) =>
+        ClientEvents.ArenaChanged.connect((mapId, arenaId) =>
         {
             const currentMatch = this.GetCurrentMatch();
             if (currentMatch === undefined)
             {
                 this.matchData = undefined;
-                return error("Current match is undefined.");
+                throw "current match is undefined.";
             }
 
-            this.matchData = {
-                matchId,
-                arenaInstance: currentMatch.Arena.instance as _Map.Arena,
-            };
+            this.matchData = currentMatch;
 
             for (const listener of this.arenaChangedHandlers)
-                task.spawn(() => listener.onArenaChanged(matchId, this.matchData!.arenaInstance));
+                task.spawn(() => listener.onArenaChanged(mapId, currentMatch.Arena as never));
         });
     }
 

@@ -128,6 +128,7 @@ export abstract class CharacterController2D extends CharacterController implemen
         const playerHumanoid = this.character.FindFirstChild("Humanoid") as
             | Humanoid
             | undefined;
+
         const axisDirection = CFrame.lookAt(Vector3.zero, this.axis);
         const playerDirection = this.GetMoveDirection(axisDirection);
 
