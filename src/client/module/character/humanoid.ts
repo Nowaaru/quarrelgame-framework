@@ -15,7 +15,7 @@ export abstract class HumanoidController implements OnStart, OnRespawn
     {
     }
 
-    onRespawn(character: Model): void
+    onRespawn(character: Model)
     {
         this.controller = character.WaitForChild("ControllerManager") as NonNullable<typeof this.controller>;
         const rootPart = this.controller.RootPart!;
@@ -28,6 +28,8 @@ export abstract class HumanoidController implements OnStart, OnRespawn
 
         this.character = character as never;
         print(`Character ${character.Name} has respawned.`);
+
+        return $tuple(this.controller, this.sensors);
     }
 
     public GetHumanoidController()
@@ -38,6 +40,11 @@ export abstract class HumanoidController implements OnStart, OnRespawn
     public GetSensors()
     {
         return this.sensors;
+    }
+
+    public GetCharacter()
+    {
+        return this.character;
     }
 
     private controller?: ControllerManager & {

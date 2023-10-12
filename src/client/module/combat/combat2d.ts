@@ -4,12 +4,13 @@ import { MotionInput } from "client/controllers/motioninput.controller";
 import { CombatController } from "client/module/combat";
 import { Animator } from "shared/components/animator.component";
 import { Client, ClientEvents, ClientFunctions } from "shared/network";
-import { Input, InputMode, InputResult } from "shared/util/input";
+import { Input, InputMode, InputResult, Motion } from "shared/util/input";
 import { EntityState } from "shared/util/lib";
 
 import { Players } from "@rbxts/services";
 import { CharacterSelectController } from "client/controllers/characterselect.controller";
 import { OnKeyboardInput } from "client/controllers/keyboard.controller";
+import Character from "shared/util/character";
 import { CameraController2D } from "../camera/camera2d";
 
 export abstract class CombatController2D extends CombatController implements OnInit, OnKeyboardInput
@@ -41,6 +42,17 @@ export abstract class CombatController2D extends CombatController implements OnI
 
     protected keybindMap: Map<Enum.KeyCode, Input> = new Map();
 
+    protected validateInput(attacks: Character.Character["Attacks"], input: (Motion | Input)[])
+    {
+        for (const [ _input ] of attacks)
+        {
+            if (_input.every((a, b) => input[b] === a))
+                return true;
+        }
+
+        return false;
+    }
+
     protected handleOffensiveInput(buttonPressed: Enum.KeyCode)
     {
         if (!this.IsEnabled())
@@ -67,7 +79,7 @@ export abstract class CombatController2D extends CombatController implements OnI
 
             if (inputMotion.size() === 1)
             { // this likely means that it's a neutral input
-                if (buttonType in Characters.get(this.selectedCharacter.Name)!.Attacks)
+                if (this.validateInput(Characters.get(this.selectedCharacter.Name)!.Attacks, lockedMotionInput.GetInputs()))
                 {
                     ClientFunctions[buttonType as Input].invoke();
 

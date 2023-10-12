@@ -15,7 +15,7 @@ export interface OnRespawn
 @Controller({
     loadOrder: -math.huge,
 })
-export class Client implements OnInit
+export class Client implements OnInit, OnRespawn
 {
     private matchRespawnTrackers: Set<OnMatchRespawn> = new Set();
     private respawnTrackers: Set<OnRespawn> = new Set();
@@ -64,6 +64,12 @@ export class Client implements OnInit
             if (Player.Character)
                 onRespawn(Player.Character);
         }
+    }
+
+    onRespawn(character: Model)
+    {
+        print("kekwkwkw");
+        this.character = character;
     }
 
     public readonly player = Players.LocalPlayer as Player & {

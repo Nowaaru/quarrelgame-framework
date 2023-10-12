@@ -9,7 +9,7 @@ import { Mouse } from "client/controllers/mouse.controller";
 import { CharacterController } from "client/module/character";
 import { CombatController2D } from "client/module/combat/combat2d";
 import { ClientFunctions } from "shared/network";
-import { ConvertMoveDirectionToMotion, InputMode, InputResult, Motion } from "shared/util/input";
+import { ConvertMoveDirectionToMotion, Input, InputMode, InputResult, Motion } from "shared/util/input";
 import { EntityState } from "shared/util/lib";
 
 import Make from "@rbxts/make";
@@ -131,10 +131,17 @@ export abstract class CharacterController2D extends CharacterController implemen
 
         const axisDirection = CFrame.lookAt(Vector3.zero, this.axis);
         const playerDirection = this.GetMoveDirection(axisDirection);
+        const currentMotion = this.motionInputController.getMotionInputInProgress();
 
         const [ motion ] = ConvertMoveDirectionToMotion(playerDirection);
-        if (this.lastFrameNormal !== playerDirection)
+        if (this.lastFrameNormal !== playerDirection || currentMotion?.[currentMotion.size() - 1] !== Motion[motion])
+        {
+            if (this.motionInputController.willTimeout())
+                this.motionInputController.clear();
+
             this.motionInputController.pushToMotionInput(Motion[motion]);
+            print(`${Motion[motion]} =>`, currentMotion?.map((n) => Motion[n]).join(", "));
+        }
 
         const currentLastFrameNormal = this.lastFrameNormal;
         this.lastFrameNormal = playerDirection;

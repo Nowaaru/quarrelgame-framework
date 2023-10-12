@@ -1,6 +1,8 @@
-import { Controller, OnInit, OnStart, OnTick } from "@flamework/core";
+import { Controller, Dependency, OnInit, OnStart, OnTick } from "@flamework/core";
+import { HumanoidController } from "client/module/character/humanoid";
 import { InputMode, InputResult } from "shared/util/input";
 import * as input from "shared/util/input";
+import { Client } from "./client.controller";
 import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
 
 export type Frames = number;
@@ -8,6 +10,8 @@ export type Frames = number;
 export namespace MotionInput
 {
     export import Motion = input.Motion;
+
+    export const None = [ Motion.Neutral ];
 
     export import Input = input.Input;
     export interface OnMotionInput
@@ -24,7 +28,7 @@ export namespace MotionInput
 
     export class MotionInput
     {
-        constructor()
+        constructor(private character: Model & { Humanoid: Humanoid; })
         {}
 
         public PushDirection(motionDirection: Motion)
@@ -34,12 +38,10 @@ export namespace MotionInput
 
         public FinishInput(finalInput: Input): LockedMotionInput
         {
-            const inputs = [...this.inputs, finalInput];
+            const inputs = [ ...this.GetInputs(false), finalInput ];
 
             return new class
             {
-                private inputs = inputs;
-
                 GetInputs()
                 {
                     return inputs;
@@ -52,9 +54,17 @@ export namespace MotionInput
             }();
         }
 
-        public GetInputs()
+        public GetInputs(padNeutral = true)
         {
-            return [...this.inputs];
+            if (padNeutral && this.inputs.size() === 1)
+            {
+                const res = [ ...this.inputs ];
+                res.unshift(Motion[input.ConvertMoveDirectionToMotion(Dependency<MotionInputController>().getDirection())[0]]);
+
+                return res;
+            }
+
+            return [ ...this.inputs ];
         }
 
         private inputs: Motion[] = [];
@@ -69,44 +79,89 @@ export namespace MotionInput
 
         private motionInputTimeout: Frames = -1;
 
-        constructor(private readonly keyboard: Keyboard)
+        private direction = Vector3.zero;
+
+        constructor(private readonly client: Client)
         {}
 
         public pushToMotionInput(input: Motion | Input): void | LockedMotionInput
         {
-            print("pushed motion/input:", input in Input ? Input[input as never] : Motion[input as never]);
-            this.currentMotionInput = this.currentMotionInput ?? new MotionInput();
-            if (input in Input)
+            // print("pushed motion/input:", input in Input ? Input[input as never] : Motion[input as never]);
+            if (this.client.character)
             {
-                const finishedInput = this.currentMotionInput.FinishInput(input as Input);
-                this.currentMotionInput = undefined;
+                this.currentMotionInput = this.currentMotionInput
+                    ?? new MotionInput(this.client.character as never);
+                if (input in Input)
+                {
+                    const finishedInput = this.currentMotionInput.FinishInput(input as Input);
+                    this.currentMotionInput = undefined;
 
-                return finishedInput;
+                    return finishedInput;
+                }
+                else if (input in Motion)
+                {
+                    this.currentMotionInput.PushDirection(input as Motion);
+                    this.motionInputTimeout = -1;
+                }
             }
-            else if (input in Motion)
-            {
-                this.currentMotionInput.PushDirection(input as Motion);
-            }
+        }
+
+        public setDirection(direction: Vector3)
+        {
+            return this.direction = direction;
+        }
+
+        public getDirection()
+        {
+            return this.direction;
+        }
+
+        public getMotionInputInProgress()
+        {
+            return this.currentMotionInput?.GetInputs(false);
+        }
+
+        public willTimeout()
+        {
+            return this.motionInputTimeout > this.motionInputTimeoutLimit;
+        }
+
+        public clear()
+        {
+            return this.currentMotionInput = undefined;
         }
 
         onTick()
         {
             if (this.currentMotionInput)
             {
-                const currentInputList = this.currentMotionInput.GetInputs();
+                const currentInputList = this.currentMotionInput.GetInputs(false);
                 if (currentInputList[currentInputList.size() - 1] === Motion.Neutral)
                 {
                     if (this.motionInputTimeout >= this.motionInputTimeoutLimit)
                     {
-                        print("motion input timed out");
-                        this.motionInputTimeout = -1;
-                        this.currentMotionInput = undefined;
-                    }
-                    else
-                    {
-                        this.motionInputTimeout += 1;
+                        // TEST:: keep the input queue for things like charge inputs
+                        const isMotionOnly = currentInputList.size() === 1 && Motion[currentInputList[0]];
+                        if (!isMotionOnly)
+                        {
+                            this.motionInputTimeout = -1;
+                            this.currentMotionInput = undefined;
+
+                            print("motion input timed out");
+                        }
+                        else
+                        {
+                            print("bad - input list:", currentInputList);
+                        }
+
+                        return;
                     }
                 }
+
+                if (this.motionInputTimeout < 0)
+                    this.motionInputTimeout = 0;
+                else
+                    this.motionInputTimeout += 1;
 
                 return;
             }
