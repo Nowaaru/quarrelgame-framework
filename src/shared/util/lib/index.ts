@@ -222,7 +222,7 @@ export const GetTickRate =
 export const Jump = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BasePart; }, JumpDistance = 26) =>
 {
     const { X, Y, Z } = Character.Humanoid.MoveDirection;
-    const thisImpulse = new Vector3(math.sign(X), 1, math.sign(Z)).mul(Character.PrimaryPart.AssemblyMass * JumpDistance);
+    const thisImpulse = new Vector3(math.sign(0), 1, math.sign(0)).mul(Character.PrimaryPart.AssemblyMass * JumpDistance);
     Character.PrimaryPart.ApplyImpulse(thisImpulse);
     Character.Humanoid.SetAttribute("JumpDirection", Character.Humanoid.MoveDirection);
 
