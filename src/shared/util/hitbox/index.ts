@@ -193,7 +193,7 @@ export namespace Hitbox
             });
 
             const overlapParams = new OverlapParams();
-            overlapParams.FilterDescendantsInstances = [target.FindFirstAncestorWhichIsA("Model")].filterUndefined();
+            overlapParams.FilterDescendantsInstances = [ target.FindFirstAncestorWhichIsA("Model") ].filterUndefined();
             overlapParams.FilterType = Enum.RaycastFilterType.Exclude;
 
             this.hitProcessor = RunService.Heartbeat.Connect(async () =>
@@ -202,14 +202,12 @@ export namespace Hitbox
                 const nonCachedModels = instancesInHitbox.mapFiltered((i) => i.FindFirstAncestorWhichIsA("Model")).filter((j) => !this.contactedModels.has(j));
 
                 if (nonCachedModels.isEmpty())
-                {
                     return;
-                }
 
-                nonCachedModels.map((m) => [m, m.FindFirstChildWhichIsA("Humanoid")] as const)
+                nonCachedModels.map((m) => [ m, m.FindFirstChildWhichIsA("Humanoid") ] as const)
                     .filter((n) => !!n[1])
-                    .filter(([o], p, q) => q.findIndex(([r]) => r === o) === p) // remove duplicates
-                    .forEach(async ([hitModel, hitHumanoid]) =>
+                    .filter(([ o ], p, q) => q.findIndex(([ r ]) => r === o) === p) // remove duplicates
+                    .forEach(async ([ hitModel, hitHumanoid ]) =>
                     {
                         this.contactedModels.add(hitModel);
 
@@ -222,7 +220,6 @@ export namespace Hitbox
                         if (entityComponent)
                         {
                             const quarrelGameService = await import("server/services/quarrelgame.service");
-                            const combatGameService = await import("server/services/combat.service");
                             assert(quarrelGameService, "quarrel game service not found");
 
                             const hitboxModel = target.FindFirstAncestorWhichIsA("Model");
@@ -250,9 +247,7 @@ export namespace Hitbox
 
                                 this.Contact.Fire(contactData);
                                 for (const listener of ActiveHitbox.onHitListeners)
-                                {
-                                    Promise.try(() => listener.onHit(contactData));
-                                }
+                                    task.spawn(() => listener.onHit(contactData));
                             }
                             else
                             {
@@ -266,9 +261,7 @@ export namespace Hitbox
         public Stop()
         {
             if (!this.active)
-            {
                 return;
-            }
 
             this.active = false;
             this.contactedModels.clear();
