@@ -134,13 +134,13 @@ export abstract class CharacterController2D extends CharacterController implemen
         const currentMotion = this.motionInputController.getMotionInputInProgress();
 
         const [ motion ] = ConvertMoveDirectionToMotion(playerDirection);
-        if (this.lastFrameNormal !== playerDirection || currentMotion?.[currentMotion.size() - 1] !== Motion[motion])
+        if (this.lastFrameNormal !== playerDirection || !currentMotion || currentMotion[currentMotion.size() - 1] !== Motion[motion])
         {
             if (this.motionInputController.willTimeout())
                 this.motionInputController.clear();
 
             this.motionInputController.pushToMotionInput(Motion[motion]);
-            print(`${Motion[motion]} =>`, currentMotion?.map((n) => Motion[n]).join(", "));
+            print(`${Motion[motion]} =>`, [ ...(currentMotion ?? [ Motion.Neutral ]), Motion[motion] ].map((n) => Motion[n]).join(", "));
         }
 
         const currentLastFrameNormal = this.lastFrameNormal;
@@ -156,8 +156,8 @@ export abstract class CharacterController2D extends CharacterController implemen
                 axisDirection,
                 Enum.NormalId.Top,
             );
-            const eqLeniency = 0.5;
 
+            const eqLeniency = 0.5;
             const currentState = this.character.GetAttribute("State");
             if (playerDirection.Dot(bottomNormal) > eqLeniency)
             {
@@ -168,8 +168,6 @@ export abstract class CharacterController2D extends CharacterController implemen
                     {
                         if (currentState === EntityState.Idle)
                             ClientFunctions.Crouch(EntityState.Crouch);
-                        else if (currentState === EntityState.Crouch)
-                            ClientFunctions.Crouch(EntityState.Idle);
                     }
                 }
 
@@ -182,10 +180,10 @@ export abstract class CharacterController2D extends CharacterController implemen
                 {
                     if (playerHumanoid.FloorMaterial !== Enum.Material.Air)
                     {
-                        print(
-                            `🚀 ~ file: 2dcontroller.controller.ts:65 ~ lastFrameDot:`,
-                            lastFrameDot,
-                        );
+                        // print(
+                        //     `🚀 ~ file: 2dcontroller.controller.ts:65 ~ lastFrameDot:`,
+                        //     lastFrameDot,
+                        // );
                         ClientFunctions.Jump();
                     }
                 }
@@ -210,7 +208,6 @@ export abstract class CharacterController2D extends CharacterController implemen
     async onMatchRespawn(character: Model): Promise<void>
     {
         super.onMatchRespawn(character);
-        print("on respawning!!!");
         const rootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
 
         this.alignPos = Make("AlignPosition", {
@@ -238,8 +235,6 @@ export abstract class CharacterController2D extends CharacterController implemen
 
             this.SetAxis(currentMatch.Arena.config.Axis.Value);
             this.SetEnabled(true);
-
-            print("character model on respawn:", character);
 
             Workspace.CurrentCamera!.CameraSubject = character.FindFirstChildWhichIsA("Humanoid") as Humanoid;
         }
