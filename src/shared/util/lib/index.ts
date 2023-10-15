@@ -206,6 +206,44 @@ export enum BlockMode
     Orientation,
 }
 
+export function isStateNegative(state: EntityState)
+{
+    return [
+        EntityState.Startup,
+        EntityState.Recovery,
+        EntityState.Attack,
+        EntityState.Hitstun,
+        EntityState.HitstunCrouching,
+        EntityState.Knockdown,
+        EntityState.KnockdownHard,
+        EntityState.Dash,
+    ].includes(state);
+}
+
+export function isStateCounterable(state: EntityState)
+{
+    return [ EntityState.Startup, EntityState.Attack ].includes(state);
+}
+
+export function isStateAggressive(state: EntityState)
+{
+    return [
+        EntityState.Startup,
+        EntityState.Attack,
+        EntityState.Recovery,
+    ].includes(state);
+}
+
+export function isStateNeutral(state: EntityState)
+{
+    return [
+        EntityState.Idle,
+        EntityState.Crouch,
+        EntityState.Walk,
+        EntityState.Midair,
+    ].includes(state);
+}
+
 /**
  *  Convert a percentage string to a number.
  */
