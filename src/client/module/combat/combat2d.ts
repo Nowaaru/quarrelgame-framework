@@ -95,10 +95,13 @@ export abstract class CombatController2D extends CombatController implements OnI
         return InputResult.Fail;
     }
 
-    onKeyboardInput(buttonPressed: Enum.KeyCode): boolean | InputResult | (() => boolean | InputResult)
+    onKeyboardInput(buttonPressed: Enum.KeyCode, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult)
     {
         print("enabled:", this.IsEnabled());
         if (!this.IsEnabled())
+            return false;
+
+        if (inputMode !== InputMode.Press)
             return false;
 
         return this.handleOffensiveInput(buttonPressed);
