@@ -206,7 +206,10 @@ export class CombatService implements OnStart, OnInit
                         return this.executeFrameData(attackFrameData, combatantComponent, attackSkill, currentLastSkillTime).tap(() =>
                         {
                             if (currentLastSkillTime === lastSkillTime)
+                            {
+                                print("state reset!");
                                 combatantComponent.ResetState();
+                            }
                             else
                                 print("state seems to have changed");
                         });

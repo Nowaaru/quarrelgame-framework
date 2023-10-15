@@ -151,7 +151,7 @@ export namespace MotionInput
                         }
                         else
                         {
-                            print("bad - input list:", currentInputList);
+                            // print("bad - input list:", currentInputList);
                         }
 
                         return;

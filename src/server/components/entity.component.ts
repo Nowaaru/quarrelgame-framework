@@ -199,6 +199,7 @@ export namespace Entity
 
             if (this.attributes.HitStop > 0)
             {
+                print("hitstop!!!");
                 this.animator.GetPlayingAnimations().forEach((animation) =>
                 {
                     if (
@@ -222,13 +223,9 @@ export namespace Entity
                 if (this.IsGrounded())
                 {
                     if (this.IsMoving())
-                    {
                         this.SetState(EntityState.Walk);
-                    }
                     else if (!this.IsState(EntityState.Crouch))
-                    {
                         this.ResetState();
-                    }
                 }
                 else if (!this.IsNegative())
                 {
@@ -261,9 +258,7 @@ export namespace Entity
             this.SetStateGuard(EntityState.Crouch, () =>
             {
                 if (this.IsNegative())
-                {
                     return false;
-                }
 
                 return true;
             });
@@ -271,9 +266,7 @@ export namespace Entity
             this.SetStateGuard(EntityState.Midair, () =>
             {
                 if (this.IsNegative())
-                {
                     return false;
-                }
 
                 return !this.IsGrounded();
             });
@@ -287,9 +280,7 @@ export namespace Entity
             this.SetStateEffect(EntityState.Crouch, () =>
             {
                 if (!this.IsAttacked)
-                {
                     this.ClearBlockstun();
-                }
 
                 slowButNotImmobile();
             });
@@ -301,9 +292,7 @@ export namespace Entity
             this.SetStateEffect(EntityState.Walk, () =>
             {
                 if (!this.IsAttacked())
-                {
                     this.ClearBlockstun();
-                }
 
                 onNeutral();
             });
@@ -337,9 +326,7 @@ export namespace Entity
             )
             {
                 if (!this.attributes.Counter)
-                {
                     this.attributes.Counter = fromEntity.entityId;
-                }
             }
         }
 
@@ -355,9 +342,7 @@ export namespace Entity
         public Jump()
         {
             if (!this.CanJump())
-            {
                 return Promise.resolve(false);
-            }
 
             this.ClearHitstop();
             return super.Jump();
@@ -367,9 +352,7 @@ export namespace Entity
         public LockRotation(rotationMode = RotationMode.Locked)
         {
             if (this.rotationLocked === rotationMode)
-            {
                 return;
-            }
 
             this.humanoid.AutoRotate = RotationMode.Locked ? false : true;
         }
@@ -401,17 +384,13 @@ export namespace Entity
                     print("facing:", dotProduct, MoveDirection.Magnitude);
 
                     if (dotProduct >= this.facingLeniency)
-                    {
                         return true;
-                    }
 
                     return false;
                 }
 
                 if (this.IsState(EntityState.Block))
-                {
                     return true;
-                }
             }
 
             print("not facing");
@@ -441,40 +420,22 @@ export namespace Entity
 
         public CanCounter()
         {
-            return this.IsState(EntityState.Startup, EntityState.Attack);
+            return lib.isStateCounterable(this.GetState());
         }
 
         public IsAttacking()
         {
-            return this.IsState(
-                EntityState.Startup,
-                EntityState.Attack,
-                EntityState.Recovery,
-            );
+            return lib.isStateAggressive(this.GetState());
         }
 
         public IsNeutral()
         {
-            return this.IsState(
-                EntityState.Idle,
-                EntityState.Crouch,
-                EntityState.Walk,
-                EntityState.Midair,
-            );
+            return lib.isStateNeutral(this.GetState());
         }
 
         public IsNegative()
         {
-            return this.IsState(
-                EntityState.Startup,
-                EntityState.Recovery,
-                EntityState.Attack,
-                EntityState.Hitstun,
-                EntityState.HitstunCrouching,
-                EntityState.Knockdown,
-                EntityState.KnockdownHard,
-                EntityState.Dash,
-            );
+            return lib.isStateNegative(this.GetState());
         }
 
         public IsAttacked()
