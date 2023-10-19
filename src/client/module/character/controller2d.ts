@@ -10,7 +10,7 @@ import { CharacterController } from "client/module/character";
 import { CombatController2D } from "client/module/combat/combat2d";
 import { ClientFunctions } from "shared/network";
 import { ConvertMoveDirectionToMotion, Input, InputMode, InputResult, Motion } from "shared/util/input";
-import { EntityState } from "shared/util/lib";
+import { EntityState, isStateNeutral } from "shared/util/lib";
 
 import Make from "@rbxts/make";
 import { Players, Workspace } from "@rbxts/services";
@@ -158,7 +158,9 @@ export abstract class CharacterController2D extends CharacterController implemen
             );
 
             const eqLeniency = 0.5;
-            const currentState = this.character.GetAttribute("State");
+            const currentState = this.character.GetAttribute("State") as EntityState;
+
+            print("oh man :gooba:", playerDirection.Dot(bottomNormal), eqLeniency);
             if (playerDirection.Dot(bottomNormal) > eqLeniency)
             {
                 const lastFrameDot = currentLastFrameNormal.Dot(bottomNormal);
@@ -166,7 +168,7 @@ export abstract class CharacterController2D extends CharacterController implemen
                 {
                     if (lastFrameDot <= eqLeniency)
                     {
-                        if (currentState === EntityState.Idle)
+                        if (isStateNeutral(currentState))
                             ClientFunctions.Crouch(EntityState.Crouch);
                     }
                 }
