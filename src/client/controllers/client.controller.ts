@@ -4,12 +4,12 @@ import { ClientEvents } from "shared/network";
 
 export interface OnMatchRespawn
 {
-    onMatchRespawn(character: Model): void;
+    onMatchRespawn(character: Model & { Humanoid: Humanoid; }, player?: Player): void;
 }
 
 export interface OnRespawn
 {
-    onRespawn(character: Model): void;
+    onRespawn(character: Model & { Humanoid: Humanoid; }): void;
 }
 
 @Controller({
@@ -39,18 +39,14 @@ export class Client implements OnInit, OnRespawn
         {
             this.matchRespawnTrackers.forEach(async (l) =>
             {
-                print("oh naur...");
-                l.onMatchRespawn(characterModel);
+                l.onMatchRespawn(characterModel as never, Players.GetPlayerFromCharacter(characterModel));
             });
         });
 
         const onRespawn = (character: Model) =>
         {
             for (const listener of this.respawnTrackers)
-            {
-                print("i'm so confused:", listener);
-                listener.onRespawn(character);
-            }
+                listener.onRespawn(character as never);
         };
 
         Players.PlayerAdded.Connect((player) =>
