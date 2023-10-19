@@ -1,4 +1,4 @@
-import { Component } from "@flamework/components";
+import { Component, Components } from "@flamework/components";
 import { HttpService, Players, Workspace } from "@rbxts/services";
 import { ServerEvents } from "shared/network";
 import { Identifier } from "shared/util/identifier";
@@ -7,8 +7,10 @@ import { StateAttributes, StatefulComponent } from "./state.component";
 
 import { Entity as EntityNamespace } from "shared/components/entity.component";
 
+import { Dependency } from "@flamework/core";
 import Signal from "@rbxts/signal";
 import * as lib from "shared/util/lib";
+import { ControllerComponent } from "./controller.component";
 
 export interface EntityAttributes extends StateAttributes
 {
@@ -58,6 +60,8 @@ export class Entity<
 
     public readonly Died = new Signal<(killer: Entity) => void>();
 
+    protected readonly controller!: ControllerComponent;
+
     constructor()
     {
         super();
@@ -79,6 +83,13 @@ export class Entity<
         const leftLeg = this.instance.FindFirstChild("Left Leg") as BasePart;
         if (this.humanoid.HipHeight <= 0 && leftLeg)
             this.SetHipHeight(leftLeg.Size.Y);
+
+        this.controller = Dependency<Components>().addComponent(this.instance, ControllerComponent)!;
+    }
+
+    onStart(): void
+    {
+        super.onStart();
     }
 
     private tickDowns: Set<defined> = new Set();
@@ -187,8 +198,4 @@ export class Entity<
     public readonly humanoid = this.instance.WaitForChild("Humanoid") as Humanoid;
 
     public readonly entityId = HttpService.GenerateGUID(false);
-
-    public readonly baseWalkSpeed = 16;
-
-    public readonly sprintWalkSpeed = 24;
 }

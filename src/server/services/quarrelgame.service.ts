@@ -3,6 +3,7 @@ import { Controller, Dependency, Modding, OnInit, OnStart, Service } from "@flam
 import Make from "@rbxts/make";
 import { Players, ReplicatedStorage, StarterPlayer, Workspace } from "@rbxts/services";
 import { Participant } from "server/components/participant.component";
+import { ControllerComponent } from "shared/components/controller.component";
 
 import { ServerFunctions } from "shared/network";
 import Character from "shared/util/character";
@@ -85,6 +86,7 @@ export class QuarrelGame implements OnStart, OnInit
 
             player.CharacterAdded.Connect((character) =>
             {
+                Dependency<Components>().addComponent(character, ControllerComponent);
                 if (!character.Parent)
                     character.AncestryChanged.Once(() => reparentCharacter(character));
                 else
@@ -96,48 +98,6 @@ export class QuarrelGame implements OnStart, OnInit
                         Parent: character.WaitForChild("Humanoid"),
                     });
                 }
-
-                character.FindFirstChildWhichIsA("Humanoid")!.EvaluateStateMachine = false;
-                const ControllerManager = Make("ControllerManager", {
-                    RootPart: character.FindFirstChildWhichIsA("Humanoid")!.RootPart,
-                });
-
-                const GroundController = Make("GroundController", {
-                    Parent: ControllerManager,
-                });
-
-                const ClimbController = Make("ClimbController", {
-                    Parent: ControllerManager,
-                });
-
-                const AirController = Make("AirController", {
-                    Parent: ControllerManager,
-                });
-
-                const SwimController = Make("SwimController", {
-                    Parent: ControllerManager,
-                });
-
-                const ClimbSensor = Make("ControllerPartSensor", {
-                    Name: "ClimbSensor",
-                });
-
-                const GroundSensor = Make("ControllerPartSensor", {
-                    Name: "GroundSensor",
-                });
-
-                const SwimSensor = Make("BuoyancySensor", {
-                    Name: "SwimSensor",
-                });
-
-                ControllerManager.GroundSensor = GroundSensor;
-                ControllerManager.ClimbSensor = ClimbSensor;
-
-                SwimSensor.Parent = ControllerManager.RootPart;
-                ClimbSensor.Parent = ControllerManager.RootPart;
-                GroundSensor.Parent = ControllerManager.RootPart;
-
-                ControllerManager.Parent = character;
             });
         });
 

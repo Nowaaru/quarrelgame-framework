@@ -236,6 +236,7 @@ export namespace Entity
 
         onStart()
         {
+            super.onStart();
             this.SetDefaultState(EntityState.Idle);
             this.ResetState();
 
@@ -243,14 +244,14 @@ export namespace Entity
                 | BasePart
                 | undefined) ?? this.instance.PrimaryPart;
 
-            const zeroWalkSpeed = () => (this.humanoid.WalkSpeed = 0);
-            const slowButNotImmobile = () => (this.humanoid.WalkSpeed = 0.0125);
+            const slowButNotImmobile = () => (this.controller.SetRooted(true)),
+                zeroWalkSpeed = slowButNotImmobile;
 
             const onNeutral = () =>
             {
                 this.attributes.PreviousSkill = undefined;
                 this.attributes.Counter = undefined;
-                this.humanoid.WalkSpeed = this.baseWalkSpeed;
+                this.controller.SetRooted(false);
 
                 return true;
             };
