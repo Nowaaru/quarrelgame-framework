@@ -27,7 +27,7 @@ that can be used as *dependencies* or *superclasses* for your own modules. Some
 singletons are not meant to be used as a superclass; this will be described
 in the documentation and in the intellisense.
 
-The core of the client is the [Client]() controller. This controller has a variety of
+The core of the client is the [Client](src/client/controllers/client.controller.ts) controller. This controller has a variety of
 methods to handle players and their operations, like events and functions:
 
 ```typescript
@@ -38,10 +38,10 @@ export function ExampleFunction()
 }
 ````
 
-On the server, the core is represented through the [QuarrelGame]() service. The QuarrelGame
+On the server, the core is represented through the [QuarrelGame](src/services/quarrelgame.service.ts) service. The QuarrelGame
 service is a singleton that handles most events that need to be functional immediately
 when the framework starts. These events have a default functionality, but they can be modified as long
 as they return the same type as the default. The QuarrelGame service also is intended to automatically
-add components that are [integral to the background functionality of the framework](src/server/services).
+add components that are [integral to the background functionality of the framework](src/server/components).
 
-To see more regarding the usage of this package, please observe the [Quarrel Game](https://www.github.com/Nowaaru/quarrelgame)
+To see more regarding the usage of this package, please observe [Quarrel Game](https://www.github.com/Nowaaru/quarrelgame).
