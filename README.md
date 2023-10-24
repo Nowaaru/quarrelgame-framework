@@ -38,7 +38,7 @@ export function ExampleFunction()
 }
 ````
 
-On the server, the core is represented through the [QuarrelGame](src/services/quarrelgame.service.ts) service. The QuarrelGame
+On the server, the core is represented through the [QuarrelGame](src/server/services/quarrelgame.service.ts) service. The QuarrelGame
 service is a singleton that handles most events that need to be functional immediately
 when the framework starts. These events have a default functionality, but they can be modified as long
 as they return the same type as the default. The QuarrelGame service also is intended to automatically
