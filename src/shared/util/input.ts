@@ -87,29 +87,51 @@ export function ConvertMoveDirectionToMotion(moveDirection: Vector3): readonly [
 
     const moveDirectionMap: (readonly [Vector3, Motion])[] = ([
         [ new Vector3(0, 1, 0), Motion.Up ],
-        [ new Vector3(0, -1, 0), Motion.Down ],
-        [ new Vector3(0, 0, 0.5), Motion.Forward ],
         [ new Vector3(0, 0.5, 0.5), Motion.UpForward ],
-        [ new Vector3(0, 0, 0), Motion.Neutral ],
         [ new Vector3(0, 0.5, -0.5), Motion.UpBack ],
-        [ new Vector3(0, -0.5, -0.5), Motion.DownBack ],
+        [ new Vector3(0, -1, 0), Motion.Down ],
         [ new Vector3(0, -0.5, 0.5), Motion.DownForward ],
+        [ new Vector3(0, -0.5, -0.5), Motion.DownBack ],
+        [ new Vector3(0, 0, 0.5), Motion.Forward ],
+        [ new Vector3(0, 0, 0), Motion.Neutral ],
         [ new Vector3(0, 0, -1), Motion.Back ],
     ] as const).map((n) => [ n[0].Unit, n[1] ]);
 
-    for (const [ vector, motion ] of moveDirectionMap)
+    // const closest: [keyof typeof Motion, number] = [ Motion[Motion.Neutral] as keyof typeof Motion, 0 ];
+
+    // for (const [ vector, motion ] of moveDirectionMap)
+    // {
+    //     const dot = vector.Dot(moveDirection.Unit);
+    //     const [ closestMotion, closestDot ] = closest;
+    //
+    //     if (dot > closestDot)
+    //     {
+    //         // const out = [ Motion[motion] as keyof typeof Motion, vector.Dot(moveDirection.Unit) ] as const;
+    //         closest.clear();
+    //         closest.push(Motion[motion] as keyof typeof Motion, dot);
+    //
+    //         print(Motion[motion], ">", closestMotion, "::", dot);
+    //         // if (vector === Vector3.zero)
+    //         // return [ Motion[motion] as keyof typeof Motion, 0 ];
+    //
+    //         // return out;
+    //     }
+    // }
+
+    const closest = moveDirectionMap.reduce((acc, curr, idx) =>
     {
-        if (vector.Dot(moveDirection.Unit) > motionDirectionLeniency)
-        {
-            const out = [ Motion[motion] as keyof typeof Motion, vector.Dot(moveDirection.Unit) ] as const;
-            if (vector === Vector3.zero)
-                return [ Motion[motion] as keyof typeof Motion, 0 ];
+        const [ vector, motion ] = curr;
+        const [ vecAcc, dotAcc ] = acc;
+        const dotCurr = vector.Dot(moveDirection.Unit);
 
-            return out;
-        }
-    }
+        print("yeah:", dotCurr, dotAcc, moveDirection.Unit, Motion[motion]);
+        if (dotCurr > dotAcc)
+            return [ Motion[motion] as keyof typeof Motion, dotCurr ];
 
-    return [ Motion[Motion.Neutral] as keyof typeof Motion, Vector3.zero.Dot(moveDirection) ];
+        return acc;
+    }, [ Motion[Motion.Neutral] as keyof typeof Motion, 0 ]);
+
+    return closest as never; // [ Motion[Motion.Neutral] as keyof typeof Motion, Vector3.zero.Dot(moveDirection) ];
 }
 
 export const isCommandNormal = (attack: unknown[]): attack is [Motion, Input] => !!(Motion[attack[0] as Motion] && Input[attack[1] as never]) && attack.size() === 2;

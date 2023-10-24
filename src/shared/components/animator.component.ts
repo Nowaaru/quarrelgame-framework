@@ -1,5 +1,5 @@
 import { BaseComponent, Component } from "@flamework/components";
-import { Dependency, OnStart } from "@flamework/core";
+import { Dependency, OnStart, OnTick } from "@flamework/core";
 
 import { HttpService, Players, RunService } from "@rbxts/services";
 import { Animation } from "shared/util/animation";
@@ -10,6 +10,11 @@ import Make from "@rbxts/make";
 import Signal from "@rbxts/signal";
 import { CharacterSelectController } from "client/controllers/characterselect.controller";
 import { QuarrelGame } from "server/services/quarrelgame.service";
+
+// FIXME:
+// Fix bug that makes the character pause
+// before going back into their neutral
+// animation
 
 export namespace Animator
 {
@@ -66,7 +71,7 @@ export namespace Animator
     {}
 
     @Component({})
-    export class StateAnimator extends Animator<StateAnimatorProps> implements OnStart
+    export class StateAnimator extends Animator<StateAnimatorProps> implements OnStart, OnTick
     {
         private currentLoadedAnimation?: Animation.Animation;
 
@@ -83,10 +88,15 @@ export namespace Animator
             this.onAttributeChanged("State", (newState, oldState) => this.onStateChanged(newState));
         }
 
+        onTick(dt: number): void
+        {
+            if (this.paused)
+                print("paused...");
+        }
+
         private async onStateChanged(newState: AttributeValue)
         {
             const Characters = RunService.IsServer() ? Dependency<QuarrelGame>().characters : Dependency<CharacterSelectController>().characters;
-            print(this.instance.GetAttribute("CharacterId"), Characters);
             const selectedCharacter = Characters.get(
                 this.instance.GetAttribute("CharacterId") as string,
             );
@@ -107,38 +117,46 @@ export namespace Animator
                             newState as keyof typeof selectedCharacter.Animations
                         ]!,
                     );
-                    let animationWasInterrupted = false;
-                    if (this.currentLoadedAnimation)
-                    {
-                        if (
-                            newLoadedAnimation.Priority.Value >= this.currentLoadedAnimation.Priority.Value
-                        )
-                        {
-                            if (
-                                newLoadedAnimation.AnimationId !== this.currentLoadedAnimation.AnimationId
-                            )
-                            {
-                                animationWasInterrupted = true;
-                                this.currentLoadedAnimation.Stop({ fadeTime: 0 });
-                            }
-                        }
-
-                        if (
-                            newLoadedAnimation.Priority === Enum.AnimationPriority.Idle && this.currentLoadedAnimation.Priority === Enum.AnimationPriority.Movement
-                        )
-                        {
-                            animationWasInterrupted = true;
-                            this.currentLoadedAnimation.Stop({ fadeTime: 0.25 });
-                        }
-                    }
+                    const animationWasInterrupted = false;
 
                     if (
                         newLoadedAnimation.AnimationId !== this.currentLoadedAnimation?.AnimationId
                     )
                     {
+                        if (
+                            newLoadedAnimation.Priority.Value >= (this.currentLoadedAnimation?.Priority.Value ?? 0)
+                        )
+                        {
+                            if (
+                                newLoadedAnimation.AnimationId !== this.currentLoadedAnimation?.AnimationId
+                            )
+                            {
+                                // animationWasInterrupted = true;
+                                print("0.25 fadetime");
+                                this.currentLoadedAnimation?.Stop({ fadeTime: 0.25 });
+                            }
+                        }
+                        else
+                        {
+                            // print("0 fadetime");
+                            this.currentLoadedAnimation?.Stop({ fadeTime: 0.15 });
+                        }
+
+                        // if (
+                        //     newLoadedAnimation.Priority === Enum.AnimationPriority.Idle
+                        //     && this.currentLoadedAnimation?.Priority === Enum.AnimationPriority.Movement
+                        //     && !animationWasInterrupted
+                        // )
+                        // {
+                        //     animationWasInterrupted = true;
+                        //     this.currentLoadedAnimation.Stop({ fadeTime: 0.25 });
+                        // }
+
+                        const isBecomingNeutralish = [ EntityState.Idle, EntityState.Crouch ].includes(newState);
+
                         this.currentLoadedAnimation = newLoadedAnimation;
                         this.currentLoadedAnimation.Play({
-                            FadeTime: newState === EntityState.Idle && animationWasInterrupted ? 0.125 : undefined,
+                            FadeTime: isBecomingNeutralish ? 0 : (animationWasInterrupted ? 0 : undefined),
                         });
                     }
                 }
@@ -151,11 +169,12 @@ export namespace Animator
             if (!paused)
             {
                 this.Unpaused.Fire();
+                this.paused = false;
                 if (this.currentLoadedAnimation?.IsPaused())
                     this.currentLoadedAnimation?.Resume();
 
                 if (this.attributes.State !== this.pausedState)
-                    this.onStateChanged(this.attributes.State);
+                    task.spawn(() => this.onStateChanged(this.attributes.State));
             }
             else
             {

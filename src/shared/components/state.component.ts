@@ -24,7 +24,7 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
 
     private stateEffects: Map<EntityState, (oldState: EntityState) => void> = new Map();
 
-    public readonly StateChanged = new Signal<(oldState: EntityState, newState: EntityState) => void>();
+    public readonly StateChanged = new Signal<(oldState: EntityState, newState: EntityState, wasForced?: boolean) => void>();
 
     onStart()
     {
@@ -39,9 +39,7 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
     public SetStateEffect(state: EntityState, effect: (oldState: EntityState) => void)
     {
         if (this.stateEffects.has(state))
-        {
             warn(`StateEffect for state ${state} already exists (${effect}). Overwriting.`);
-        }
 
         this.stateEffects.set(state, effect);
     }
@@ -49,9 +47,7 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
     public SetStateGuard(state: EntityState, guard: () => boolean | void)
     {
         if (this.stateGuards.has(state))
-        {
             warn(`StateGuard for state ${state} already exists (${guard}). Overwriting.`);
-        }
 
         this.stateGuards.set(state, guard);
     }
@@ -59,6 +55,14 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
     public RemoveStateGuard(state: EntityState)
     {
         this.stateGuards.delete(state);
+    }
+
+    private doStateFunctions(state: EntityState, force = false)
+    {
+        this.StateChanged.Fire(this.GetState(), state, force);
+        this.attributes.State = state;
+
+        task.spawn(() => this.stateEffects.get(state)?.(this.GetState()));
     }
 
     public SetState(state: EntityState): boolean
@@ -75,14 +79,15 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
                 }
             }
 
-            this.StateChanged.Fire(this.GetState(), state);
-            this.stateEffects.get(state)?.(this.GetState());
-            this.attributes.State = state;
-
+            this.ForceState(state);
             return true;
         }
 
         return false;
+    }
+    public ForceState(state: EntityState): void
+    {
+        this.doStateFunctions(state, true);
     }
 
     public GetState(): EntityState
@@ -103,8 +108,6 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
     public ResetState()
     {
         if (this.defaultState !== undefined)
-        {
             this.SetState(this.defaultState);
-        }
     }
 }

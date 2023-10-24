@@ -26,7 +26,7 @@ export namespace MotionInput
         abstract GetInputsFilterNeutral(): (Motion | Input)[];
     }
 
-    export class MotionInput
+    export class MotionInput // TODO: implement partial motion-input matching
     {
         constructor(private character: Model & { Humanoid: Humanoid; })
         {}
@@ -56,7 +56,7 @@ export namespace MotionInput
 
         public GetInputs(padNeutral = true)
         {
-            if (padNeutral && this.inputs.size() === 1)
+            if (padNeutral && this.inputs[0] !== Motion.Neutral)
             {
                 const res = [ ...this.inputs ];
                 res.unshift(Motion[input.ConvertMoveDirectionToMotion(Dependency<MotionInputController>().getDirection())[0]]);

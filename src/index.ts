@@ -43,13 +43,12 @@ export * from "shared/util/lib";
 export * from "shared/util/model";
 export * from "shared/util/story";
 
-export * from "shared/components/animator.component";
-export * from "shared/components/rotator.component";
-export * from "shared/components/state.component";
-
 export * from "server/components/entity.component";
 export * from "server/components/map.component";
 export * from "server/components/participant.component";
+export * from "shared/components/animator.component";
+export * from "shared/components/rotator.component";
+export * from "shared/components/state.component";
 
 export { Entity as EntityBase, EntityAttributes } from "shared/components/entity.component";
 export { ClientEvents, ClientFunctions, ServerEvents, ServerFunctions } from "shared/network";

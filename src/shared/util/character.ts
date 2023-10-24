@@ -6,7 +6,7 @@ import { Animation } from "shared/util/animation";
 import { EntityState, HitboxRegion, HitData, HitResult } from "shared/util/lib";
 
 import { Hitbox } from "./hitbox";
-import { Input, Motion, MotionInput } from "./input";
+import { Input, isInput, Motion, MotionInput } from "./input";
 
 import { Dependency } from "@flamework/core";
 import { CharacterRigR6 as CharacterRigR6_ } from "@rbxts/promise-character";
@@ -81,9 +81,7 @@ export namespace Character
 
         characterSubheader?: string;
 
-        attacks: {
-            [k in Input]?: Skill.Skill | (() => Skill.Skill);
-        };
+        attacks: Map<MotionInput, Skill.Skill | (() => Skill.Skill)>;
     }
 
     interface CharacterProps2D extends CharacterProps
@@ -121,7 +119,7 @@ export namespace Character
 
         readonly Animations: Animations;
 
-        readonly Attacks: Readonly<CharacterProps["attacks"]>;
+        readonly Attacks: ReadonlyMap<MotionInput, Skill.Skill | (() => Skill.Skill)>;
 
         readonly RigType: CharacterRigType;
 
@@ -169,7 +167,7 @@ export namespace Character
 
         protected rigType: CharacterRigType = CharacterRigType.HumanoidDescription;
 
-        protected attacks: CharacterProps["attacks"] = {};
+        protected attacks: CharacterProps["attacks"] = new Map();
 
         protected characterArchetype: Archetype = Archetype.WellRounded;
 
@@ -227,9 +225,9 @@ export namespace Character
             return this;
         }
 
-        public SetAttack(animationId: keyof typeof this.attacks, skill: Skill.Skill)
+        public SetAttack(input: Input | MotionInput, skill: Skill.Skill | (() => Skill.Skill))
         {
-            this.attacks[animationId] = skill;
+            this.attacks.set(isInput(input) ? [ input ] : input, skill);
 
             return this;
         }
@@ -390,7 +388,11 @@ export namespace Skill
         >(entity: K, skill: Skill.Skill): Promise<HitData<Entity.EntityAttributes, I>>
         {
             const { animator } = entity;
+            const previousEntityState = [ EntityState.Idle, EntityState.Crouch ].includes(entity.GetState())
+                ? entity.GetState()
+                : EntityState.Idle;
 
+            print("prev entity state:", previousEntityState);
             this.AttackSetup?.(entity);
             assert(RunService.IsServer(), "Function is to be run on the server.");
             assert(this.Animation, "Builder incomplete! Animation not defined.");
@@ -418,11 +420,21 @@ export namespace Skill
                 }).then(async () =>
                 {
                     const schedulerService = Dependency<SchedulerService>();
+                    const waitFrames = async (frames: number) =>
+                    {
+                        const waiter = async () =>
+                        {
+                            for (let i = 0; i < frames; i++)
+                                await schedulerService.WaitForNextTick();
+                        };
+
+                        return Promise.any([ waiter(), Promise.fromEvent(animatorAnimation.Ended) ]);
+                    };
+
                     if (this.StartupFrames > 0)
                     {
                         entity.SetState(EntityState.Startup);
-                        for (let i = 0; i < this.StartupFrames; i++)
-                            await schedulerService.WaitForNextTick();
+                        await waitFrames(this.StartupFrames);
                     }
 
                     let attackDidLand = HitResult.Whiffed;
@@ -454,6 +466,7 @@ export namespace Skill
 
                                 return result;
                             };
+
                             if (AttackerIsBlocking)
                             {
                                 if (Attacked.IsState(EntityState.Crouch))
@@ -512,10 +525,8 @@ export namespace Skill
                             });
                         });
 
-                        for (let i = 0; i < this.ActiveFrames; i++)
-                            await schedulerService.WaitForNextTick();
-
-                        activeHitbox.Stop();
+                        await waitFrames(this.StartupFrames);
+                        Promise.try(() => activeHitbox.Stop());
                     }
 
                     if (this.RecoveryFrames > 0)
@@ -537,21 +548,28 @@ export namespace Skill
                             print("ouch, you whiffed...");
                         }
 
-                        for (let i = 0; i < this.RecoveryFrames; i++)
-                            await schedulerService.WaitForNextTick();
+                        // await Promise.fromEvent(animatorAnimation.Ended);
+                        // for (let i = 0; i < this.RecoveryFrames; i++)
+                        // {
+                        //     if (animatorAnimation.IsPlaying())
+                        //         await schedulerService.WaitForNextTick();
+                        // }
+                        await waitFrames(this.StartupFrames);
                     }
 
-                    entity.SetState(EntityState.Idle);
-                    if (animatorAnimation.IsPlaying())
-                    {
-                        return Promise.fromEvent(animatorAnimation.Ended)
-                            .then(() =>
-                                res({
-                                    attacker: entity,
-                                    hitResult: attackDidLand,
-                                })
-                            );
-                    }
+                    task.spawn(() => entity.ForceState(previousEntityState));
+
+                    print("current entity state:", EntityState[previousEntityState]);
+                    // if (animatorAnimation.IsPlaying())
+                    // {
+                    //     return Promise.fromEvent(animatorAnimation.Ended)
+                    //         .then(() =>
+                    //             res({
+                    //                 attacker: entity,
+                    //                 hitResult: attackDidLand,
+                    //             })
+                    //         );
+                    // }
 
                     return res({
                         attacker: entity,

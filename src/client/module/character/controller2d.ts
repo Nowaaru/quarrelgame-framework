@@ -134,13 +134,14 @@ export abstract class CharacterController2D extends CharacterController implemen
         const currentMotion = this.motionInputController.getMotionInputInProgress();
 
         const [ motion ] = ConvertMoveDirectionToMotion(playerDirection);
+
         if (this.lastFrameNormal !== playerDirection || !currentMotion || currentMotion[currentMotion.size() - 1] !== Motion[motion])
         {
             if (this.motionInputController.willTimeout())
                 this.motionInputController.clear();
 
             this.motionInputController.pushToMotionInput(Motion[motion]);
-            print(`${Motion[motion]} =>`, [ ...(currentMotion ?? [ Motion.Neutral ]), Motion[motion] ].map((n) => Motion[n]).join(", "));
+            print(`[${motion}, (${playerDirection})] =>`, [ ...(currentMotion ?? [ Motion.Neutral ]), Motion[motion] ].map((n) => Motion[n]).join(", "));
         }
 
         const currentLastFrameNormal = this.lastFrameNormal;
@@ -160,7 +161,6 @@ export abstract class CharacterController2D extends CharacterController implemen
             const eqLeniency = 0.5;
             const currentState = this.character.GetAttribute("State") as EntityState;
 
-            print("oh man :gooba:", playerDirection.Dot(bottomNormal), eqLeniency);
             if (playerDirection.Dot(bottomNormal) > eqLeniency)
             {
                 const lastFrameDot = currentLastFrameNormal.Dot(bottomNormal);

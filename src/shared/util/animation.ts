@@ -69,35 +69,26 @@ export namespace Animation
             this.AnimationTrack.Ended.Connect(() =>
             {
                 if (animator.attributes.ActiveAnimation === this.Id)
-                {
                     animator.attributes.ActiveAnimation = undefined;
-                }
 
                 this.Ended.Fire();
             });
 
-            const tickRate = GetTickRate();
-
             this.Loaded = new Promise<void>((res) =>
             {
                 while (!this.AnimationTrack)
-                {
                     task.wait();
-                }
 
                 if (this.AnimationTrack.Length > 0 ?? this.AnimationTrack.IsPropertyModified("Length"))
-                {
                     return res();
-                }
 
                 do
                 task.wait();
                 while (this.AnimationTrack.Length === 0);
 
+                const tickRate = GetTickRate();
                 if (tickRate)
-                {
                     this.GameLength = tickRate * this.AnimationTrack.Length;
-                }
 
                 return res();
             });
@@ -116,9 +107,7 @@ export namespace Animation
         public IsLoaded()
         {
             if (this.AnimationTrack.IsPropertyModified("Length"))
-            {
                 return true;
-            }
 
             return false;
         }
@@ -166,15 +155,11 @@ export namespace Animation
         public async Stop({ fadeTime, yieldFade }: { fadeTime?: number; yieldFade?: boolean; }): Promise<this>
         {
             if (this.animator.attributes.ActiveAnimation === this.Id)
-            {
                 this.animator.attributes.ActiveAnimation = undefined;
-            }
 
             this.AnimationTrack.Stop(fadeTime);
             if (yieldFade)
-            {
                 task.wait(fadeTime);
-            }
 
             return this;
         }
