@@ -1,3 +1,5 @@
+import Character, { Skill } from "./character";
+
 /**
  * The medium the User is using
  * to interact with the client.
@@ -80,21 +82,21 @@ export enum Motion
 }
 
 const motionDirectionLeniency = 0.85;
-export function ConvertMoveDirectionToMotion(moveDirection: Vector3): readonly [keyof typeof Motion, number]
+export function ConvertMoveDirectionToMotion(moveDirection: Vector3): readonly [motion: keyof typeof Motion, dot: number]
 {
     // -Z is forward (for some reason), fix that
     moveDirection = new Vector3(moveDirection.X, moveDirection.Y, -moveDirection.Z);
 
     const moveDirectionMap: (readonly [Vector3, Motion])[] = ([
-        [ new Vector3(0, 1, 0), Motion.Up ],
-        [ new Vector3(0, 0.5, 0.5), Motion.UpForward ],
-        [ new Vector3(0, 0.5, -0.5), Motion.UpBack ],
-        [ new Vector3(0, -1, 0), Motion.Down ],
-        [ new Vector3(0, -0.5, 0.5), Motion.DownForward ],
-        [ new Vector3(0, -0.5, -0.5), Motion.DownBack ],
-        [ new Vector3(0, 0, 0.5), Motion.Forward ],
-        [ new Vector3(0, 0, 0), Motion.Neutral ],
-        [ new Vector3(0, 0, -1), Motion.Back ],
+        [ new Vector3(0, 1), Motion.Up ],
+        [ new Vector3(0.5, 0.5), Motion.UpForward ],
+        [ new Vector3(-0.5, 0.5), Motion.UpBack ],
+        [ new Vector3(0, -1), Motion.Down ],
+        [ new Vector3(0.5, -0.5), Motion.DownForward ],
+        [ new Vector3(-0.5, -0.5), Motion.DownBack ],
+        [ new Vector3(0, 0), Motion.Neutral ],
+        [ new Vector3(0.5, 0), Motion.Forward ],
+        [ new Vector3(-0.5, 0), Motion.Back ],
     ] as const).map((n) => [ n[0].Unit, n[1] ]);
 
     // const closest: [keyof typeof Motion, number] = [ Motion[Motion.Neutral] as keyof typeof Motion, 0 ];
@@ -118,7 +120,7 @@ export function ConvertMoveDirectionToMotion(moveDirection: Vector3): readonly [
     //     }
     // }
 
-    const closest = moveDirectionMap.reduce((acc, curr, idx) =>
+    /* const clowosest = moveDirectionMap.reduce((acc, curr, idx) =>
     {
         const [ vector, motion ] = curr;
         const [ vecAcc, dotAcc ] = acc;
@@ -129,15 +131,85 @@ export function ConvertMoveDirectionToMotion(moveDirection: Vector3): readonly [
             return [ Motion[motion] as keyof typeof Motion, dotCurr ];
 
         return acc;
-    }, [ Motion[Motion.Neutral] as keyof typeof Motion, 0 ]);
+    }, [ Motion[Motion.Neutral] as keyof typeof Motion, 0 ]);*/
+
+    const closest = moveDirectionMap.map(([ vector, motion ]) =>
+    {
+        const dotCurr = vector.Dot(moveDirection.Unit);
+
+        return [ Motion[motion], dotCurr ] as const;
+    }).filter(([ , dot ]) => dot > 0).sort(([ , a ], [ , b ]) => a < b)
+        .reduce((acc, cur) =>
+        {
+            const [ , dot ] = cur;
+            if (dot > acc[1])
+                return cur;
+
+            return acc;
+        }, [ Motion[Motion.Neutral], 0 ] as readonly [string, number]);
+    // print("{", moveDirection, "} |", ...closest);
 
     return closest as never; // [ Motion[Motion.Neutral] as keyof typeof Motion, Vector3.zero.Dot(moveDirection) ];
+}
+
+function temporarySwap(array: unknown[])
+{
+    let left = undefined;
+    let right = undefined;
+    const length = array.size();
+    for (left = 0, right = length - 1; left < right; left += 1, right -= 1)
+    {
+        const temporary = array[left];
+        array[left] = array[right];
+        array[right] = temporary;
+    }
+
+    return array;
+}
+
+/**
+ * Search `character`'s skills and return an array of
+ * all skills that are similar to `motion`, sorted
+ * by heat and filtering non-correlating entries.
+ */
+export function validateMotion(input: (Motion | Input)[], character: Character.Character, minHeat: number = 2): Skill.Skill[] | undefined
+{
+    const { Skills } = character;
+    const reversedInput = temporarySwap(input);
+
+    const filteredSkills = [ ...Skills ].mapFiltered((skill) =>
+    {
+        const { MotionInput } = skill;
+        const reversedMotion = temporarySwap([ ...MotionInput ]);
+
+        let heat = 0;
+        for (const [ i, input ] of pairs(reversedInput))
+        {
+            // print("!!", reversedMotion[i - 1], input, reversedMotion.size(), "/", reversedInput.size());
+            if (reversedMotion[i - 1] === input)
+                heat++;
+        }
+
+        if (heat >= minHeat)
+            return [ heat, skill ] as const;
+
+        return undefined;
+    });
+
+    return filteredSkills.size() > 0 ? filteredSkills.map(([ , skill ]) => skill) : undefined;
 }
 
 export const isCommandNormal = (attack: unknown[]): attack is [Motion, Input] => !!(Motion[attack[0] as Motion] && Input[attack[1] as never]) && attack.size() === 2;
 export function isInput(input: unknown): input is Input
 {
     return !!Input[input as never];
+}
+export function GenerateRelativeVectorFromNormalId(
+    relativeTo: CFrame,
+    normal: Enum.NormalId,
+)
+{
+    return relativeTo.VectorToWorldSpace(Vector3.FromNormalId(normal));
 }
 
 export type MotionInput = Array<Motion | Input>;

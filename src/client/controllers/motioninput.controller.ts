@@ -1,7 +1,11 @@
 import { Controller, Dependency, OnInit, OnStart, OnTick } from "@flamework/core";
+import Make from "@rbxts/make";
+import { Workspace } from "@rbxts/services";
+import { CharacterController } from "client/module/character";
 import { HumanoidController } from "client/module/character/humanoid";
 import { InputMode, InputResult } from "shared/util/input";
 import * as input from "shared/util/input";
+import { NullifyYComponent } from "shared/util/lib";
 import { Client } from "./client.controller";
 import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
 
@@ -81,6 +85,8 @@ export namespace MotionInput
 
         private direction = Vector3.zero;
 
+        private characterController?: CharacterController;
+
         constructor(private readonly client: Client)
         {}
 
@@ -104,6 +110,91 @@ export namespace MotionInput
                     this.motionInputTimeout = -1;
                 }
             }
+        }
+
+        /**
+         * Bind the current character controller to the motion
+         * input controller.
+         *
+         * @param characterController The character controller to bind.
+         */
+        public BindController<T extends CharacterController>(characterController: T)
+        {
+            this.characterController = characterController;
+        }
+
+        /**
+         * Retrieve the motion direction from
+         * the current input device.
+         *
+         * Inverts the input depending on the {@link relativeTo}parameter.
+         *
+         * @param relativeTo The CFrame that determines how inputs are
+         * modified.
+         */
+        public GetMotionDirection(relativeTo: CFrame)
+        {
+            assert(this.characterController, "no character controller bound.");
+            const keyboardDirectionMap = this.characterController.GetKeybinds();
+            const keyboard = Dependency<Keyboard>();
+
+            let totalVector = Vector3.zero;
+
+            keyboardDirectionMap.forEach((normal, code) =>
+            {
+                if (keyboard.isKeyDown(code))
+                {
+                    const { Top, Bottom, Back: Left, Front: Right } = Enum.NormalId;
+                    const { character } = Dependency<Client>();
+                    if (character)
+                    {
+                        const { LookVector } = character.GetPivot();
+                        const facingUnit = NullifyYComponent(LookVector).Dot(NullifyYComponent(relativeTo.Position).Unit);
+                        const isFacingAway = facingUnit < 0;
+
+                        if (isFacingAway && ([ Left, Right ] as Enum.NormalId[]).includes(normal))
+                        {
+                            switch ( normal )
+                            {
+                                case Left:
+                                    normal = Right;
+                                    break;
+
+                                case Right:
+                                    normal = Left;
+                                    break;
+                            }
+                        }
+
+                        if (character.GetPivot().Y < relativeTo.Y && [ Top, Bottom ] as EnumItem[])
+                        {
+                            switch ( normal )
+                            {
+                                case Top:
+                                    normal = Bottom;
+                                    break;
+
+                                case Bottom:
+                                    normal = Top;
+                                    break;
+                            }
+                        }
+                    }
+
+                    if (relativeTo)
+                    {
+                        totalVector = totalVector.add(
+                            input.GenerateRelativeVectorFromNormalId(relativeTo, normal),
+                        );
+                    }
+                    else
+                    {
+                        totalVector = totalVector.add(Vector3.FromNormalId(normal));
+                    }
+                }
+            });
+
+            return totalVector.Magnitude > 0 ? totalVector.Unit : totalVector;
         }
 
         public setDirection(direction: Vector3)

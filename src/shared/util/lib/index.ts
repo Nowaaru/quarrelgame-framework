@@ -282,5 +282,19 @@ export const Jump = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BaseP
     return Promise.resolve(true);
 };
 
+/**
+ * Remove the Y component of a Vector or CFrame.
+ * Good for determining whether a character is facing another
+ * only on a specific set of axes.
+ */
+export function NullifyYComponent(item: CFrame): CFrame;
+export function NullifyYComponent(item: Vector3): Vector3;
+export function NullifyYComponent(
+    item: Vector3 | CFrame,
+): Vector3 | CFrame
+{
+    return (typeIs(item, "CFrame") ? new CFrame(item.Position.mul(new Vector3(1, 0, 1))).mul(item.Rotation) : item.mul(new Vector3(1, 0, 1)));
+}
+
 export { getEnumValues } from "shared/util/lib/other/enum";
 export type ForChild<A extends {}, T extends keyof A = keyof A> = (child: T) => A[T] extends Instance ? A[T] : never;

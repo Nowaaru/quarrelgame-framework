@@ -8,7 +8,7 @@ import { Physics } from "server/components/physics";
 import { ServerFunctions } from "shared/network";
 import { Character, Skill } from "shared/util/character";
 import { Hitbox } from "shared/util/hitbox";
-import { CommandNormal, Input, isCommandNormal, isInput, Motion, MotionInput } from "shared/util/input";
+import { CommandNormal, Input, isCommandNormal, isInput, Motion, MotionInput, validateMotion } from "shared/util/input";
 import { ConvertPercentageToNumber, EntityState, getEnumValues, HitboxRegion, HitResult } from "shared/util/lib";
 import { EffectsService } from "./effects.service";
 export interface OnHit
@@ -161,6 +161,8 @@ export class CombatService implements OnStart, OnInit
             else
                 attackSkillLike = getSkillFromMotionInput(player, input);
 
+            print("verified command inputs:", ...validateMotion(input, selectedCharacter) ?? []);
+
             const attackSkill = typeIs(attackSkillLike, "function") ? attackSkillLike() : attackSkillLike;
             if (attackSkill)
             {
@@ -211,7 +213,9 @@ export class CombatService implements OnStart, OnInit
                                 combatantComponent.ResetState();
                             }
                             else
+                            {
                                 print("state seems to have changed");
+                            }
                         });
                     }
                     else if (!skillDoesGatling)

@@ -9,16 +9,18 @@ import { Mouse } from "client/controllers/mouse.controller";
 import { CharacterController } from "client/module/character";
 import { CombatController2D } from "client/module/combat/combat2d";
 import { ClientFunctions } from "shared/network";
-import { ConvertMoveDirectionToMotion, Input, InputMode, InputResult, Motion } from "shared/util/input";
-import { EntityState, isStateNeutral } from "shared/util/lib";
+import { ConvertMoveDirectionToMotion, GenerateRelativeVectorFromNormalId, Input, InputMode, InputResult, Motion } from "shared/util/input";
+import { EntityState, isStateNeutral, NullifyYComponent, SessionType } from "shared/util/lib";
 
 import Make from "@rbxts/make";
+import Object from "@rbxts/object-utils";
 import { Players, Workspace } from "@rbxts/services";
 import { MatchController, OnArenaChange } from "client/controllers/match.controller";
 import { HumanoidController } from "client/module/character/humanoid";
 import type _Map from "server/components/map.component";
 import { Animator } from "shared/components/animator.component";
 import { StatefulComponent } from "shared/components/state.component";
+import { MatchData } from "shared/util/lib";
 
 interface ChangedSignals
 {
@@ -44,8 +46,8 @@ export abstract class CharacterController2D extends CharacterController implemen
     onArenaChanged(
         _: string,
         arenaInstance: Model & {
-            config: Required<_Map.ConfigurationToValue<_Map.ArenaConfiguration, Required<_Map.ArenaConfiguration>>>;
-            script?: (Actor & { [key: string]: ModuleScript; }) | undefined;
+            config: _Map.ConfigurationToValue;
+            script?: Actor | undefined;
             model: Folder;
         },
     ): void
@@ -107,16 +109,24 @@ export abstract class CharacterController2D extends CharacterController implemen
     private lastFrameNormal: Vector3 = Vector3.zero;
     onRender()
     {
-        if (!this.enabled)
+        const axis = this.axis,
+            character = this.character,
+            enabled = this.enabled,
+            match = this.matchController.GetMatchData();
+
+        if (!enabled)
             return;
 
-        if (!this.character)
-            return;
+        if (!character)
+            throw "no character";
 
-        if (!this.axis)
-            return;
+        if (!match)
+            throw "no match data";
 
-        const { X, Y, Z } = this.axis;
+        if (!axis)
+            throw "no axis";
+
+        const { X, Y, Z } = axis;
         if (this.alignPos?.Attachment0)
         {
             this.alignPos.Position = new Vector3(X, 0, Z);
@@ -125,23 +135,64 @@ export abstract class CharacterController2D extends CharacterController implemen
                 .mul(12000);
         }
 
-        const playerHumanoid = this.character.FindFirstChild("Humanoid") as
+        const playerHumanoid = character.FindFirstChild("Humanoid") as
             | Humanoid
             | undefined;
 
-        const axisDirection = CFrame.lookAt(Vector3.zero, this.axis);
-        const playerDirection = this.GetMoveDirection(axisDirection);
+        const axisDirection = CFrame.lookAt(Vector3.zero, axis);
+        let axisRotatedOrigin: CFrame;
+
+        const sessionType = match.Participants.size() > 1 ? SessionType.Multiplayer : SessionType.Singleplayer;
+        switch ( sessionType )
+        {
+            case (SessionType.Multiplayer):
+            {
+                if (match.Participants.size() === 2)
+                {
+                    const targetPlayer = Players.GetPlayers().find((e) =>
+                        e.GetAttribute("ParticipantId")
+                            === match.Participants.find(({ ParticipantId }) => ParticipantId !== this.player.GetAttribute("ParticipantId"))
+                    );
+
+                    assert(targetPlayer, "no target player");
+                    assert(targetPlayer.Character, "target player has no character");
+
+                    axisRotatedOrigin = CFrame.lookAt(
+                        NullifyYComponent(this.character!.GetPivot()).Position,
+                        NullifyYComponent(targetPlayer.Character.GetPivot()).Position,
+                    );
+
+                    print("playing multiplayer");
+                    break;
+                }
+
+                print("playing multiplayer with a lot of people");
+
+                /* falls through */
+            }
+
+            default:
+            {
+                const { Origin, Axis } = match.Arena.config;
+                const { Position } = Origin.Value;
+                axisRotatedOrigin = CFrame.lookAt(Position, Position.add(Axis.Value));
+            }
+        }
+
+        assert(axisRotatedOrigin, "no axis rotated origin");
+
+        const playerDirection = this.GetMoveDirection(axisRotatedOrigin);
+        const combatDirection = this.motionInputController.GetMotionDirection(axisRotatedOrigin);
         const currentMotion = this.motionInputController.getMotionInputInProgress();
+        const [ [ playerMotion ], [ combatMotion ] ] = [ playerDirection, combatDirection ].map(ConvertMoveDirectionToMotion);
 
-        const [ motion ] = ConvertMoveDirectionToMotion(playerDirection);
-
-        if (this.lastFrameNormal !== playerDirection || !currentMotion || currentMotion[currentMotion.size() - 1] !== Motion[motion])
+        if (this.lastFrameNormal !== playerDirection || !currentMotion || currentMotion[currentMotion.size() - 1] !== Motion[combatMotion])
         {
             if (this.motionInputController.willTimeout())
                 this.motionInputController.clear();
 
-            this.motionInputController.pushToMotionInput(Motion[motion]);
-            print(`[${motion}, (${playerDirection})] =>`, [ ...(currentMotion ?? [ Motion.Neutral ]), Motion[motion] ].map((n) => Motion[n]).join(", "));
+            this.motionInputController.pushToMotionInput(Motion[combatMotion]);
+            // print(`[${motion}, (${playerDirection})] =>`, [ ...(currentMotion ?? [ Motion.Neutral ]), Motion[motion] ].map((n) => Motion[n]).join(", "));
         }
 
         const currentLastFrameNormal = this.lastFrameNormal;
@@ -149,17 +200,17 @@ export abstract class CharacterController2D extends CharacterController implemen
         if (playerHumanoid)
         {
             playerHumanoid.AutoRotate = false;
-            const bottomNormal = this.GenerateRelativeVectorFromNormalId(
+            const bottomNormal = GenerateRelativeVectorFromNormalId(
                 axisDirection,
                 Enum.NormalId.Bottom,
             );
-            const topNormal = this.GenerateRelativeVectorFromNormalId(
+            const topNormal = GenerateRelativeVectorFromNormalId(
                 axisDirection,
                 Enum.NormalId.Top,
             );
 
             const eqLeniency = 0.5;
-            const currentState = this.character.GetAttribute("State") as EntityState;
+            const currentState = character.GetAttribute("State") as EntityState;
 
             if (playerDirection.Dot(bottomNormal) > eqLeniency)
             {

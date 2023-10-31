@@ -5,7 +5,7 @@ import { Gamepad, GamepadButtons, OnGamepadInput } from "client/controllers/game
 import { Keyboard } from "client/controllers/keyboard.controller";
 import { MatchController } from "client/controllers/match.controller";
 import { Mouse } from "client/controllers/mouse.controller";
-import { InputMode, InputResult } from "shared/util/input";
+import { GenerateRelativeVectorFromNormalId, InputMode, InputResult } from "shared/util/input";
 import { HumanoidController } from "./humanoid";
 
 export abstract class CharacterController implements OnGamepadInput, OnMatchRespawn
@@ -27,15 +27,8 @@ export abstract class CharacterController implements OnGamepadInput, OnMatchResp
 
     protected abstract readonly keyboardDirectionMap: Map<Enum.KeyCode, Enum.NormalId>;
 
-    protected GenerateRelativeVectorFromNormalId(
-        relativeTo: CFrame,
-        normal: Enum.NormalId,
-    )
-    {
-        return relativeTo.VectorToWorldSpace(Vector3.FromNormalId(normal));
-    }
-
-    public GetMoveDirection(relativeTo?: CFrame)
+    // TODO: fix bug where movedirection doesnt take into consideration the side the player is on
+    public GetMoveDirection(relativeTo: CFrame)
     {
         let totalVector = Vector3.zero;
         this.keyboardDirectionMap.forEach((normal, code) =>
@@ -45,7 +38,7 @@ export abstract class CharacterController implements OnGamepadInput, OnMatchResp
                 if (relativeTo)
                 {
                     totalVector = totalVector.add(
-                        this.GenerateRelativeVectorFromNormalId(relativeTo, normal),
+                        GenerateRelativeVectorFromNormalId(relativeTo, normal),
                     );
                 }
                 else
@@ -55,7 +48,7 @@ export abstract class CharacterController implements OnGamepadInput, OnMatchResp
             }
         });
 
-        return totalVector !== Vector3.zero ? totalVector.Unit : totalVector;
+        return totalVector.Magnitude > 0 ? totalVector.Unit : totalVector;
     }
 
     private theseMovementActions?: BoundActionInfo[];
@@ -83,6 +76,11 @@ export abstract class CharacterController implements OnGamepadInput, OnMatchResp
                 [],
             ),
         );
+    }
+
+    public GetKeybinds()
+    {
+        return new ReadonlyMap([ ...this.keyboardDirectionMap ]);
     }
 
     public EnableRobloxMovement()
