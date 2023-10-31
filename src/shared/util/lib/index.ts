@@ -3,8 +3,11 @@ import { Players, ReplicatedStorage, RunService } from "@rbxts/services";
 import { ClientFunctions } from "shared/network";
 
 import type { Entity } from "server/components/entity.component";
+import type MapNamespace from "server/components/map.component";
+import type { ParticipantAttributes } from "server/components/participant.component";
+import type { MatchPhase, MatchSettings, MatchState } from "server/services/matchservice.service";
 import type { SchedulerService } from "server/services/scheduler.service";
-import type Character from "../character";
+import type Character from "shared/util/character";
 
 export const QuarrelGameFolder = ReplicatedStorage.WaitForChild("QuarrelGame") as Folder;
 export const QuarrelCommands = QuarrelGameFolder.WaitForChild("QuarrelGame/cmdr") as Folder;
@@ -34,6 +37,42 @@ export enum SprintState
 {
     Walking,
     Sprinting,
+}
+
+export enum SessionType
+{
+    Singleplayer,
+    Multiplayer,
+}
+
+export interface MatchData
+{
+    /** The match's settings. */
+    Settings: MatchSettings;
+
+    /** The match's current state. */
+    Phase: MatchPhase;
+
+    /** The IDs of the match's current participants. */
+    Participants: Array<ParticipantAttributes>;
+
+    /** The match's current state. */
+    State: MatchState<
+        Entity.PlayerCombatantAttributes,
+        Entity.EntityAttributes
+    >;
+
+    /** The match's current map. */
+    Map: Folder;
+
+    /** The match's current arena. */
+    Arena: Model & {
+        model: Folder;
+        config: MapNamespace.ConfigurationToValue;
+        script?: Actor;
+    };
+
+    MatchId: string;
 }
 
 /**

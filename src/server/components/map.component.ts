@@ -54,7 +54,7 @@ namespace _Map
         /**
          * The configuration of the arena.
          */
-        readonly config?: ArenaConfiguration;
+        readonly config: ArenaConfiguration;
     }
 
     export interface ArenaConfiguration<T extends ArenaType = typeof ArenaType["2D"]>
@@ -117,26 +117,25 @@ namespace _Map
      */
     type ArenaScript = ModuleScript;
 
-    export type ConfigurationToValue<
-        T extends ArenaConfiguration = ArenaConfiguration,
-        CR = Required<T>,
-    > =
+    type ValueifyConfiguration<
+        T extends Required<ArenaConfiguration> = ArenaConfiguration,
+    > = {
+        [K in keyof T]: T[K] extends CFrame ? CFrameValue
+            : T[K] extends Vector3 ? Vector3Value
+            : T[K] extends Vector2 ? Vector3Value
+            : T[K] extends number ? NumberValue
+            : T[K] extends string ? StringValue
+            : T[K] extends boolean ? BoolValue
+            : T[K] extends Instance ? ObjectValue
+            : T[K] extends Color3 ? Color3Value
+            : K;
+    };
+    export type ConfigurationToValue =
         & Configuration
-        & {
-            [K in keyof CR]?: CR[K] extends CFrame ? CFrameValue
-                : CR[K] extends Vector3 ? Vector3Value
-                : CR[K] extends Vector2 ? Vector3Value
-                : CR[K] extends number ? NumberValue
-                : CR[K] extends string ? StringValue
-                : CR[K] extends boolean ? BoolValue
-                : CR[K] extends Instance ? ObjectValue
-                : CR[K] extends Color3 ? Color3Value
-                : K;
-        };
+        & (ValueifyConfiguration & Partial<ValueifyConfiguration>);
 
     export type Arena<
         T extends ArenaLike | (Model & { PrimaryPart: BasePart; }) = ArenaLike,
-        CR = Required<ArenaConfiguration>,
     > = T extends ArenaLike ? Model & {
             /**
              * The configuration of the arena.
@@ -148,9 +147,7 @@ namespace _Map
              * The list of scripts that will be loaded
              * in the arena. Must be Parallel Luau-friendly.
              */
-            script?: Actor & {
-                [key: string]: ArenaScript;
-            };
+            script?: Actor;
             model: Folder;
         }
         : Arena<ArenaLike & { model: T; }>;
@@ -296,7 +293,7 @@ namespace _Map
             entity: Entity,
         ): { arenaType: ArenaType; arenaIndex: number; } | undefined
         {
-            print(this.entityLocations, entity, this.entityLocations.get(entity));
+            // print(this.entityLocations, entity, this.entityLocations.get(entity));
             return this.entityLocations.get(entity);
         }
 

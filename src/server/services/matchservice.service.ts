@@ -4,7 +4,8 @@ import { Entity } from "server/components/entity.component";
 import { Client, ClientEvents, ServerEvents, ServerFunctions } from "shared/network";
 import { Identifier } from "shared/util/identifier";
 
-import { Participant } from "server/components/participant.component";
+import { Participant, ParticipantAttributes } from "server/components/participant.component";
+import { MatchData as SerializedMatchData } from "shared/util/lib";
 import { QuarrelGame } from "./quarrelgame.service";
 
 import Make from "@rbxts/make";
@@ -146,7 +147,7 @@ export interface MatchSettings
     ArenaType: number;
 }
 
-export interface MatchData
+interface MatchData
 {
     Participants: Participant[];
 
@@ -599,50 +600,47 @@ export class MatchService implements OnStart, OnInit
         });
     }
 
-    public SerializeMatch(thisParticipant: Participant, matchId: string)
+    public SerializeMatch(thisParticipant: Participant, matchId: string): SerializedMatchData
     {
         const ongoingMatch = this.GetOngoingMatch(
             matchId,
         );
-        if (ongoingMatch)
-        {
-            const currentMap = ongoingMatch.GetMap();
-            const currentLocation = currentMap.GetEntityLocation(
-                thisParticipant.entity!,
-            );
-            assert(currentLocation, `participant is not in an arena.`);
 
-            const matchParticipants = ongoingMatch.GetParticipants();
-            const matchEntitites = [ ...matchParticipants ].map(
-                (participant) => participant.entity as Entity.PlayerCombatant<Entity.PlayerCombatantAttributes>,
-            );
+        assert(ongoingMatch, "no ongoing match");
+        const currentMap = ongoingMatch.GetMap();
+        const currentLocation = currentMap.GetEntityLocation(
+            thisParticipant.entity!,
+        );
+        assert(currentLocation, `participant is not in an arena.`);
 
-            const thisArena = ongoingMatch
-                .GetMap()
-                .GetArenaFromIndex(
-                    currentLocation.arenaType,
-                    currentLocation.arenaIndex,
-                )!;
-            return {
-                Settings: ongoingMatch.GetMatchSettings(),
-                Arena: {
-                    instance: thisArena,
-                    config: thisArena.config,
-                },
-                Participants: [ ...matchParticipants ].map(
-                    (participant) => participant.attributes,
-                ),
-                State: {
-                    CombatantStates: matchEntitites.map((n) => n.attributes),
-                    EntityStates: [],
-                    Tick: -1,
-                    Time: -1,
-                },
-                Map: ongoingMatch.GetMap().instance,
-                Phase: ongoingMatch.GetMatchPhase(),
-                MatchId: matchId,
-            };
-        }
+        const matchParticipants = ongoingMatch.GetParticipants();
+        const matchEntitites = [ ...matchParticipants ].map(
+            (participant) => participant.entity as Entity.PlayerCombatant<Entity.PlayerCombatantAttributes>,
+        );
+
+        const thisArena = ongoingMatch
+            .GetMap()
+            .GetArenaFromIndex(
+                currentLocation.arenaType,
+                currentLocation.arenaIndex,
+            )! as SerializedMatchData["Arena"];
+
+        return {
+            Settings: ongoingMatch.GetMatchSettings(),
+            Arena: thisArena,
+            Participants: [ ...matchParticipants ].map<ParticipantAttributes>(
+                (participant) => participant.attributes,
+            ),
+            State: {
+                CombatantStates: matchEntitites.map((n) => n.attributes),
+                EntityStates: [],
+                Tick: -1,
+                Time: -1,
+            },
+            Map: ongoingMatch.GetMap().instance,
+            Phase: ongoingMatch.GetMatchPhase(),
+            MatchId: matchId,
+        };
     }
 
     onStart()

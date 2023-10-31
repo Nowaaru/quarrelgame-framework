@@ -73,7 +73,7 @@ export class MatchController implements OnStart, OnInit
         const thisMatch = this.GetCurrentMatch()!;
         assert(thisMatch !== undefined, "Current match is undefined.");
 
-        return thisMatch.Arena.instance as _Map.Arena;
+        return thisMatch.Arena;
     }
 
     private matchContainer = Workspace.WaitForChild("MapContainer") as Folder;

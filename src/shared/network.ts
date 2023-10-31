@@ -2,7 +2,7 @@ import { Networking } from "@flamework/networking";
 import { Input, Motion, MotionInput } from "./util/input";
 
 import type { MatchPhase, MatchSettings, MatchState } from "server/services/matchservice.service";
-import type { EntityState } from "./util/lib";
+import type { EntityState, MatchData } from "./util/lib";
 
 import type { Entity } from "server/components/entity.component";
 import type MapNamespace from "server/components/map.component";
@@ -127,35 +127,7 @@ export namespace Server
          *
          * @returns The match's current state.
          */
-        GetCurrentMatch():
-            | {
-                /** The match's settings. */
-                Settings: MatchSettings;
-
-                /** The match's current state. */
-                Phase: MatchPhase;
-
-                /** The IDs of the match's current participants. */
-                Participants: Array<ParticipantAttributes>;
-
-                /** The match's current state. */
-                State: MatchState<
-                    Entity.PlayerCombatantAttributes,
-                    Entity.EntityAttributes
-                >;
-
-                /** The match's current map. */
-                Map: Folder;
-
-                /** The match's current arena. */
-                Arena: {
-                    instance: Model;
-                    config: MapNamespace.Arena["config"];
-                };
-
-                MatchId: string;
-            }
-            | undefined;
+        GetCurrentMatch(): MatchData | undefined;
     }
 
     /**
