@@ -123,6 +123,11 @@ export namespace MotionInput
             this.characterController = characterController;
         }
 
+        public IsBound()
+        {
+            return !!this.characterController;
+        }
+
         /**
          * Retrieve the motion direction from
          * the current input device.

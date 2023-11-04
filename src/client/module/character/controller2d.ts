@@ -110,6 +110,7 @@ export abstract class CharacterController2D extends CharacterController implemen
     onRender()
     {
         const axis = this.axis,
+            bound = this.motionInputController.IsBound(),
             character = this.character,
             enabled = this.enabled,
             match = this.matchController.GetMatchData();
@@ -126,7 +127,10 @@ export abstract class CharacterController2D extends CharacterController implemen
         if (!axis)
             throw "no axis";
 
-        const { X, Y, Z } = axis;
+        if (!bound)
+            throw "not bound";
+
+        const { X, Z } = axis;
         if (this.alignPos?.Attachment0)
         {
             this.alignPos.Position = new Vector3(X, 0, Z);
@@ -180,7 +184,6 @@ export abstract class CharacterController2D extends CharacterController implemen
         }
 
         assert(axisRotatedOrigin, "no axis rotated origin");
-
         const playerDirection = this.GetMoveDirection(axisRotatedOrigin);
         const combatDirection = this.motionInputController.GetMotionDirection(axisRotatedOrigin);
         const currentMotion = this.motionInputController.getMotionInputInProgress();
