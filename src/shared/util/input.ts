@@ -81,58 +81,23 @@ export enum Motion
     UpForward = 9,
 }
 
-const motionDirectionLeniency = 0.85;
+const rawDirectionMap: (readonly [Vector3, Motion])[] = ([
+    [ new Vector3(0, 1), Motion.Up ],
+    [ new Vector3(0.5, 0.5), Motion.UpForward ],
+    [ new Vector3(-0.5, 0.5), Motion.UpBack ],
+    [ new Vector3(0, -1), Motion.Down ],
+    [ new Vector3(0.5, -0.5), Motion.DownForward ],
+    [ new Vector3(-0.5, -0.5), Motion.DownBack ],
+    [ new Vector3(0, 0), Motion.Neutral ],
+    [ new Vector3(0.5, 0), Motion.Forward ],
+    [ new Vector3(-0.5, 0), Motion.Back ],
+] as const).map((n) => [ n[0], n[1] ]);
+
+const moveDirectionMap: typeof rawDirectionMap = rawDirectionMap.map((n) => [ n[0].Unit, n[1] ]);
+
 export function ConvertMoveDirectionToMotion(moveDirection: Vector3): readonly [motion: keyof typeof Motion, dot: number]
 {
-    // -Z is forward (for some reason), fix that
     moveDirection = new Vector3(moveDirection.X, moveDirection.Y, -moveDirection.Z);
-
-    const moveDirectionMap: (readonly [Vector3, Motion])[] = ([
-        [ new Vector3(0, 1), Motion.Up ],
-        [ new Vector3(0.5, 0.5), Motion.UpForward ],
-        [ new Vector3(-0.5, 0.5), Motion.UpBack ],
-        [ new Vector3(0, -1), Motion.Down ],
-        [ new Vector3(0.5, -0.5), Motion.DownForward ],
-        [ new Vector3(-0.5, -0.5), Motion.DownBack ],
-        [ new Vector3(0, 0), Motion.Neutral ],
-        [ new Vector3(0.5, 0), Motion.Forward ],
-        [ new Vector3(-0.5, 0), Motion.Back ],
-    ] as const).map((n) => [ n[0].Unit, n[1] ]);
-
-    // const closest: [keyof typeof Motion, number] = [ Motion[Motion.Neutral] as keyof typeof Motion, 0 ];
-
-    // for (const [ vector, motion ] of moveDirectionMap)
-    // {
-    //     const dot = vector.Dot(moveDirection.Unit);
-    //     const [ closestMotion, closestDot ] = closest;
-    //
-    //     if (dot > closestDot)
-    //     {
-    //         // const out = [ Motion[motion] as keyof typeof Motion, vector.Dot(moveDirection.Unit) ] as const;
-    //         closest.clear();
-    //         closest.push(Motion[motion] as keyof typeof Motion, dot);
-    //
-    //         print(Motion[motion], ">", closestMotion, "::", dot);
-    //         // if (vector === Vector3.zero)
-    //         // return [ Motion[motion] as keyof typeof Motion, 0 ];
-    //
-    //         // return out;
-    //     }
-    // }
-
-    /* const clowosest = moveDirectionMap.reduce((acc, curr, idx) =>
-    {
-        const [ vector, motion ] = curr;
-        const [ vecAcc, dotAcc ] = acc;
-        const dotCurr = vector.Dot(moveDirection.Unit);
-
-        print("yeah:", dotCurr, dotAcc, moveDirection.Unit, Motion[motion]);
-        if (dotCurr > dotAcc)
-            return [ Motion[motion] as keyof typeof Motion, dotCurr ];
-
-        return acc;
-    }, [ Motion[Motion.Neutral] as keyof typeof Motion, 0 ]);*/
-
     const closest = moveDirectionMap.map(([ vector, motion ]) =>
     {
         const dotCurr = vector.Dot(moveDirection.Unit);
@@ -147,9 +112,19 @@ export function ConvertMoveDirectionToMotion(moveDirection: Vector3): readonly [
 
             return acc;
         }, [ Motion[Motion.Neutral], 0 ] as readonly [string, number]);
-    // print("{", moveDirection, "} |", ...closest);
 
-    return closest as never; // [ Motion[Motion.Neutral] as keyof typeof Motion, Vector3.zero.Dot(moveDirection) ];
+    return closest as never;
+}
+
+export function ConvertMotionToMoveDirection(motion: Motion): Vector3
+{
+    for (const [ moveDirection, value ] of rawDirectionMap)
+    {
+        if (motion === value)
+            return moveDirection;
+    }
+
+    return Vector3.zero;
 }
 
 function temporarySwap(array: unknown[])
