@@ -1,8 +1,9 @@
 import { Dependency, OnInit, OnStart } from "@flamework/core";
 import { assign, fromEntries } from "@rbxts/object-utils";
 import { fixedSizeHint } from "@rbxts/rust-classes/out/util/sizeHint";
-import { Client, OnMatchRespawn } from "client/controllers/client.controller";
+import { Client } from "client/controllers/client.controller";
 import { OnRespawn } from "client/controllers/client.controller";
+import { OnMatchRespawn } from "client/controllers/match.controller";
 import Character from "shared/util/character";
 
 export abstract class HumanoidController implements OnStart, OnMatchRespawn

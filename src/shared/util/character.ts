@@ -84,6 +84,39 @@ export namespace Character
         attacks: Map<MotionInput, Skill.Skill | (() => Skill.Skill)>;
     }
 
+    export enum CharacterEvent
+    {
+        SKILL_CAST,
+        METER,
+
+        DAMAGED,
+        HEALED,
+
+        ATTACK,
+        ANIMATION_START,
+        ANIMATION_END,
+    }
+
+    namespace CharacterEventSignatures
+    {
+        export type SkillCast = (skillId: string) => void;
+        export type Meter = (meter: number) => void;
+        export type Damaged = (healthOld: number, healthNew: number) => void;
+        export type Healed = (healthOld: number, healthNew: number) => void;
+        export type Attack = (attackId: string) => void;
+        export type AnimationStart = (animation: Animation.Animation) => void;
+        export type AnimationEnd = (animation: Animation.Animation) => void;
+    }
+
+    type CharacterEventSignature<T extends CharacterEvent> = T extends typeof CharacterEvent["SKILL_CAST"] ? CharacterEventSignatures.SkillCast
+        : T extends typeof CharacterEvent["METER"] ? CharacterEventSignatures.SkillCast
+        : T extends typeof CharacterEvent["DAMAGED"] ? CharacterEventSignatures.AnimationEnd
+        : T extends typeof CharacterEvent["HEALED"] ? CharacterEventSignatures.Healed
+        : T extends typeof CharacterEvent["ATTACK"] ? CharacterEventSignatures.Attack
+        : T extends typeof CharacterEvent["ANIMATION_START"] ? CharacterEventSignatures.AnimationStart
+        : T extends typeof CharacterEvent["ANIMATION_END"] ? CharacterEventSignatures.AnimationEnd
+        : never;
+
     interface CharacterProps2D extends CharacterProps
     {
         character3D?: CharacterProps3D;
@@ -414,10 +447,7 @@ export namespace Skill
 
             return new Promise((res) =>
             {
-                return animatorAnimation.Play({
-                    FadeTime: 0,
-                    Weight: 10,
-                }).then(async () =>
+                const playAnimation = async () =>
                 {
                     const schedulerService = Dependency<SchedulerService>();
                     const waitFrames = async (frames: number) =>
@@ -441,9 +471,17 @@ export namespace Skill
 
                     if (this.ActiveFrames > 0)
                     {
+                        let onContact: RBXScriptConnection | void;
+                        Promise.try(async () =>
+                        {
+                            await waitFrames(this.ActiveFrames);
+                            activeHitbox.Stop();
+                            onContact = onContact?.Disconnect();
+                        });
+
                         entity.SetState(EntityState.Attack);
                         const activeHitbox = this.Hitbox.Initialize(entity.GetPrimaryPart(), skill);
-                        activeHitbox.Contact.Connect(({
+                        onContact = activeHitbox.Contact.Connect(({
                             Attacker,
                             Attacked,
 
@@ -456,7 +494,7 @@ export namespace Skill
                                 if (result === HitResult.Counter)
                                 {
                                     if (!skill.CanCounter)
-                                        return HitResult.Contact;
+                                        return attackDidLand = HitResult.Contact;
                                 }
                                 else if (result === HitResult.Contact)
                                 {
@@ -464,7 +502,7 @@ export namespace Skill
                                         return setLandState(HitResult.Counter);
                                 }
 
-                                return result;
+                                return attackDidLand = result;
                             };
 
                             if (AttackerIsBlocking)
@@ -524,37 +562,33 @@ export namespace Skill
                                 attacked: Attacked,
                             });
                         });
-
-                        await waitFrames(this.StartupFrames);
-                        Promise.try(() => activeHitbox.Stop());
                     }
 
                     if (this.RecoveryFrames > 0)
                     {
-                        entity.SetState(EntityState.Recovery);
                         if (attackDidLand !== HitResult.Whiffed)
                         {
                             let addedFrames = 0;
                             if (attackDidLand === HitResult.Blocked)
                                 addedFrames += this.BlockStunFrames;
 
-                            res({
+                            task.spawn(() => entity.ForceState(previousEntityState));
+                            return res({
                                 hitResult: attackDidLand,
                                 attacker: entity,
                             });
                         }
-                        else
-                        {
-                            print("ouch, you whiffed...");
-                        }
 
+                        task.spawn(() => entity.SetState(EntityState.Recovery));
                         // await Promise.fromEvent(animatorAnimation.Ended);
                         // for (let i = 0; i < this.RecoveryFrames; i++)
                         // {
                         //     if (animatorAnimation.IsPlaying())
                         //         await schedulerService.WaitForNextTick();
                         // }
-                        await waitFrames(this.StartupFrames);
+                        print("waiting frames");
+                        await waitFrames(this.RecoveryFrames);
+                        print("done waiting");
                     }
 
                     task.spawn(() => entity.ForceState(previousEntityState));
@@ -575,7 +609,17 @@ export namespace Skill
                         attacker: entity,
                         hitResult: attackDidLand,
                     });
+                };
+
+                task.spawn(() =>
+                {
+                    animatorAnimation.Play({
+                        FadeTime: 0,
+                        // Weight: 4,
+                    });
                 });
+
+                playAnimation();
             });
         }
     }

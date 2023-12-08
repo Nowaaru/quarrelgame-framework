@@ -4,12 +4,20 @@ import Roact from "@rbxts/roact";
 import CharacterSelect from "client/ui/characterselect";
 
 import { Controller, OnInit, OnStart } from "@flamework/core";
+import { Players } from "@rbxts/services";
 import { ClientFunctions } from "shared/network";
 import { Character } from "shared/util/character";
 import { Client } from "./client.controller";
-import { Players } from "@rbxts/services";
 
-@Controller({})
+/*
+ * The controller responsible for handling character selection
+ * and attributing the selected character to the Client.
+ *
+ * Has a priority of 1.
+ */
+@Controller({
+    loadOrder: 1,
+})
 export class CharacterSelectController implements OnStart, OnInit
 {
     private currentCharacterSelect?: Roact.Tree;

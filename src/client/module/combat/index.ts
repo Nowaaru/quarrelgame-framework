@@ -1,11 +1,11 @@
 import { Players } from "@rbxts/services";
-import { OnMatchRespawn } from "client/controllers/client.controller";
+import { OnMatchRespawn } from "client/controllers/match.controller";
 import { Character } from "shared/util/character";
 
 import { Components } from "@flamework/components";
 import { Dependency } from "@flamework/core";
-import { Input, InputMode, InputResult } from "shared/util/input";
 import { CharacterSelectController } from "client/controllers/characterselect.controller";
+import { Input, InputMode, InputResult } from "shared/util/input";
 
 export abstract class CombatController implements OnMatchRespawn
 {

@@ -8,8 +8,14 @@ interface OnAssetLoad
     onAssetLoaded?(assetId: string): void;
 }
 
+/**
+ * The controller responsible for handling
+ * resource loading and general management.
+ *
+ * Has a priority of -65536.
+ */
 @Controller({
-    loadOrder: 1,
+    loadOrder: -(2 ** 16),
 })
 export class ResourceController implements OnAssetLoad
 {

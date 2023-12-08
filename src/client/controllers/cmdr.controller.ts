@@ -1,7 +1,15 @@
 import { Controller, OnInit, OnStart } from "@flamework/core";
 import { CmdrClient } from "@rbxts/cmdr";
 
-@Controller({})
+/*
+ * The controller responsible for handling the
+ * command backend for the framework. Utilizes `@rbxts/cmdr`.
+ *
+ * Has a priority of -1.
+ */
+@Controller({
+    loadOrder: -1,
+})
 export class CommandController implements OnInit
 {
     private activationKeys: Enum.KeyCode[] = new Array<Enum.KeyCode>();

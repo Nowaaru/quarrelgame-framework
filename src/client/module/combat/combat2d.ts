@@ -1,43 +1,23 @@
 import { Components } from "@flamework/components";
-import { Controller, Dependency, OnInit, OnStart } from "@flamework/core";
+import { Dependency } from "@flamework/core";
 import { MotionInput } from "client/controllers/motioninput.controller";
 import { CombatController } from "client/module/combat";
 import { Animator } from "shared/components/animator.component";
-import { Client, ClientEvents, ClientFunctions } from "shared/network";
+import { ClientFunctions } from "shared/network";
 import { Input, InputMode, InputResult, Motion } from "shared/util/input";
-import { EntityState } from "shared/util/lib";
 
-import { Players } from "@rbxts/services";
+import Object from "@rbxts/object-utils";
 import { CharacterSelectController } from "client/controllers/characterselect.controller";
 import { OnKeyboardInput } from "client/controllers/keyboard.controller";
+import { OnMatchRespawn } from "client/controllers/match.controller";
 import Character from "shared/util/character";
 import { CameraController2D } from "../camera/camera2d";
 
-export abstract class CombatController2D extends CombatController implements OnInit, OnKeyboardInput
+export abstract class CombatController2D extends CombatController implements OnKeyboardInput, OnMatchRespawn
 {
     constructor(protected readonly motionInputController: MotionInput.MotionInputController, protected readonly cameraController2D: CameraController2D)
     {
         super();
-    }
-
-    onInit()
-    {
-        /*
-        ClientEvents.SetCombatMode.connect(async (combatMode) =>
-        {
-            if (combatMode === Client.CombatMode.TwoDimensional)
-            {
-                const thisMatch = await ClientFunctions.GetCurrentMatch();
-                assert(thisMatch, "no match found");
-
-                this.cameraController2D.SetCameraEnabled(true);
-                this.cameraController2D.SetParticipants(...[ ...thisMatch.Participants.mapFiltered(({ ParticipantId }) =>
-                {
-                    return Players.GetPlayers().find((p) => p.GetAttribute("ParticipantId") === ParticipantId)?.Character;
-                }) * ... entity model support here ... * ]);
-            }
-        });
-        */
     }
 
     protected keybindMap: Map<Enum.KeyCode, Input> = new Map();
@@ -59,7 +39,6 @@ export abstract class CombatController2D extends CombatController implements OnI
             return false;
 
         const Characters = Dependency<CharacterSelectController>().characters;
-        print("button:", buttonPressed, "character:", this.character, "sc:", this.selectedCharacter);
         const buttonType = this.keybindMap.get(buttonPressed);
         if (!this.character)
             return InputResult.Fail;
@@ -75,7 +54,6 @@ export abstract class CombatController2D extends CombatController implements OnI
 
             const lockedMotionInput = this.motionInputController.pushToMotionInput(buttonType)!;
             const inputMotion = lockedMotionInput.GetInputsFilterNeutral();
-            print("inputMotion", inputMotion);
 
             if (inputMotion.size() === 1)
             { // this likely means that it's a neutral input
@@ -95,9 +73,13 @@ export abstract class CombatController2D extends CombatController implements OnI
         return InputResult.Fail;
     }
 
+    public GetKeybinds()
+    {
+        return new ReadonlyMap(Object.entries(this.keybindMap));
+    }
+
     onKeyboardInput(buttonPressed: Enum.KeyCode, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult)
     {
-        print("enabled:", this.IsEnabled());
         if (!this.IsEnabled())
             return false;
 

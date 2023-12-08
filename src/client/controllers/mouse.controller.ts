@@ -50,6 +50,12 @@ export enum LockType
     Current,
 }
 
+/*
+ * The controller responsible for handling mouse
+ * inputs.
+ *
+ * Has a load order of 1.
+ */
 @Controller({
     loadOrder: 1,
 })

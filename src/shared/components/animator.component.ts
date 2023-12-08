@@ -118,47 +118,49 @@ export namespace Animator
                         ]!,
                     );
                     const animationWasInterrupted = false;
-
-                    if (
-                        newLoadedAnimation.AnimationId !== this.currentLoadedAnimation?.AnimationId
-                    )
+                    if (this.currentLoadedAnimation?.IsPlaying())
                     {
                         if (
-                            newLoadedAnimation.Priority.Value >= (this.currentLoadedAnimation?.Priority.Value ?? 0)
+                            newLoadedAnimation.AnimationId !== this.currentLoadedAnimation?.AnimationId
                         )
                         {
                             if (
-                                newLoadedAnimation.AnimationId !== this.currentLoadedAnimation?.AnimationId
+                                newLoadedAnimation.Priority.Value >= (this.currentLoadedAnimation?.Priority.Value ?? 0)
                             )
                             {
-                                // animationWasInterrupted = true;
-                                print("0.25 fadetime");
-                                this.currentLoadedAnimation?.Stop({ fadeTime: 0.25 });
+                                if (
+                                    newLoadedAnimation.AnimationId !== this.currentLoadedAnimation?.AnimationId
+                                )
+                                {
+                                    // animationWasInterrupted = true;
+                                    print("0.25 fadetime");
+                                    this.currentLoadedAnimation?.Stop({ fadeTime: 0.25 });
+                                }
                             }
+                            else
+                            {
+                                // print("0 fadetime");
+                                this.currentLoadedAnimation?.Stop({ fadeTime: 0.15 });
+                            }
+
+                            // if (
+                            //     newLoadedAnimation.Priority === Enum.AnimationPriority.Idle
+                            //     && this.currentLoadedAnimation?.Priority === Enum.AnimationPriority.Movement
+                            //     && !animationWasInterrupted
+                            // )
+                            // {
+                            //     animationWasInterrupted = true;
+                            //     this.currentLoadedAnimation.Stop({ fadeTime: 0.25 });
+                            // }
                         }
-                        else
-                        {
-                            // print("0 fadetime");
-                            this.currentLoadedAnimation?.Stop({ fadeTime: 0.15 });
-                        }
-
-                        // if (
-                        //     newLoadedAnimation.Priority === Enum.AnimationPriority.Idle
-                        //     && this.currentLoadedAnimation?.Priority === Enum.AnimationPriority.Movement
-                        //     && !animationWasInterrupted
-                        // )
-                        // {
-                        //     animationWasInterrupted = true;
-                        //     this.currentLoadedAnimation.Stop({ fadeTime: 0.25 });
-                        // }
-
-                        const isBecomingNeutralish = [ EntityState.Idle, EntityState.Crouch ].includes(newState);
-
-                        this.currentLoadedAnimation = newLoadedAnimation;
-                        this.currentLoadedAnimation.Play({
-                            FadeTime: isBecomingNeutralish ? 0 : (animationWasInterrupted ? 0 : undefined),
-                        });
                     }
+
+                    const isBecomingNeutralish = [ EntityState.Idle, EntityState.Crouch ].includes(newState);
+
+                    this.currentLoadedAnimation = newLoadedAnimation;
+                    this.currentLoadedAnimation.Play({
+                        FadeTime: isBecomingNeutralish ? 0 : (animationWasInterrupted ? 0 : undefined),
+                    }).then(() => print("oh yeah we playing"));
                 }
             }
         }

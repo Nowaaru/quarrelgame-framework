@@ -1,8 +1,8 @@
 import Make from "@rbxts/make";
 import { ContextActionService, Players } from "@rbxts/services";
-import { OnMatchRespawn } from "client/controllers/client.controller";
 import { Gamepad, GamepadButtons, OnGamepadInput } from "client/controllers/gamepad.controller";
 import { Keyboard } from "client/controllers/keyboard.controller";
+import { OnMatchRespawn } from "client/controllers/match.controller";
 import { MatchController } from "client/controllers/match.controller";
 import { Mouse } from "client/controllers/mouse.controller";
 import { GenerateRelativeVectorFromNormalId, InputMode, InputResult } from "shared/util/input";

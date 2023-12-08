@@ -10,6 +10,12 @@ export interface OnKeyboardInput
     onProcessedKeyboardInput?: OnKeyboardInput["onKeyboardInput"];
 }
 
+/*
+ * The controller responsible for handling keyboard
+ * inputs.
+ *
+ * Has a load order of 1.
+ */
 @Controller({
     loadOrder: 1,
 })

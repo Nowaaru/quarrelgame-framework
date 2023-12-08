@@ -2,46 +2,31 @@ import { Controller, Modding, OnInit, OnStart } from "@flamework/core";
 import { Players, StarterGui } from "@rbxts/services";
 import { ClientEvents } from "shared/network";
 
-export interface OnMatchRespawn
-{
-    onMatchRespawn(character: Model & { Humanoid: Humanoid; }, player?: Player): void;
-}
-
 export interface OnRespawn
 {
     onRespawn(character: Model & { Humanoid: Humanoid; }): void;
 }
 
+/*
+ * The controller that is responsible for handling
+ * client-related events.
+ *
+ * Has a priority of negative "infinity."
+ */
 @Controller({
     loadOrder: -math.huge,
 })
 export class Client implements OnInit, OnRespawn
 {
-    private matchRespawnTrackers: Set<OnMatchRespawn> = new Set();
     private respawnTrackers: Set<OnRespawn> = new Set();
 
     constructor()
     {}
 
-    // FIXME: currently there is a massive bug where onMatchRespawn functions
-    // made for the local player runs because of other participants respawning.
-    // should be an easy fix
-
     onInit()
     {
-        Modding.onListenerAdded<OnMatchRespawn>((a) => this.matchRespawnTrackers.add(a));
-        Modding.onListenerRemoved<OnMatchRespawn>((a) => this.matchRespawnTrackers.delete(a));
-
         Modding.onListenerAdded<OnRespawn>((a) => this.respawnTrackers.add(a));
         Modding.onListenerRemoved<OnRespawn>((a) => this.respawnTrackers.delete(a));
-
-        ClientEvents.MatchParticipantRespawned.connect((characterModel) =>
-        {
-            this.matchRespawnTrackers.forEach(async (l) =>
-            {
-                l.onMatchRespawn(characterModel as never, Players.GetPlayerFromCharacter(characterModel));
-            });
-        });
 
         const onRespawn = (character: Model) =>
         {

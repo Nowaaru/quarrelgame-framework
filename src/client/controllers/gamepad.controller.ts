@@ -31,6 +31,10 @@ export type GamepadButtons =
 
 /**
  * @module Gamepad/Gamepad
+ * The controller responsible for handling gamepad
+ * inputs.
+ *
+ * Has a load order of 1.
  */
 @Controller({
     loadOrder: 1,

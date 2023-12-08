@@ -12,6 +12,7 @@ import { Physics } from "./physics";
 import { QuarrelGame } from "server/services/quarrelgame.service";
 import * as entityExport from "shared/components/entity.component";
 import { ServerEvents, ServerFunctions } from "shared/network";
+import type { Skill } from "shared/util/character";
 import { Input } from "shared/util/input";
 import * as lib from "shared/util/lib";
 enum RotationMode
@@ -27,6 +28,8 @@ export namespace Entity
     export import EntityState = lib.EntityState;
 
     export import Entity = entityExport.Entity;
+
+    export import EntityEvent = entityExport.EntityEvent;
 
     @Component({})
     export class EntityContainer extends BaseComponent<{}, Folder> implements OnStart

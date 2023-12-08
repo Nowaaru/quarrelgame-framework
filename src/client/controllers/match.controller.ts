@@ -15,8 +15,20 @@ export interface OnMatchStart
     onMatchStart(matchId: string, matchData: ReturnType<Server.Functions["GetCurrentMatch"]>): void;
 }
 
+export interface OnMatchRespawn
+{
+    onMatchRespawn(character: Model & { Humanoid: Humanoid; }, player?: Player): void;
+}
+
+/**
+ * The controller responsible for
+ * handling the match requests sent
+ * by the server.
+ *
+ * Has a priority of 2.
+ */
 @Controller({
-    loadOrder: -1,
+    loadOrder: 2,
 })
 export class MatchController implements OnStart, OnInit
 {
@@ -24,11 +36,24 @@ export class MatchController implements OnStart, OnInit
 
     private matchData: ReturnType<Server.Functions["GetCurrentMatch"]>;
 
+    private matchRespawnTrackers: Set<OnMatchRespawn> = new Set();
+
     onStart()
     {
+        // FIXME: currently there is a massive bug where onMatchRespawn functions
+        // made for the local player runs because of other participants respawning.
+        // should be an easy fix
+        ClientEvents.MatchParticipantRespawned.connect((characterModel) =>
+        {
+            this.matchRespawnTrackers.forEach(async (l) =>
+            {
+                l.onMatchRespawn(characterModel as never, Players.GetPlayerFromCharacter(characterModel));
+            });
+        });
+
         ClientEvents.ArenaChanged.connect((mapId, arenaId) =>
         {
-            const currentMatch = this.GetCurrentMatch();
+            const currentMatch = this.RequestCurrentMatch();
             if (currentMatch === undefined)
             {
                 this.matchData = undefined;
@@ -42,6 +67,10 @@ export class MatchController implements OnStart, OnInit
         });
     }
 
+    onMatchRespawn()
+    {
+    }
+
     onInit()
     {
         ClientEvents.MatchParticipantRespawned.connect((characterModel) =>
@@ -52,6 +81,9 @@ export class MatchController implements OnStart, OnInit
 
         Modding.onListenerAdded<OnArenaChange>((l) => this.arenaChangedHandlers.add(l));
         Modding.onListenerRemoved<OnArenaChange>((l) => this.arenaChangedHandlers.delete(l));
+
+        Modding.onListenerAdded<OnMatchRespawn>((a) => this.matchRespawnTrackers.add(a));
+        Modding.onListenerRemoved<OnMatchRespawn>((a) => this.matchRespawnTrackers.delete(a));
     }
 
     public GetMatchData()
@@ -60,17 +92,17 @@ export class MatchController implements OnStart, OnInit
     }
 
     /**
-     * Get the current match data freshly requested from the server.
+     * Request the current match data freshly requested from the server.
      * @returns The current match.
      */
-    public GetCurrentMatch()
+    public RequestCurrentMatch()
     {
         return ClientFunctions.GetCurrentMatch().await()[1] as ReturnType<Server.Functions["GetCurrentMatch"]>;
     }
 
     public GetCurrentArena(): _Map.Arena | undefined
     {
-        const thisMatch = this.GetCurrentMatch()!;
+        const thisMatch = this.matchData;
         assert(thisMatch !== undefined, "Current match is undefined.");
 
         return thisMatch.Arena;

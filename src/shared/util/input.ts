@@ -82,10 +82,10 @@ export enum Motion
 }
 
 const rawDirectionMap: (readonly [Vector3, Motion])[] = ([
-    [ new Vector3(0, 1), Motion.Up ],
+    [ new Vector3(0, 0.5), Motion.Up ],
     [ new Vector3(0.5, 0.5), Motion.UpForward ],
     [ new Vector3(-0.5, 0.5), Motion.UpBack ],
-    [ new Vector3(0, -1), Motion.Down ],
+    [ new Vector3(0, -0.5), Motion.Down ],
     [ new Vector3(0.5, -0.5), Motion.DownForward ],
     [ new Vector3(-0.5, -0.5), Motion.DownBack ],
     [ new Vector3(0, 0), Motion.Neutral ],
@@ -146,6 +146,10 @@ function temporarySwap(array: unknown[])
  * Search `character`'s skills and return an array of
  * all skills that are similar to `motion`, sorted
  * by heat and filtering non-correlating entries.
+ *
+ * TODO: Check for general cardinal direction navigation by
+ * looking for specific directions within the non-cardinal
+ * directions (S/NW, S/NE), DownLeft should qualify for Down and Left.
  */
 export function validateMotion(input: (Motion | Input)[], character: Character.Character, minHeat: number = 2): Skill.Skill[] | undefined
 {

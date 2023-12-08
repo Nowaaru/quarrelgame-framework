@@ -59,10 +59,12 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
 
     private doStateFunctions(state: EntityState, force = false)
     {
-        this.StateChanged.Fire(this.GetState(), state, force);
-        this.attributes.State = state;
+        task.spawn(() => {
 
-        task.spawn(() => this.stateEffects.get(state)?.(this.GetState()));
+            this.StateChanged.Fire(this.GetState(), state, force);
+            this.attributes.State = state;
+            this.stateEffects.get(state)?.(this.GetState());
+        });
     }
 
     public SetState(state: EntityState): boolean

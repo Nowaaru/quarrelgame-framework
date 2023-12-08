@@ -1,6 +1,6 @@
 import { OnInit, OnPhysics } from "@flamework/core";
 import { Players, Workspace } from "@rbxts/services";
-import { OnMatchRespawn } from "client/controllers/client.controller";
+import { OnMatchRespawn } from "client/controllers/match.controller";
 import { CameraController, CameraFacing } from "client/module/camera";
 import { ClientFunctions } from "shared/network";
 

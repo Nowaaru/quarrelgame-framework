@@ -3,7 +3,7 @@ import Make from "@rbxts/make";
 import { Workspace } from "@rbxts/services";
 import { CharacterController } from "client/module/character";
 import { HumanoidController } from "client/module/character/humanoid";
-import { InputMode, InputResult } from "shared/util/input";
+import { InputMode, InputResult, MotionInput as MotionInputType } from "shared/util/input";
 import * as input from "shared/util/input";
 import { NullifyYComponent } from "shared/util/lib";
 import { Client } from "./client.controller";
@@ -20,7 +20,7 @@ export namespace MotionInput
     export import Input = input.Input;
     export interface OnMotionInput
     {
-        onMotionInput(motionInput: MotionInput): void;
+        onMotionInput(motionInput: MotionInputType, filteredInput: MotionInputType): void;
     }
 
     abstract class LockedMotionInput
@@ -42,20 +42,25 @@ export namespace MotionInput
 
         public FinishInput(finalInput: Input): LockedMotionInput
         {
-            const inputs = [ ...this.GetInputs(false), finalInput ];
+            const inputs = [ ...this.GetInputs(false), finalInput ] as MotionInputType;
 
-            return new class
+            const outClass = new class
             {
-                GetInputs()
+                GetInputs(): MotionInputType
                 {
                     return inputs;
                 }
 
-                GetInputsFilterNeutral()
+                GetInputsFilterNeutral(): MotionInputType
                 {
                     return inputs.filter((input) => input !== Motion.Neutral);
                 }
             }();
+
+            for (const handler of Dependency<MotionInputController>().motionInputEventHandlers)
+                handler.onMotionInput(outClass.GetInputs(), outClass.GetInputsFilterNeutral());
+
+            return outClass;
         }
 
         public GetInputs(padNeutral = true)
@@ -74,9 +79,19 @@ export namespace MotionInput
         private inputs: Motion[] = [];
     }
 
-    @Controller({})
+    /**
+     * The controller that handles motion inputs,
+     * intended for 2D combat.
+     *
+     * Has a priority of 2.
+     */
+    @Controller({
+        loadOrder: 2,
+    })
     export class MotionInputController implements OnTick
     {
+        public readonly motionInputEventHandlers = new Set<OnMotionInput>();
+
         private currentMotionInput?: MotionInput;
 
         private motionInputTimeoutLimit: Frames = 16;
@@ -123,6 +138,10 @@ export namespace MotionInput
             this.characterController = characterController;
         }
 
+        /**
+         * Check if a character controller is bound to this motion
+         * input controller.
+         */
         public IsBound()
         {
             return !!this.characterController;

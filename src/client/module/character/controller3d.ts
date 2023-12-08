@@ -1,8 +1,7 @@
 import { Controller, Dependency, OnInit, OnStart, OnTick } from "@flamework/core";
-import { OnMatchRespawn } from "client/controllers/client.controller";
 import { Gamepad, GamepadButtons } from "client/controllers/gamepad.controller";
 import { Keyboard } from "client/controllers/keyboard.controller";
-import { MatchController } from "client/controllers/match.controller";
+import { MatchController, OnMatchRespawn } from "client/controllers/match.controller";
 import { Mouse } from "client/controllers/mouse.controller";
 import { CharacterController } from "client/module/character";
 import { InputMode, InputResult } from "shared/util/input";

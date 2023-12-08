@@ -1,9 +1,9 @@
 import { Components } from "@flamework/components";
 import { Controller, Dependency, OnPhysics, OnRender, OnStart, OnTick } from "@flamework/core";
 
-import { OnMatchRespawn } from "client/controllers/client.controller";
 import { Gamepad, GamepadButtons } from "client/controllers/gamepad.controller";
 import { Keyboard } from "client/controllers/keyboard.controller";
+import { OnMatchRespawn } from "client/controllers/match.controller";
 import { MotionInput } from "client/controllers/motioninput.controller";
 import { Mouse } from "client/controllers/mouse.controller";
 import { CharacterController } from "client/module/character";
@@ -129,6 +129,8 @@ export abstract class CharacterController2D extends CharacterController implemen
 
         if (!bound)
             throw "not bound";
+        // else
+        // print("bound now :D");
 
         const { X, Z } = axis;
         if (this.alignPos?.Attachment0)
