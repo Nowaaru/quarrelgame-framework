@@ -225,7 +225,15 @@ export class Entity<
      */
     public RegisterEvent<T extends EntityEvent>(characterEvent: T, handler: EntityEventHandler[T])
     {
-        this.entityEvents.set(characterEvent, [ ...(this.entityEvents.get(characterEvent) ?? []), handler ]);
+        const { entityEvents } = this;
+        entityEvents.set(characterEvent, [ ...(entityEvents.get(characterEvent) ?? []), handler ]);
+
+        return new class
+        {
+            public readonly id: number = entityEvents.size() - 1;
+            public readonly event: number = characterEvent;
+            public readonly ["__tostring"] = () => `ID 0x${characterEvent}-${this.id}`;
+        }();
     }
 
     /**

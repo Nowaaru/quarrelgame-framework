@@ -5,6 +5,7 @@ import { Entity } from "./entity.component";
 
 import { MatchService } from "server/services/matchservice.service";
 import type { QuarrelGame } from "server/services/quarrelgame.service";
+import { EntityEvent } from "shared/components/entity.component";
 
 export interface ParticipantAttributes
 {
@@ -48,7 +49,8 @@ export class Participant extends BaseComponent<ParticipantAttributes, Player & {
 
     public setupDiedHandler()
     {
-        this.entity?.Died.Once(() => this.onEntityDied());
+        // TODO: fix potential memory leak?
+        this.entity?.RegisterEvent(EntityEvent.DEAD, () => this.onEntityDied());
     }
 
     public async SelectCharacter(characterId: string): Promise<boolean>
