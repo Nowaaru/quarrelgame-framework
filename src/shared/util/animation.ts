@@ -1,7 +1,7 @@
 import Make from "@rbxts/make";
 import Signal from "@rbxts/signal";
 
-import { HttpService } from "@rbxts/services";
+import { HttpService, RunService } from "@rbxts/services";
 import { GetTickRate } from "./lib";
 
 import type { Animator } from "shared/components/animator.component";
@@ -12,6 +12,7 @@ interface PlayOptions
     FadeTime?: number;
     Weight?: number;
 }
+
 export namespace Animation
 {
     export interface AnimationData
@@ -23,6 +24,89 @@ export namespace Animation
         priority?: Enum.AnimationPriority;
         loop?: boolean;
     }
+
+    enum AnimationState
+    {
+        PLAYING,
+        STOPPED,
+        PAUSED,
+    }
+
+    /**
+     * Determines the priority of animations
+     * when determining weights for stepping.
+     */
+    enum StepPriority
+    {
+        /**
+         * A special property that forces this animation to
+         * be stepped regardless of other priorites.
+         *
+         * Good for integral animations, like world animators.
+         */
+        CRITICAL = "CRITICAL",
+        /**
+         * The highest priority.
+         *
+         * Good for action animations.
+         */
+        HEAVY = 0x3,
+        /**
+         * The middleground priority.
+         * Good for walking animations.
+         */
+        MEDIUM = 0x2,
+        /**
+         * The lowest priority.
+         * Good for idle animations.
+         */
+        LIGHT = 0x1,
+    }
+
+    /**
+     * A more fine animation player to allow for
+     * animations of different frametimes, more
+     * events, and in-depth animation debug utiities.
+     */
+    export class AnimationPlayer
+    {
+        private static allPlayers: Set<AnimationPlayer> = new Set();
+        static {
+            const allAnimations = new Set<AnimationPlayer>();
+            RunService.PreAnimation.Connect(() =>
+            {
+
+            });
+        }
+
+        public StepPriority: StepPriority | number = StepPriority.MEDIUM;
+
+        public State: AnimationState = AnimationState.STOPPED;
+
+        /**
+         * The controller this animation is playing on.
+         *
+         * 📝 Can be an interface, or an instance.
+         */
+        public readonly Controller: {Play: Callback};
+
+        /**
+         * How long the animation has been playing
+         * since the start time.
+         */
+        public readonly Progress = 4;
+
+        /**
+         * How fast the animation plays.
+         */
+        public Rate = 1;
+
+        constructor(private readonly animation: Animation, Controller: { Play: Callback })
+        {
+            this.Controller = Controller;
+        }
+    }
+
     export class Animation
     {
         public readonly Animation: Instances["Animation"];
@@ -44,6 +128,36 @@ export namespace Animation
         public readonly AnimationId: string;
 
         public Ended: Signal<() => void> = new Signal();
+
+        public Loop: Signal<() => void> = new Signal();
+
+        public KeyframeReached: Signal<() => void> = new Signal();
+
+        /**
+        * Returns a signal that is fired when the progress is passed.
+        *
+        * @param loop Whether this signal should persist upon loop.
+        */
+        public Progress(duration: number, loop: boolean): Signal<() => void>
+        {
+            const _thisSignal = new Signal<() => void>();
+
+            let conn: RBXScriptConnection | undefined = this.AnimationTrack.GetPropertyChangedSignal("TimePosition").Connect(() =>
+            {
+                if (!this.AnimationTrack.IsPlaying)
+
+                    return;
+
+                _thisSignal.Fire();
+                if (loop)
+                {
+                    conn?.Disconnect();
+                    conn = undefined;
+                }
+            });
+
+            return _thisSignal;
+        }
 
         constructor(private readonly animator: Animator.Animator, animationData: Animation.AnimationData)
         {
@@ -72,6 +186,11 @@ export namespace Animation
                     animator.attributes.ActiveAnimation = undefined;
 
                 this.Ended.Fire();
+            });
+
+            this.AnimationTrack.DidLoop.Connect(() =>
+            {
+                this.Loop.Fire();
             });
 
             this.Loaded = new Promise<void>((res) =>
