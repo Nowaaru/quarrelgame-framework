@@ -14,6 +14,9 @@ export class CommandController implements OnInit
 {
     private activationKeys: Enum.KeyCode[] = new Array<Enum.KeyCode>();
 
+    constructor()
+    {}
+
     onInit()
     {
         this.applyActivationKeys();

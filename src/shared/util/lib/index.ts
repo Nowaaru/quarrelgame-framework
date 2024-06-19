@@ -67,8 +67,11 @@ export interface MatchData
 
     /** The match's current arena. */
     Arena: Model & {
+        /** The model of the arena. */
         model: Folder;
+        /** Arena parameters. */
         config: MapNamespace.ConfigurationToValue;
+        /** Arena controller. */
         script?: Actor;
     };
 

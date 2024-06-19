@@ -63,6 +63,18 @@ export namespace Server
         StartMatch(): boolean;
 
         /**
+         * Tell the server and other users that the player
+         * is ready.
+         */
+        Ready(): boolean;
+
+        /**
+         * Tell the server and other users that the player
+         * is not ready.
+         */
+        Unready(): boolean;
+
+        /**
          * Creates a new match.
          *
          * @param matchSettings The settings to use for the match.
@@ -256,11 +268,15 @@ export namespace Client
 export const GlobalEvents = Networking.createEvent<
     Server.Events,
     Client.Events
->();
+>(undefined, undefined, {
+    disableClientGuards: true,
+});
 export const GlobalFunctions = Networking.createFunction<
     Server.Functions,
     Client.Functions
->();
+>(undefined, undefined, {
+    disableClientGuards: true,
+});
 
 export const ServerFunctions = GlobalFunctions.server;
 export const ClientFunctions = GlobalFunctions.client;

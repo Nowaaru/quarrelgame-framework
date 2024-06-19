@@ -13,6 +13,7 @@ export type Frames = number;
 
 export namespace MotionInput
 {
+
     export import Motion = input.Motion;
 
     export const None = [ Motion.Neutral ];

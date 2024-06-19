@@ -281,10 +281,12 @@ export abstract class CharacterController2D extends CharacterController implemen
         });
 
         // TODO: fix bug that prevents this part in the controller from running
+        print("hgweh???");
         const currentMatch = await ClientFunctions.GetCurrentMatch();
         if (currentMatch?.Arena)
         {
             const components = Dependency<Components>();
+            print("why hello there!");
 
             this.character = character;
             character.WaitForChild("Humanoid").WaitForChild("Animator");

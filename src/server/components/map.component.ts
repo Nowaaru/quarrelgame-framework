@@ -384,11 +384,6 @@ namespace _Map
                             Children: defaultValues,
                         });
                     }
-
-                    Dependency<Components>().addComponent(
-                        new Instance("Folder", arena),
-                        ServerEntity.EntityContainer,
-                    ).instance.Name = `EntityContainer-${arena.Name}`;
                 });
             });
         }

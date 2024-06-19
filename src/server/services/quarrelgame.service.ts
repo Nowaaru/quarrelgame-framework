@@ -25,6 +25,9 @@ export interface OnCharacterListChanged
 })
 export class QuarrelGame implements OnStart, OnInit
 {
+    constructor()
+    {}
+
     public readonly DefaultBlockMode = BlockMode.MoveDirection;
 
     public readonly CharacterContainer = Make("Folder", {

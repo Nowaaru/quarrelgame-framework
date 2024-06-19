@@ -24,6 +24,7 @@ ClientFunctions.RequestLoadMap.setCallback((mapId: string) =>
 {
     return new Promise((res) =>
     {
+        print("request received");
         assert(QuarrelMaps.FindFirstChild(mapId), `Map ${mapId} does not exist.`);
         Dependency<ResourceController>()
             .requestPreloadInstances(

@@ -1,4 +1,4 @@
-import { Controller, Modding } from "@flamework/core";
+import { Controller, Modding, OnStart } from "@flamework/core";
 import { ContentProvider } from "@rbxts/services";
 
 interface OnAssetLoad
@@ -17,7 +17,7 @@ interface OnAssetLoad
 @Controller({
     loadOrder: -(2 ** 16),
 })
-export class ResourceController implements OnAssetLoad
+export class ResourceController implements OnAssetLoad, OnStart
 {
     private readonly assetLoadListeners = new Set<OnAssetLoad>();
 
@@ -29,6 +29,9 @@ export class ResourceController implements OnAssetLoad
 
     constructor()
     {
+    }
+
+    onStart(): void {
         Modding.onListenerAdded<OnAssetLoad>((object) => this.assetLoadListeners.add(object));
         Modding.onListenerRemoved<OnAssetLoad>((object) => this.assetLoadListeners.delete(object));
     }

@@ -59,7 +59,7 @@ export class TestService implements OnStart, OnInit
         const matchService = Dependency<MatchService>();
         const quarrelGame = Dependency<QuarrelGame>();
 
-        this.testParticipant.then((participant) =>
+        this.testParticipant.then(() =>
         {
             const match = matchService.CreateMatch({
                 Participants: quarrelGame.GetAllParticipants(),
@@ -69,8 +69,10 @@ export class TestService implements OnStart, OnInit
                 },
             });
 
-            if (match)
-                match.StartMatch(participant);
+            match.Ready.Once(() => {
+                if (match)
+                    match.StartMatch();
+            });
         });
 
         return true;

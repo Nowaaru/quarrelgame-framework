@@ -38,6 +38,9 @@ export class MatchController implements OnStart, OnInit
 
     private matchRespawnTrackers: Set<OnMatchRespawn> = new Set();
 
+    constructor()
+    {}
+
     onStart()
     {
         // FIXME: currently there is a massive bug where onMatchRespawn functions
@@ -45,8 +48,10 @@ export class MatchController implements OnStart, OnInit
         // should be an easy fix
         ClientEvents.MatchParticipantRespawned.connect((characterModel) =>
         {
+            print("ok wh");
             this.matchRespawnTrackers.forEach(async (l) =>
             {
+                print("whaur?");
                 l.onMatchRespawn(characterModel as never, Players.GetPlayerFromCharacter(characterModel));
             });
         });

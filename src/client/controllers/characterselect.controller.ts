@@ -3,11 +3,14 @@ import Roact from "@rbxts/roact";
 
 import CharacterSelect from "client/ui/characterselect";
 
-import { Controller, OnInit, OnStart } from "@flamework/core";
+import { Controller, Modding, OnInit, OnStart } from "@flamework/core";
 import { Players } from "@rbxts/services";
 import { ClientFunctions } from "shared/network";
 import { Character } from "shared/util/character";
-import { Client } from "./client.controller";
+
+export interface OnCharacterSelected {
+    onCharacterSelected(character: Character.Character): void;
+}
 
 /*
  * The controller responsible for handling character selection
@@ -18,8 +21,7 @@ import { Client } from "./client.controller";
 @Controller({
     loadOrder: 1,
 })
-export class CharacterSelectController implements OnStart, OnInit
-{
+export class CharacterSelectController implements OnStart, OnInit {
     private currentCharacterSelect?: Roact.Tree;
 
     private characterSelectConstructor?: Roact.Element;
@@ -28,10 +30,11 @@ export class CharacterSelectController implements OnStart, OnInit
 
     private currentlySelectedCharacter?: Character.Character;
 
+    private readonly characterSelectedListeners = new Set<OnCharacterSelected>();
+
     public readonly characters = new Map<string, Character.Character>();
 
-    constructor()
-    {
+    constructor() {
         this.characterSelectScreenGui = Make("ScreenGui", {
             Parent: Players.LocalPlayer.WaitForChild("PlayerGui"),
             IgnoreGuiInset: true,
@@ -40,56 +43,56 @@ export class CharacterSelectController implements OnStart, OnInit
         });
     }
 
-    onInit()
-    {
+    onInit() { 
+        Modding.onListenerAdded<OnCharacterSelected>((listener) => {
+            this.characterSelectedListeners.add(listener);
+        })
     }
 
-    onStart()
-    {
+    onStart() {
         if (!Players.LocalPlayer.GetAttribute("SelectedCharacter"))
             this.OpenCharacterSelect();
     }
 
-    public SetCharacters(characters: ReadonlyMap<string, Character.Character>)
-    {
+    public SetCharacters(characters: ReadonlyMap<string, Character.Character>) {
         this.characters.clear();
-        for (const [ charname, char ] of characters)
+        for (const [charname, char] of characters)
             this.characters.set(charname, char);
     }
 
-    public BindCharacterSelectInstance()
-    {
+    public BindCharacterSelectInstance(screengui: ScreenGui) {
+        this.characterSelectScreenGui = screengui;
     }
 
-    public OpenCharacterSelect()
-    {
-        if (!this.currentCharacterSelect)
-        {
+    public OpenCharacterSelect() {
+        if (!this.currentCharacterSelect) {
             this.currentCharacterSelect = Roact.mount(
                 Roact.createElement(CharacterSelect, {
                     Characters: this.characters,
-                    OnSelect: (selectedCharacter: Character.Character) =>
-                    {
-                        if (this.currentlySelectedCharacter && selectedCharacter === this.currentlySelectedCharacter)
-                        {
+                    OnSelect: (selectedCharacter: Character.Character) => {
+                        if (
+                            this.currentlySelectedCharacter &&
+                            selectedCharacter === this.currentlySelectedCharacter
+                        ) {
                             ClientFunctions.RespawnCharacter(selectedCharacter.Name);
                             this.CloseCharacterSelect();
-                        }
-                        else
-                        {
+                        } else {
                             this.currentlySelectedCharacter = selectedCharacter;
-                            ClientFunctions.SelectCharacter(selectedCharacter.Name);
+                            ClientFunctions.SelectCharacter(selectedCharacter.Name).then(() =>
+                            {
+                                for (const listener of this.characterSelectedListeners)
+                                    listener.onCharacterSelected(selectedCharacter);
+                            });
                         }
                     },
                 }),
                 this.characterSelectScreenGui,
-                "CharacterSelect",
+                "CharacterSelect"
             );
         }
     }
 
-    public CloseCharacterSelect()
-    {
+    public CloseCharacterSelect() {
         if (this.currentCharacterSelect !== undefined)
             Roact.unmount(this.currentCharacterSelect);
 

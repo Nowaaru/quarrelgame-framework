@@ -1,7 +1,7 @@
 import { Components } from "@flamework/components";
 import { Dependency, OnInit, OnStart, Service } from "@flamework/core";
 import { Entity } from "server/components/entity.component";
-import { Client, ClientEvents, ServerEvents, ServerFunctions } from "shared/network";
+import { Client, ServerEvents, ServerFunctions } from "shared/network";
 import { Identifier } from "shared/util/identifier";
 
 import { Participant, ParticipantAttributes } from "server/components/participant.component";
@@ -221,6 +221,8 @@ export class Match
         Map: "happyhome",
     };
 
+    private readonly participants_ready: Set<Participant> = new Set();
+
     private readonly participants: Set<Participant> = new Set();
 
     private readonly matchFolder: Folder;
@@ -230,11 +232,20 @@ export class Match
     private matchHost;
 
     /** Signals **/
+    public readonly Starting = new Signal<() => void>();
+
     public readonly Ended = new Signal<(postMatchData: PostMatchData) => void>();
+
+    public readonly Ready = new Signal<(participant: string) => void>();
+
+    public readonly NotReady = new Signal<(participant: string) => void>();
+
+    public readonly Joining = new Signal<(participant: string) => void>();
+
+    public readonly Leaving = new Signal<(participant: string) => void>();
 
     constructor(private readonly originalMatchHost: Participant, public readonly matchId = Identifier.Generate())
     {
-        const { Map: matchMap } = this.matchSettings;
         this.matchHost = originalMatchHost;
         this.matchFolder = Make("Folder", {
             Name: `Match-${this.matchId}`,
@@ -253,6 +264,44 @@ export class Match
     public AddParticipant(participant: Participant)
     {
         this.participants.add(participant);
+        participant.attributes.MatchId = this.matchId;
+    }
+
+    /**
+     * Mark a participant as 'ready.'
+     * Errors if the participant is not added first.
+     *
+     * ⚠️ Can lead to unstable behavior if the match is in progress.
+     *
+     * @param participant The participant to add.
+     */
+    public ReadyParticipant(participant: Participant)
+    {
+
+        assert(this.participants.has(participant), `participant ${participant.instance.Name} is not in the current match (${this.matchId})`);
+        assert(!this.participants_ready.has(participant), `participant ${participant.instance.Name} is already ready`);
+
+        this.participants_ready.add(participant);
+        this.Ready.Fire(participant.id);
+        return true;
+    }
+
+    /**
+     * Mark a participant as 'ready.'
+     * Errors if the participant is not added first.
+     *
+     * ⚠️ Can lead to unstable behavior if the match is in progress.
+     *
+     * @param participant The participant to add.
+     */
+    public UnreadyParticipant(participant: Participant)
+    {
+        assert(this.participants.has(participant), `participant ${participant.instance.Name} is not in the current match (${this.matchId})`);
+        assert(this.participants_ready.has(participant), `participant ${participant.instance.Name} is not ready`);
+
+        this.participants_ready.delete(participant);
+        this.NotReady.Fire(participant.id);
+        return true;
     }
 
     /**
@@ -276,7 +325,9 @@ export class Match
                 this.matchHost = [ ...this.participants ][0];
         }
 
+        participant.attributes.MatchId = undefined;
         this.participants.delete(participant);
+        this.Leaving.Fire(participant.id);
     }
 
     /**
@@ -288,7 +339,11 @@ export class Match
      */
     public ClearParticipants()
     {
-        this.participants.clear();
+        for (const participant of this.participants)
+        {
+            this.participants.delete(participant)
+            this.Leaving.Fire(participant.id);
+        }
         this.participants.add(this.matchHost);
     }
 
@@ -356,8 +411,9 @@ export class Match
     private RequestParticipantsLoadMap(): Promise<Participant["id"][]>
     {
         return Promise.all<Promise<Participant["id"]>[]>(
-            [ ...this.participants ].map((participant) =>
+            [ ...this.participants_ready ].map((participant) =>
             {
+                print(`requesting participant ${participant.attributes.ParticipantId} to load map...`);
                 return new Promise<Participant["id"]>((res, rej) =>
                 {
                     return ServerFunctions.RequestLoadMap(
@@ -370,9 +426,13 @@ export class Match
                         )
                         .then(() =>
                         {
+                            print(`participant ${participant.attributes.ParticipantId} has loaded!`)
                             res(participant.id);
                         })
-                        .catch((err) => rej(err));
+                        .catch((err) => {
+                            print(`participant ${participant.attributes.ParticipantId} failed to load map`)
+                            rej(err)
+                        });
                 });
             }),
         );
@@ -382,13 +442,15 @@ export class Match
      * Start a new match.
      * @param matchHost The participant that is hosting the match.
      */
-    public StartMatch(matchHost: Participant)
+    public StartMatch()
     {
+        assert(this.GetReadyParticipants().size() > 0, "there are no ready participants");
+
         this.matchPhase = MatchPhase.Starting;
 
         this.RequestParticipantsLoadMap().then(() =>
         {
-            for (const participant of this.GetParticipants())
+            for (const participant of this.GetReadyParticipants())
                 participant.instance.SetAttribute("MatchId", this.matchId);
 
             this.matchPhase = MatchPhase.InProgress;
@@ -425,7 +487,7 @@ export class Match
                 ? map.GetArenaFromIndex(MapNamespace.ArenaType["2D"], 0)
                 : map.GetArenaFromIndex(MapNamespace.ArenaType["3D"], 0);
 
-            for (const participant of this.GetParticipants())
+            for (const participant of this.GetReadyParticipants())
             {
                 print("loading participant:", participant.instance.Name);
                 const startType = randomStart === ArenaTypeFlags["ALLOW_2D"] ? MapNamespace.ArenaType["2D"] : MapNamespace.ArenaType["3D"];
@@ -433,10 +495,11 @@ export class Match
                 ServerEvents.MatchStarted.fire(participant.instance, this.matchId, this.Serialize(participant));
             }
 
+            this.Starting.Fire();
             return Promise.fromEvent(this.Ended).finally(
                 () => (this.matchPhase = MatchPhase.Ending),
             );
-        });
+        }).then(() => print("match started"));
     }
 
     public Serialize(perspective: Participant)
@@ -478,6 +541,15 @@ export class Match
     public GetParticipants(): Set<Participant>
     {
         return new Set([ ...this.participants ]);
+    }
+
+    /**
+     * Retrieve the ready participants in the match.
+     * @returns The ready participants in the match.
+     */
+    public GetReadyParticipants(): Set<Participant>
+    {
+        return new Set([ ...this.participants_ready ]);
     }
 
     /**
@@ -543,6 +615,30 @@ export class MatchService implements OnStart, OnInit
             return false;
         });
 
+        ServerFunctions.Ready.setCallback((player) =>
+        {
+            const thisParticipant = Dependency<QuarrelGame>().GetParticipant(player);
+            assert(thisParticipant, `participant for ${player} does not exist.`);
+            assert(thisParticipant.attributes.MatchId, `participant ${player} is not in a match.`);
+
+            const currentMatch = this.GetOngoingMatch(thisParticipant.attributes.MatchId);
+            assert(currentMatch, `player ${player}'s current match is invalid`);
+
+            return currentMatch.ReadyParticipant(thisParticipant);
+        });
+
+        ServerFunctions.Unready.setCallback((player) =>
+        {
+            const thisParticipant = Dependency<QuarrelGame>().GetParticipant(player);
+            assert(thisParticipant, `participant for ${player} does not exist.`);
+            assert(thisParticipant.attributes.MatchId, `participant ${player} is not in a match.`);
+
+            const currentMatch = this.GetOngoingMatch(thisParticipant.attributes.MatchId);
+            assert(currentMatch, `player ${player}'s current match is invalid`);
+
+            return currentMatch.UnreadyParticipant(thisParticipant);
+        });
+
         ServerFunctions.CreateMatch.setCallback(
             (player, matchSettings = DefaultMatchSettings) =>
             {
@@ -581,7 +677,7 @@ export class MatchService implements OnStart, OnInit
                 "participant is not the host of the match",
             );
 
-            ongoingMatch!.StartMatch(thisParticipant);
+            ongoingMatch!.StartMatch();
             return true;
         });
 
@@ -613,7 +709,7 @@ export class MatchService implements OnStart, OnInit
         );
         assert(currentLocation, `participant is not in an arena.`);
 
-        const matchParticipants = ongoingMatch.GetParticipants();
+        const matchParticipants = ongoingMatch.GetReadyParticipants();
         const matchEntitites = [ ...matchParticipants ].map(
             (participant) => participant.entity as Entity.PlayerCombatant<Entity.PlayerCombatantAttributes>,
         );

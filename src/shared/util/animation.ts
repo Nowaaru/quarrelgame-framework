@@ -71,6 +71,7 @@ export namespace Animation
     export class AnimationPlayer
     {
         private static allPlayers: Set<AnimationPlayer> = new Set();
+        /* TODO: animation scheduler that runs animations step by step
         static {
             const allAnimations = new Set<AnimationPlayer>();
             RunService.PreAnimation.Connect(() =>
@@ -78,6 +79,7 @@ export namespace Animation
 
             });
         }
+        */
 
         public StepPriority: StepPriority | number = StepPriority.MEDIUM;
 
