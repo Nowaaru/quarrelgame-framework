@@ -144,6 +144,7 @@ export class Entity<
     onStart(): void
     {
         super.onStart();
+        this.SetDefaultState(EntityState.Idle);
         this.FireEvent(EntityEvent.CREATE);
 
         // the entitystate might actually be a number, don't remember! will fix if it causes problems
@@ -301,7 +302,7 @@ export class Entity<
 
     public IsMoving()
     {
-        return this.humanoid.MoveDirection !== Vector3.zero;
+        return !this.humanoid.MoveDirection.FuzzyEq(Vector3.zero)
     }
 
     public GetPrimaryPart()
