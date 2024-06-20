@@ -9,7 +9,7 @@ import { ClientFunctions } from "shared/network";
 import { Character } from "shared/util/character";
 
 export interface OnCharacterSelected {
-    onCharacterSelected(character: Character.Character): void;
+    onCharacterSelected(charcter: Character.Character): void;
 }
 
 /*
@@ -43,10 +43,10 @@ export class CharacterSelectController implements OnStart, OnInit {
         });
     }
 
-    onInit() { 
+    onInit() {
         Modding.onListenerAdded<OnCharacterSelected>((listener) => {
             this.characterSelectedListeners.add(listener);
-        })
+        });
     }
 
     onStart() {
@@ -74,20 +74,21 @@ export class CharacterSelectController implements OnStart, OnInit {
                             this.currentlySelectedCharacter &&
                             selectedCharacter === this.currentlySelectedCharacter
                         ) {
-                            ClientFunctions.RespawnCharacter(selectedCharacter.Name);
-                            this.CloseCharacterSelect();
+                            ClientFunctions.SelectCharacter(selectedCharacter.Name).then(() =>
+                                ClientFunctions.RespawnCharacter(selectedCharacter.Name)
+                                    .then(() => {
+                                        for (const listener of this.characterSelectedListeners)
+                                            listener.onCharacterSelected(selectedCharacter);
+                                    })
+                                    .finally(() => this.CloseCharacterSelect()),
+                            );
                         } else {
                             this.currentlySelectedCharacter = selectedCharacter;
-                            ClientFunctions.SelectCharacter(selectedCharacter.Name).then(() =>
-                            {
-                                for (const listener of this.characterSelectedListeners)
-                                    listener.onCharacterSelected(selectedCharacter);
-                            });
                         }
                     },
                 }),
                 this.characterSelectScreenGui,
-                "CharacterSelect"
+                "CharacterSelect",
             );
         }
     }
