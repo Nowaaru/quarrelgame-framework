@@ -23,6 +23,7 @@ enum RotationMode
 
 type String<T> = string;
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Entity
 {
     export import EntityState = lib.EntityState;
