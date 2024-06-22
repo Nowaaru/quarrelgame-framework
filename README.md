@@ -4,6 +4,29 @@ Quarrel Game Framework is a series of runtimes that allow developers to
 create a variety of hand-to-hand combat games similar to other games like
 [Black Magic II](https://www.roblox.com/games/969669348/Game), [Guilty Gear Strive](https://www.guiltygear.com/ggst/en/), and [Under Night In-Birth](https://store.steampowered.com/app/452510/UNDER_NIGHT_INBIRTH_ExeLate/).
 
+#### Todo
+* [x] 3D Camera
+* [x] 2D Camera
+
+---
+
+* [x] Input Registry
+* [x] Frame Data
+* [x] Attack Execution
+* [x] Custom Characters and Movesets
+* [x] Motion Inputs
+* [x] Command Inputs
+* [x] Entities and Combatants
+* [x] Match System Logic
+* [x] Jumping
+* [x] Combo Choreography - Gatling / BEAT!
+* [ ] Double Jumping
+* [ ] Rollback Netcode (use Chickynoid)
+* [ ] "Matchmaking" System
+* [ ] Attack Cinematics
+* [ ] Defense Cinematics
+* [ ] Chickynoid Integration
+
 ## Usage
 
 This project depends on [**Flamework**](https://fireboltofdeath.dev/docs/flamework/). Flamework is a framework 
@@ -45,3 +68,4 @@ as they return the same type as the default. The QuarrelGame service also is int
 add components that are [integral to the background functionality of the framework](src/server/components).
 
 To see more regarding the usage of this package, please observe [Quarrel Game](https://www.github.com/Nowaaru/quarrelgame).
+
