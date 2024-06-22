@@ -72,12 +72,6 @@ export class TestService implements OnStart, OnInit
             match.Ready.Once(() => {
                 if (match)
                     match.StartMatch();
-
-                task.wait(5);
-                const deps = Dependency<Components>();
-                const entity = deps.getComponents<Entity.Entity>(participant.instance).size()
-                const combatant = deps.getComponents<Combatant>(participant.instance).size()
-
             });
         });
 
