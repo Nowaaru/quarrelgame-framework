@@ -301,6 +301,7 @@ export namespace Entity
             
             this.SetStateEffect(EntityState.Landing, () => 
             {
+                this.instance.PrimaryPart.AssemblyLinearVelocity = this.instance.PrimaryPart.AssemblyLinearVelocity.mul(new Vector3(1,0,1))
                 this.WhileInState((1/60) * Dependency<MovementService>().JumpEndFrames).then(() =>
                 {
                     if (this.IsMoving())
