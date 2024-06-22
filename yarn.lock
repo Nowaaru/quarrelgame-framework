@@ -72,6 +72,13 @@
     "@rbxts/signal" "^1.0.3"
     "@rbxts/t" "^2.1.4"
 
+"@grifon-games/chickynoid@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@grifon-games/chickynoid/-/chickynoid-1.0.5.tgz#3b96afcb12cfc2b2179aed1f96e9cfb75ee60b2e"
+  integrity sha512-rQCiaOmsUOVxdynCGWmXvDrKG3ngYneH8U7CeCLxFRnbnvsKgUehlWOYR3m9Ub1t+/gLf4DH5x+xy7EAo8YmZg==
+  dependencies:
+    "@rbxts/signal" "^1.0.3"
+
 "@humanwhocodes/config-array@^0.11.11":
   version "0.11.11"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.11.tgz#88a04c570dbbc7dd943e4712429c3df09bc32844"

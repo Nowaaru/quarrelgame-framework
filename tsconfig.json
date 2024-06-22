@@ -14,7 +14,7 @@
     "moduleDetection": "force",
     "strict": true,
     "target": "ESNext",
-    "typeRoots": ["node_modules/@rbxts", "node_modules/@flamework"],
+    "typeRoots": ["node_modules/@rbxts", "node_modules/@flamework", "node_modules/@grifon-games"],
 
     // configurable
     "rootDir": "src",
