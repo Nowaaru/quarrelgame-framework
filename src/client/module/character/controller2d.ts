@@ -239,10 +239,7 @@ export abstract class CharacterController2D extends CharacterController implemen
                     if (playerHumanoid.FloorMaterial !== Enum.Material.Air)
                     if ([EntityState.Idle, EntityState.Walk].includes(character.GetAttribute("State") as number))
                     {
-                        // print(
-                        //     `🚀 ~ file: 2dcontroller.controller.ts:65 ~ lastFrameDot:`,
-                        //     lastFrameDot,
-                        // );
+
                             ClientFunctions.Jump();
                     }
                 }
