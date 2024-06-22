@@ -19,10 +19,14 @@ create a variety of hand-to-hand combat games similar to other games like
 * [x] Entities and Combatants
 * [x] Match System Logic
 * [x] Jumping
+* [x] Hitboxes
+* [x] Disjoint Hitboxes
+* [x] No Physics Bouncing
 * [x] Combo Choreography - Gatling / BEAT!
 * [ ] Combo Choreography - Air Combos
 * [ ] Combo Choreography - Blocking
 * [ ] Combo Choreography - Perfect Blocking
+* [ ] Hurtbox Support
 * [ ] Animations - On-Demand Inverse Kinematics (grabbing, pinning, etc)
 * [ ] Double Jumping
 * [ ] "Matchmaking" System
