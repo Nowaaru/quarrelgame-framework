@@ -4,6 +4,7 @@ import { ServerEvents } from "shared/network";
 import { Identifier } from "shared/util/identifier";
 import { EntityState } from "shared/util/lib";
 import { StateAttributes, StatefulComponent } from "./state.component";
+import { OnTick } from "@flamework/core";
 
 import { Entity as EntityNamespace } from "shared/components/entity.component";
 
@@ -12,6 +13,7 @@ import Signal from "@rbxts/signal";
 import type { Skill } from "shared/util/character";
 import * as lib from "shared/util/lib";
 import { ControllerComponent } from "./controller.component";
+import { MovementService } from "server/services/movement.service";
 
 /**
  * Events that can be registered onto an entity.
@@ -110,6 +112,8 @@ export class Entity<
     private readonly entityEvents: Map<EntityEvent, Callback[]> = new Map();
 
     protected readonly controller!: ControllerComponent;
+
+    protected floorMaterial!: Enum.Material;
 
     constructor()
     {
@@ -245,7 +249,8 @@ export class Entity<
         ...params: typeof characterEvent extends T ? Parameters<EntityEventHandler[T]> : unknown[]
     ): Promise<unknown>
     {
-        assert(this.entityEvents.has(characterEvent), `character event ${characterEvent} does not exist`);
+        if (!this.entityEvents.has(characterEvent))
+            return Promise.resolve(); // `error(character event ${characterEvent} does not exist);
 
         return Promise.allSettled(this.entityEvents.get(characterEvent)!.map(async e => e(...params)));
     }
@@ -265,20 +270,26 @@ export class Entity<
         return new Promise<boolean>((res) =>
         {
             const playerFromCharacter = Players.GetPlayerFromCharacter(this.instance);
-            if (playerFromCharacter)
-                return ServerEvents.Jump(playerFromCharacter, this.instance);
+            this.SetState(EntityState.Jumping)
+            this.WhileInState((1/60) * Dependency<MovementService>().JumpStartFrames).then(() =>
+            {
+                print("jump: yayed: false")
+                if (playerFromCharacter)
 
-            lib.Jump(this.instance);
+                    return ServerEvents.Jump(playerFromCharacter, this.instance);
 
-            return res(true);
+                lib.Jump(this.instance);
+            }).catch((new_state) =>
+            {
+                print("jump: failed:", new_state);
+            }).finally(() => res(true));
         });
     }
 
     public IsGrounded()
     {
-        const isPhysicallyGrounded = this.humanoid.FloorMaterial !== Enum.Material.Air;
-        if (isPhysicallyGrounded)
-            return true;
+        // if (this.humanoid.FloorMaterial && this.humanoid.FloorMaterial !== Enum.Material.Air)
+        //     return true;
 
         const characterPosition = this.instance.GetPivot();
         const raycastParams = new RaycastParams();
@@ -286,18 +297,32 @@ export class Entity<
             Workspace.WaitForChild("CharacterContainer"),
         ];
         raycastParams.FilterType = Enum.RaycastFilterType.Exclude;
+       
+        const extents = this.instance.GetExtentsSize();
+        const ray_dist = ((extents.Y / 2) + 0.5);
+        const _end = characterPosition.Position;
+        const boxResult = Workspace.Raycast(_end, new Vector3(0, -ray_dist, 0), raycastParams);
+        // const boxResult = Workspace.Blockcast(
+        //     characterPosition,
+        //     extents,
+        //     new Vector3(0, -extents.Y / 1.25, 0),
+        //     raycastParams,
+        // );
 
-        const boxResult = Workspace.Blockcast(
-            characterPosition,
-            this.instance.GetExtentsSize(),
-            new Vector3(0, -this.humanoid.HipHeight * 1.125, 0),
-            raycastParams,
-        );
-
+        if (this.instance.Parent) {
+            const { Distance } = boxResult ?? { Distance: ray_dist } as const;
+            const tPart = (Workspace.FindFirstChild("CharacterContainer")!.FindFirstChild("TPart") ?? new Instance("Part", Workspace.FindFirstChild("CharacterContainer"))) as BasePart;
+            tPart.Anchored = true;
+            tPart.CanCollide = false;
+            tPart.CanQuery = false;
+            tPart.Name = "TPart";
+            tPart.Color = boxResult ? new Color3(0,1,0) : new Color3(1,0,0);
+            tPart.Size = new Vector3(extents.X, Distance, extents.Y);
+            tPart.Position = _end.sub(new Vector3(0, Distance / 2, 0));
+        }
+    
         if (boxResult)
             return true;
-
-        return false;
     }
 
     public IsMoving()

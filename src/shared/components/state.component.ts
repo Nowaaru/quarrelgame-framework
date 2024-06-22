@@ -4,9 +4,6 @@ import { EntityState } from "shared/util/lib";
 
 import Signal from "@rbxts/signal";
 
-interface StateGuard
-{
-}
 export interface StateAttributes
 {
     /**
@@ -63,7 +60,7 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
 
             this.StateChanged.Fire(this.GetState(), state, force);
             this.attributes.State = state;
-            this.stateEffects.get(state)?.(this.GetState());
+            this.stateEffects.get(state)?.(state);
         });
     }
 
@@ -102,6 +99,12 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
         return states.includes(this.attributes.State);
     }
 
+    public IsDefaultState(): boolean
+    {
+        assert(this.defaultState !== undefined, `default state is undefined for instance ${this.instance.Name}`);
+        return this.attributes.State === this.defaultState
+    }
+
     public SetDefaultState(state: EntityState)
     {
         this.defaultState = state;
@@ -111,5 +114,32 @@ export class StatefulComponent<A extends StateAttributes, I extends Instance> ex
     {
         if (this.defaultState !== undefined)
             this.SetState(this.defaultState);
+    }
+
+    public WhileInState(time: number | undefined): Promise<void>
+    {
+        return new Promise((res, rej) => {
+            let state: 0 | 1 = 0;
+            let r: RBXScriptConnection | void = this.StateChanged.Once((_, new_state) =>
+            {
+                if (state === 0)
+                {
+                    state = 1;
+                    rej(new_state);
+                }
+
+                r = r?.Disconnect();
+            })
+
+            task.delay(time ?? 0, () => {
+                if (state === 0)
+                {
+                    state = 1;
+                    res();
+                }
+
+                r = r?.Disconnect();
+            });
+        })
     }
 }

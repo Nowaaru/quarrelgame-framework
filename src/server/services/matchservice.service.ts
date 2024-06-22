@@ -442,13 +442,13 @@ export class Match
      * Start a new match.
      * @param matchHost The participant that is hosting the match.
      */
-    public StartMatch()
+    public async StartMatch()
     {
         assert(this.GetReadyParticipants().size() > 0, "there are no ready participants");
 
         this.matchPhase = MatchPhase.Starting;
 
-        this.RequestParticipantsLoadMap().then(() =>
+        return this.RequestParticipantsLoadMap().then(async () =>
         {
             for (const participant of this.GetReadyParticipants())
                 participant.instance.SetAttribute("MatchId", this.matchId);

@@ -15,6 +15,7 @@ import { ServerEvents, ServerFunctions } from "shared/network";
 import type { Skill } from "shared/util/character";
 import { Input } from "shared/util/input";
 import * as lib from "shared/util/lib";
+import { MovementService } from "server/services/movement.service";
 enum RotationMode
 {
     Unlocked,
@@ -169,7 +170,7 @@ export namespace Entity
             State: EntityState.Idle,
         },
     })
-    export class Combatant<A extends CombatantAttributes> extends Entity<A> implements OnStart, OnFrame
+    export class Combatant<A extends CombatantAttributes = CombatantAttributes> extends Entity<A> implements OnStart, OnFrame
     {
         public readonly animator: Animator.Animator;
 
@@ -181,8 +182,7 @@ export namespace Entity
 
             const components = Dependency<Components>();
 
-            this.animator = components.getComponent(this.instance, Animator.Animator) ?? components.addComponent(this.instance, Animator.Animator);
-            this.stateAnimator = components.getComponent(this.instance, Animator.StateAnimator) ?? components.addComponent(this.instance, Animator.StateAnimator);
+            this.animator = this.stateAnimator = components.getComponent(this.instance, Animator.StateAnimator) ?? components.addComponent(this.instance, Animator.StateAnimator);
         }
 
         private readonly staminaHandler = RunService.Heartbeat.Connect((dt) =>
@@ -196,10 +196,14 @@ export namespace Entity
 
         onFrame(dt: number): void
         {
+            if (!this.instance?.Parent)
+                return;
             // tick-down stun and iframes
             this.tickDown<CombatantAttributes>("IFrame");
             this.tickDown<CombatantAttributes>("BlockStun");
             this.tickDown<CombatantAttributes>("HitStop");
+
+            //print("huh:", Dependency<Components>().getComponents<Animator.Animator>(this.instance))
 
             if (this.attributes.HitStop > 0)
             {
@@ -224,14 +228,26 @@ export namespace Entity
 
             if (this.IsNeutral())
             {
+                print(EntityState[this.GetState()], this.IsGrounded(), this.IsState(EntityState.Jumping));
                 if (this.IsGrounded())
                 {
-                    if (this.IsMoving())
+                    if (this.IsMoving() && !this.IsState(EntityState.Jumping, EntityState.Walk))
+
                         this.SetState(EntityState.Walk);
-                    else if (!this.IsState(EntityState.Crouch))
-                        this.ResetState();
+
+                    else if (!this.IsState(EntityState.Crouch, EntityState.Jumping, EntityState.Landing))
+                    {
+                        if (this.IsState(EntityState.Midair)) 
+
+                            this.SetState(EntityState.Landing)
+
+                        else if (!this.IsDefaultState()) 
+
+                            this.ResetState();
+                    }
+
                 }
-                else if (!this.IsNegative())
+                else if (!this.IsNegative() || this.IsState(EntityState.Jumping))
                 {
                     this.SetState(EntityState.Midair);
                 }
@@ -268,15 +284,32 @@ export namespace Entity
                 return true;
             });
 
+            this.SetStateGuard(EntityState.Jumping, () =>
+            {
+                return this.IsGrounded();
+            });
+
             this.SetStateGuard(EntityState.Midair, () =>
             {
-                if (this.IsNegative())
+                if (this.IsNegative() && !this.IsState(EntityState.Jumping))
                     return false;
 
                 return !this.IsGrounded();
             });
 
             this.SetStateEffect(EntityState.Midair, onNeutral);
+            
+            this.SetStateEffect(EntityState.Landing, () => 
+            {
+                this.WhileInState((1/60) * Dependency<MovementService>().JumpStartFrames).then(() =>
+                {
+                    if (this.IsMoving())
+                        this.SetState(EntityState.Walk)
+                    else this.SetState(EntityState.Idle)
+                }).catch((to) => {
+                    print(`caught u lackin to ${to} (THIS SHOULD NOT HAVE HAPPENED)`);
+                })
+            });
 
             this.SetStateEffect(EntityState.Startup, zeroWalkSpeed);
 
@@ -420,7 +453,8 @@ export namespace Entity
 
         public CanJump()
         {
-            return !this.IsNegative() && this.IsGrounded();
+            print("grounded:", this.IsGrounded())
+            return !this.IsNegative() && !this.IsState(EntityState.Jumping) && this.IsGrounded();
         }
 
         public CanCounter()
