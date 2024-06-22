@@ -288,7 +288,7 @@ export abstract class CharacterController2D extends CharacterController implemen
 
             this.character = character;
             character.WaitForChild("Humanoid").WaitForChild("Animator");
-            components.addComponent(character, Animator.Animator);
+            // components.addComponent(character, Animator.Animator);
             components.addComponent(character, StatefulComponent);
 
             this.SetAxis(currentMatch.Arena.config.Axis.Value);
