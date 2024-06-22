@@ -20,12 +20,17 @@ create a variety of hand-to-hand combat games similar to other games like
 * [x] Match System Logic
 * [x] Jumping
 * [x] Combo Choreography - Gatling / BEAT!
+* [ ] Combo Choreography - Air Combos
+* [ ] Combo Choreography - Blocking
+* [ ] Combo Choreography - Perfect Blocking
+* [ ] Animations - On-Demand Inverse Kinematics (grabbing, pinning, etc)
 * [ ] Double Jumping
-* [ ] Rollback Netcode (use Chickynoid)
 * [ ] "Matchmaking" System
 * [ ] Attack Cinematics
 * [ ] Defense Cinematics
 * [ ] Chickynoid Integration
+* [ ] Rollback Netcode (use Chickynoid)
+* [ ] **Component Garbage Collection**
 
 ## Usage
 
