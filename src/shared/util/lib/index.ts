@@ -118,6 +118,16 @@ export enum EntityState
      * floor.
      */
     KnockdownHard,
+
+    /**
+     * A state where the Entity is
+     * blocking.
+     *
+     * Unused on MoveDirection-based
+     * blocking.
+     */
+    Block,
+
     /**
      * A state where the Entity
      * was knocked off their feet
@@ -132,19 +142,22 @@ export enum EntityState
     Crouch,
 
     /**
-     * A state where the Entity is
-     * blocking.
-     *
-     * Unused on MoveDirection-based
-     * blocking.
+     * A state where the Entity
+     * is about to jump.
      */
-    Block,
+    Jumping,
 
     /**
      * A state where the Entity is
      * midair.
      */
     Midair,
+
+    /**
+     * A state where the Entity
+     * is landing.
+     */
+    Landing,
 
     /**
      * A state where the Entity is
@@ -258,6 +271,8 @@ export function isStateNegative(state: EntityState)
         EntityState.HitstunCrouching,
         EntityState.Knockdown,
         EntityState.KnockdownHard,
+        EntityState.Jumping,
+        EntityState.Landing,
         EntityState.Dash,
     ].includes(state);
 }
@@ -282,7 +297,9 @@ export function isStateNeutral(state: EntityState)
         EntityState.Idle,
         EntityState.Crouch,
         EntityState.Walk,
+        EntityState.Jumping,
         EntityState.Midair,
+        EntityState.Landing,
     ].includes(state);
 }
 
@@ -306,20 +323,17 @@ export const Jump = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BaseP
     Character.PrimaryPart.ApplyImpulse(thisImpulse);
     Character.Humanoid.SetAttribute("JumpDirection", Character.Humanoid.MoveDirection);
 
-    do
+    if (Character.GetAttribute("State") === EntityState.Jumping)
     {
-        task.wait();
-    }
-    while (Character.Humanoid.FloorMaterial !== Enum.Material.Air);
-
-    const _conn = Character.Humanoid.GetPropertyChangedSignal("FloorMaterial").Connect(() =>
-    {
-        if (Character.Humanoid.FloorMaterial !== Enum.Material.Air)
+        const _conn = Character.Humanoid.GetPropertyChangedSignal("FloorMaterial").Connect(() =>
         {
-            _conn.Disconnect();
-            Character.Humanoid.SetAttribute("JumpDirection", undefined);
-        }
-    });
+            if (Character.Humanoid.FloorMaterial !== Enum.Material.Air)
+            {
+                _conn.Disconnect();
+                Character.Humanoid.SetAttribute("JumpDirection", undefined);
+            }
+        });
+    }
 
     return Promise.resolve(true);
 };
