@@ -8,6 +8,8 @@ import { QuarrelGame } from "./quarrelgame.service";
 export class MovementService implements OnStart, OnInit
 {
     public readonly JumpStartFrames = 14;
+
+    public readonly JumpEndFrames = 2;
     
     constructor(private readonly quarrelGame: QuarrelGame)
     {}

@@ -301,7 +301,7 @@ export namespace Entity
             
             this.SetStateEffect(EntityState.Landing, () => 
             {
-                this.WhileInState((1/60) * Dependency<MovementService>().JumpStartFrames).then(() =>
+                this.WhileInState((1/60) * Dependency<MovementService>().JumpEndFrames).then(() =>
                 {
                     if (this.IsMoving())
                         this.SetState(EntityState.Walk)
