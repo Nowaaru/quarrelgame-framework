@@ -23,6 +23,7 @@ create a variety of hand-to-hand combat games similar to other games like
 * [x] Disjoint Hitboxes
 * [x] No Physics Bouncing
 * [x] Combo Choreography - Gatling / BEAT!
+* [ ] **Motion Input Controller Overhaul** - Held Inputs, Automatic Skill Acquisition through Push Function (im so cooked 💀)
 * [ ] Combo Choreography - Air Combos
 * [ ] Combo Choreography - Blocking
 * [ ] Combo Choreography - Perfect Blocking
