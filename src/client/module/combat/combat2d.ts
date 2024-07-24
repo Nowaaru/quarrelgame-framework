@@ -83,7 +83,10 @@ export abstract class CombatController2D extends CombatController implements OnK
         if (!this.IsEnabled())
             return false;
 
-        if (inputMode !== InputMode.Press)
+        const inProgressInputSize = this.motionInputController.getMotionInputInProgress()?.size() ?? 0;
+        if (inProgressInputSize > 0 && inputMode !== InputMode.Release)
+            return false;
+        else if (inputMode !== InputMode.Press)
             return false;
 
         return this.handleOffensiveInput(buttonPressed);
