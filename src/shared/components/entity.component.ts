@@ -283,7 +283,7 @@ export class Entity<
                 print("jump: yayed: false")
                 if (playerFromCharacter)
 
-                    return ServerEvents.Jump(playerFromCharacter, this.instance);
+                    return ServerEvents.Jump(playerFromCharacter);
 
                 lib.Jump(this.instance);
             }).catch((new_state) =>

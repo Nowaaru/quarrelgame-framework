@@ -183,12 +183,25 @@ export function isInput(input: unknown): input is Input
 {
     return !!Input[input as never];
 }
+
 export function GenerateRelativeVectorFromNormalId(
     relativeTo: CFrame,
     normal: Enum.NormalId,
 )
 {
     return relativeTo.VectorToWorldSpace(Vector3.FromNormalId(normal));
+}
+
+export function isCurrentMotionDashInput(
+    inputs: MotionInput
+)
+{
+    const motionSize = inputs.size()
+    if (motionSize < 4)
+        return false;
+
+    const primaryInput = inputs[motionSize - 1];
+    return primaryInput !== Motion.Neutral && primaryInput && inputs[motionSize - 3] === primaryInput && inputs[motionSize - 4]
 }
 
 export type MotionInput = Array<Motion | Input>;
