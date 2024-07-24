@@ -16,6 +16,7 @@ import { Identifier } from "./identifier";
 
 type SkillName = string;
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Character
 {
     export const MaximumEaseOfUse = 5;
@@ -81,6 +82,14 @@ export namespace Character
 
         characterSubheader?: string;
 
+        maximumAirOptions: number;
+
+        maximumAirDashes: number;
+
+        maximumAirJumps: number;
+        
+        eightWayDash: boolean;
+
         attacks: Map<MotionInput, Skill.Skill | (() => Skill.Skill)>;
     }
 
@@ -97,6 +106,7 @@ export namespace Character
         ANIMATION_END,
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace CharacterEventSignatures
     {
         export type SkillCast = (skillId: string) => void;
@@ -208,6 +218,14 @@ export namespace Character
 
         protected characterSubheader?: string;
 
+        protected maximumAirOptions?: number;
+
+        protected maximumAirDashes?: number;
+
+        protected maximumAirJumps?: number;
+
+        protected eightWayDash?: boolean;
+
         public SetName(name: string)
         {
             this.name = name;
@@ -275,7 +293,7 @@ export namespace Character
         public Compile(): CharacterProps
         {
             // eslint-disable-next-line max-len
-            const { name, description, easeOfUse, characterModel, skills, rigType, attacks, animations, characterArchetype, characterHeader, characterSubheader } =
+            const { name, description, easeOfUse, characterModel, skills, rigType, attacks, animations, characterArchetype, characterHeader, characterSubheader, maximumAirOptions, maximumAirJumps, maximumAirDashes, eightWayDash = false } =
                 this;
             assert(characterModel, "Builder incomplete! Character model is unset.");
             assert(name, "Builder incomplete! Name is unset.");
@@ -293,6 +311,10 @@ export namespace Character
                 characterArchetype,
                 characterHeader,
                 characterSubheader,
+                maximumAirOptions: maximumAirOptions ?? 2,
+                maximumAirJumps: maximumAirJumps ?? 1,
+                maximumAirDashes: maximumAirDashes ?? 1,
+                eightWayDash,
                 rigType,
             };
         }
@@ -324,6 +346,7 @@ export namespace Character
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Skill
 {
     interface FrameDataClassProps

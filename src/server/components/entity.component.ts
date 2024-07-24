@@ -11,9 +11,9 @@ import { Physics } from "./physics";
 
 import { QuarrelGame } from "server/services/quarrelgame.service";
 import * as entityExport from "shared/components/entity.component";
-import { ServerEvents, ServerFunctions } from "shared/network";
-import type { Skill } from "shared/util/character";
-import { Input } from "shared/util/input";
+import { ClientFunctions, ServerEvents, ServerFunctions } from "shared/network";
+import type { Character, Skill } from "shared/util/character";
+import { ConvertMotionToMoveDirection, Input, Motion } from "shared/util/input";
 import * as lib from "shared/util/lib";
 import { MovementService } from "server/services/movement.service";
 enum RotationMode
@@ -75,11 +75,51 @@ export namespace Entity
     export interface CombatantAttributes extends EntityAttributes
     {
         /**
-         * The maximum stamina of the entity.
+         * The maximum amount of air options
+         * an Entity can do.
+         *
+         * Especially useful for preventing infinite air combos.
+         */
+        MaxAirOptions: number;
+        /**
+         * The remaining amount of air dashes
+         * the Entity has.
+         */
+        MaxAirDashes: number;
+        /**
+         * The remaining amount of jumps
+         * the Entity has.
+         */
+        MaxAirJumps: number;
+        /**
+         * The remaining amount of air options
+         * an Entity has remaining.
+         *
+         * Especially useful for preventing infinite air combos.
+         */
+        AirOptions: number;
+        /**
+         * The remaining amount of air dashes
+         * the Entity has.
+         */
+        AirDashes: number;
+        /**
+         * The remaining amount of jumps
+         * the Entity has.
+         */
+        AirJumps: number;
+
+        /**
+         * Whether the Entity can eight-way dash.
+         */
+        CanEightWayDash: boolean;
+
+        /**
+         * The maximum stamina of the Entity.
          */
         MaxStamina: number;
         /**
-         * The current stamina of the entity.
+         * The current stamina of the Entity.
          */
         Stamina: number;
 
@@ -162,6 +202,16 @@ export namespace Entity
             MaxBlockStamina: 100,
             BlockStamina: 100,
 
+            MaxAirOptions: 2,
+            MaxAirJumps: 1,
+            MaxAirDashes: 1,
+
+            AirOptions: -1,
+            AirJumps: -1,
+            AirDashes: -1,
+
+            CanEightWayDash: false,
+
             IFrame: -1,
             BlockStun: -1,
             HitStop: -1,
@@ -175,6 +225,27 @@ export namespace Entity
         public readonly animator: Animator.Animator;
 
         public readonly stateAnimator: Animator.StateAnimator;
+
+        public readonly hurtbox = (() => {
+            const hurtboxInstance = new Instance("Part");
+            hurtboxInstance.Name = "Hurtbox";
+            hurtboxInstance.Transparency = 0.8;
+            hurtboxInstance.Material = Enum.Material.ForceField;
+            hurtboxInstance.Anchored = false;
+            hurtboxInstance.CanCollide = false;
+            hurtboxInstance.CanQuery = true;
+            hurtboxInstance.Massless = true;
+            hurtboxInstance.Size = this.instance.GetExtentsSize();
+            hurtboxInstance.PivotTo(this.instance.GetPivot());
+
+            const WeldConstraint = new Instance("WeldConstraint", this.instance.PrimaryPart);
+            WeldConstraint.Part0 = WeldConstraint.Parent as BasePart;
+            WeldConstraint.Part1 = hurtboxInstance;
+
+            hurtboxInstance.Parent = WeldConstraint.Parent;
+
+            return hurtboxInstance;
+        })() as Omit<BasePart, "Destroy"> 
 
         constructor()
         {
@@ -194,7 +265,7 @@ export namespace Entity
             );
         });
 
-        onFrame(dt: number): void
+        onFrame(): void
         {
             if (!this.instance?.Parent)
                 return;
@@ -265,10 +336,21 @@ export namespace Entity
                 | undefined) ?? this.instance.PrimaryPart;
 
             const slowButNotImmobile = () => (this.controller.SetRooted(true)),
-                zeroWalkSpeed = slowButNotImmobile;
+                  zeroWalkSpeed = slowButNotImmobile;
 
             const onNeutral = () =>
             {
+                if (this.IsState(EntityState.Idle, EntityState.Walk)) {
+                    if (this.attributes.AirJumps < this.attributes.MaxAirJumps)
+                        this.attributes.AirJumps = this.attributes.MaxAirJumps;
+
+                    if (this.attributes.AirDashes < this.attributes.MaxAirDashes)
+                        this.attributes.AirDashes = this.attributes.MaxAirDashes;
+
+                    if (this.attributes.AirOptions < this.attributes.MaxAirOptions)
+                        this.attributes.AirOptions = this.attributes.MaxAirOptions;
+                }
+
                 this.attributes.PreviousSkill = undefined;
                 this.attributes.Counter = undefined;
                 this.controller.SetRooted(false);
@@ -378,13 +460,38 @@ export namespace Entity
             this.attributes.BlockStun = -1;
         }
 
-        public Jump()
+        public async Jump()
         {
             if (!this.CanJump())
                 return Promise.resolve(false);
 
             this.ClearHitstop();
             return super.Jump();
+        }
+
+        public async Dash(direction: Motion)
+        {
+            if (this.IsNegative())
+                return Promise.resolve(false);
+
+            if (!this.IsGrounded())
+            {
+                if (this.attributes.AirDashes <= 0|| this.attributes.AirOptions <= 0)
+
+                    return Promise.resolve(false);
+
+                this.attributes.AirDashes -= 1;
+                this.attributes.AirOptions -= 1;
+            }
+
+            this.ClearHitstop();
+            const neutralMotionName: keyof typeof Motion = Motion[direction].match("Forward")[0] as "Forward" ?? Motion[direction].match("Back")[0] as "Back" ?? "Back";
+            const maybePlayer = Players.GetPlayerFromCharacter(this.instance);
+            const motionDirection = ConvertMotionToMoveDirection(this.attributes.CanEightWayDash ? direction : Motion[neutralMotionName]);
+            if (maybePlayer)
+                return ServerEvents.Dash(maybePlayer, motionDirection)
+            else
+                return lib.PhysicsDash(this.instance, motionDirection, undefined, false);
         }
 
         private rotationLocked = RotationMode.Unlocked;
@@ -454,8 +561,13 @@ export namespace Entity
 
         public CanJump()
         {
-            print("grounded:", this.IsGrounded())
-            return !this.IsNegative() && !this.IsState(EntityState.Jumping) && this.IsGrounded();
+            if (!this.IsNegative())
+                if (this.IsGrounded())
+                    return !this.IsState(EntityState.Jumping)
+                else
+                    return this.attributes.AirOptions > 0 && this.attributes.AirJumps > 0;
+            else return false;
+            // if sandwich?! O_O
         }
 
         public CanCounter()
@@ -505,6 +617,16 @@ export namespace Entity
             MaxBlockStamina: 100,
             BlockStamina: 100,
 
+            MaxAirOptions: 2,
+            MaxAirJumps: 1,
+            MaxAirDashes: 1,
+
+            AirOptions: -1,
+            AirJumps: -1,
+            AirDashes: -1,
+
+            CanEightWayDash: false,
+
             IFrame: -1,
             BlockStun: -1,
             HitStop: -1,
@@ -514,8 +636,8 @@ export namespace Entity
         },
     })
     export class PlayerCombatant<
-        A extends PlayerCombatantAttributes,
-    > extends Combatant<A>
+        A extends PlayerCombatantAttributes = PlayerCombatantAttributes
+    > extends Combatant<A> implements OnStart
     {
         constructor()
         {

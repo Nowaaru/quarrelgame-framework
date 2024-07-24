@@ -10,6 +10,8 @@ import { HumanoidController } from "./humanoid";
 
 export abstract class CharacterController implements OnGamepadInput, OnMatchRespawn
 {
+    protected abstract readonly keyboardDirectionMap: Map<Enum.KeyCode, Enum.NormalId>;
+
     protected character?: Model;
 
     protected player = Players.LocalPlayer;
@@ -25,27 +27,20 @@ export abstract class CharacterController implements OnGamepadInput, OnMatchResp
     )
     {}
 
-    protected abstract readonly keyboardDirectionMap: Map<Enum.KeyCode, Enum.NormalId>;
-
-    // TODO: fix bug where movedirection doesnt take into consideration the side the player is on
     public GetMoveDirection(relativeTo: CFrame)
     {
         let totalVector = Vector3.zero;
         this.keyboardDirectionMap.forEach((normal, code) =>
         {
             if (this.keyboard.isKeyDown(code))
-            {
+
                 if (relativeTo)
-                {
-                    totalVector = totalVector.add(
-                        GenerateRelativeVectorFromNormalId(relativeTo, normal),
-                    );
-                }
+
+                    totalVector = totalVector.add(GenerateRelativeVectorFromNormalId(relativeTo, normal));
+
                 else
-                {
+
                     totalVector = totalVector.add(Vector3.FromNormalId(normal));
-                }
-            }
         });
 
         return totalVector.Magnitude > 0 ? totalVector.Unit : totalVector;
@@ -54,6 +49,8 @@ export abstract class CharacterController implements OnGamepadInput, OnMatchResp
     private theseMovementActions?: BoundActionInfo[];
     public DisableRobloxMovement()
     {
+        //FIXME: 
+        //what the hell is going on over here??
         this.theseMovementActions = [
             ...ContextActionService.GetAllBoundActionInfo(),
         ]
