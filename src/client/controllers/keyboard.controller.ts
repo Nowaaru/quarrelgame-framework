@@ -4,6 +4,9 @@ import { Keyboard as ClackKeyboard } from "@rbxts/clack";
 import Signal from "@rbxts/signal";
 import { InputMode, InputProcessed, InputResult } from "shared/util/input";
 
+// TODO:
+// use UserInputService
+
 export interface OnKeyboardInput
 {
     onKeyboardInput?(buttonPressed: Enum.KeyCode, inputMode: InputMode): InputResult | boolean | (() => boolean | InputResult);
@@ -51,12 +54,12 @@ export class Keyboard implements OnStart, OnInit
             {
                 if (isProcessed)
                 {
-                    keyboardInputObject.onProcessedKeyboardInput?.(pressedKey, InputMode.Press);
+                    task.spawn(() => keyboardInputObject.onProcessedKeyboardInput?.(pressedKey, InputMode.Press));
 
                     return;
                 }
 
-                keyboardInputObject.onKeyboardInput?.(pressedKey, InputMode.Press);
+                task.spawn(() => keyboardInputObject.onKeyboardInput?.(pressedKey, InputMode.Press));
             });
         });
 
@@ -70,12 +73,12 @@ export class Keyboard implements OnStart, OnInit
             {
                 if (isProcessed)
                 {
-                    keyboardInputObject.onProcessedKeyboardInput?.(pressedKey, InputMode.Release);
+                    task.spawn(() => keyboardInputObject.onProcessedKeyboardInput?.(pressedKey, InputMode.Release));
 
                     return;
                 }
 
-                keyboardInputObject.onKeyboardInput?.(pressedKey, InputMode.Release);
+                task.spawn(() => keyboardInputObject.onKeyboardInput?.(pressedKey, InputMode.Release));
             });
         });
     }
