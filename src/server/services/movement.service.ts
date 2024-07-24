@@ -1,7 +1,7 @@
 import { Components } from "@flamework/components";
 import { Dependency, OnInit, OnStart, Service } from "@flamework/core";
+import { type Entity } from "server/components/entity.component";
 import { ServerFunctions } from "shared/network";
-import { EntityState } from "shared/util/lib";
 import { QuarrelGame } from "./quarrelgame.service";
 
 @Service({})
@@ -39,6 +39,18 @@ export class MovementService implements OnStart, OnInit
         ServerFunctions.Jump.setCallback((player) =>
         {
             return fetchEntityFromPlayer(player).Jump();
+        });
+
+        ServerFunctions.Dash.setCallback((player, direction) =>
+        {
+
+            assert(this.quarrelGame.IsParticipant(player), `player ${player} is not a participant`);
+            assert(player.Character, "player is not defined");
+
+            const combatant = Dependency<Components>().getComponent<Entity.PlayerCombatant>(player.Character);
+            assert(combatant, "combatant not defined");
+
+            return combatant.Dash(direction).andThenReturn(true);
         });
     }
 }
