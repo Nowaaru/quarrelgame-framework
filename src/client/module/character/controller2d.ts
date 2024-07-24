@@ -9,7 +9,7 @@ import { Mouse } from "client/controllers/mouse.controller";
 import { CharacterController } from "client/module/character";
 import { CombatController2D } from "client/module/combat/combat2d";
 import { ClientFunctions } from "shared/network";
-import { ConvertMoveDirectionToMotion, GenerateRelativeVectorFromNormalId, Input, InputMode, InputResult, Motion } from "shared/util/input";
+import { ConvertMoveDirectionToMotion, GenerateRelativeVectorFromNormalId, Input, InputMode, InputResult, isCurrentMotionDashInput, Motion } from "shared/util/input";
 import { EntityState, isStateNeutral, NullifyYComponent, SessionType } from "shared/util/lib";
 
 import Make from "@rbxts/make";
@@ -187,18 +187,6 @@ export abstract class CharacterController2D extends CharacterController implemen
 
         assert(axisRotatedOrigin, "no axis rotated origin");
         const playerDirection = this.GetMoveDirection(axisRotatedOrigin);
-        const combatDirection = this.motionInputController.GetMotionDirection(axisRotatedOrigin);
-        const currentMotion = this.motionInputController.getMotionInputInProgress();
-        const [ [ playerMotion ], [ combatMotion ] ] = [ playerDirection, combatDirection ].map(ConvertMoveDirectionToMotion);
-
-        if (this.lastFrameNormal !== playerDirection || !currentMotion || currentMotion[currentMotion.size() - 1] !== Motion[combatMotion])
-        {
-            if (this.motionInputController.willTimeout())
-                this.motionInputController.clear();
-
-            this.motionInputController.pushToMotionInput(Motion[combatMotion]);
-            // print(`[${motion}, (${playerDirection})] =>`, [ ...(currentMotion ?? [ Motion.Neutral ]), Motion[motion] ].map((n) => Motion[n]).join(", "));
-        }
 
         const currentLastFrameNormal = this.lastFrameNormal;
         this.lastFrameNormal = playerDirection;
@@ -235,19 +223,14 @@ export abstract class CharacterController2D extends CharacterController implemen
             {
                 const lastFrameDot = currentLastFrameNormal.Dot(topNormal);
                 if (lastFrameDot <= eqLeniency)
-                {
-                    if (playerHumanoid.FloorMaterial !== Enum.Material.Air)
-                    if ([EntityState.Idle, EntityState.Walk].includes(character.GetAttribute("State") as number))
-                    {
 
-                            ClientFunctions.Jump();
-                    }
-                }
+                    ClientFunctions.Jump();
+
             }
             else if (currentState === EntityState.Crouch)
-            {
+
                 ClientFunctions.Crouch(EntityState.Idle);
-            }
+
 
             if (playerHumanoid.FloorMaterial === Enum.Material.Air && playerHumanoid.GetAttribute("JumpDirection"))
                 playerHumanoid.Move(playerHumanoid.GetAttribute("JumpDirection") as Vector3);
