@@ -8,6 +8,7 @@ import type { Entity } from "server/components/entity.component";
 import type MapNamespace from "server/components/map.component";
 import type { ParticipantAttributes } from "server/components/participant.component";
 
+
 /**
  * Functions that can only have callbacks defined on the server,
  * but can be executed on the client.
@@ -15,6 +16,7 @@ import type { ParticipantAttributes } from "server/components/participant.compon
  * 📝 Execution of these functions translate to the correlating
  * event or function being fired/invoked.
  */
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Server
 {
     interface MovementFunctions
@@ -27,6 +29,19 @@ export namespace Server
          * Make the player jump.
          */
         Jump(): boolean;
+        /**
+         * Make the character dash via Physics.
+         */
+        Dash(direction: Motion, dashPower?: number): Promise<boolean>;
+        /**
+         * Make the character dash via Constraints.
+         */
+        ConstraintDash(direction: Motion, dashPower?: number): Promise<boolean>;
+        /**
+         * Make the character dash via CFrame
+         * interpolation.
+         */
+        InterpolateDash(direction: Motion, dashPower?: number): Promise<boolean>;
     }
 
     type InputFunctions = {
@@ -202,6 +217,7 @@ export namespace Server
  * is advised to instead use events to communicate between the client and server
  * unless absolutely necessary.
  */
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Client
 {
     interface MatchEvents
@@ -233,13 +249,24 @@ export namespace Client
          */
         Tick(frameTime: number, tickRate: number): number;
         /**
-         * Make the character jump.
+         * Make the player jump.
          */
-        Jump(
-            character: Model & { Humanoid: Humanoid; PrimaryPart: BasePart; },
-        ): void;
+        Jump(jumpPower?: number): void;
         /**
-         * Change the combat mode that the player is in.
+         * Make the player dash via Physics.
+         */
+        Dash(direction: Vector3, dashPower?: number): void
+        /**
+         * Make the player dash via Constraints.
+         */
+        ConstraintDash(direction: Vector3, dashPower?: number): void
+        /**
+         * Make the player dash via CFrame
+         * interpolation.
+         */
+        InterpolateDash(direction: Vector3, dashPower?: number): void
+        /**
+         * Make the player dash via Physics.
          */
         SetCombatMode(combatMode: CombatMode): void;
     }
@@ -278,8 +305,24 @@ export const GlobalFunctions = Networking.createFunction<
     disableClientGuards: true,
 });
 
+/**
+ * Functions that the Client can call to 
+ * make requests to the server.
+ */
 export const ServerFunctions = GlobalFunctions.server;
+/**
+ * Functions that the Client can call to 
+ * make requests to the server.
+ */
 export const ClientFunctions = GlobalFunctions.client;
 
+/**
+ * Events that the Server can fire to
+ * make requests to the client.
+ */
 export const ServerEvents = GlobalEvents.server;
+/**
+ * Events that the Client can fire to
+ * make requests to the server.
+ */
 export const ClientEvents = GlobalEvents.client;

@@ -339,6 +339,39 @@ export const Jump = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BaseP
 };
 
 /**
+ * Make a character dash.
+ */
+export const PhysicsDash = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BasePart; }, direction = Character.PrimaryPart.CFrame.LookVector.mul(-1), dashPower = 28, conserveMomentum = true) =>
+{
+    const thisImpulse = direction.Unit.mul(Character.PrimaryPart.AssemblyMass * dashPower);
+
+    if (conserveMomentum)
+        Character.PrimaryPart.ApplyImpulse(thisImpulse);
+    else
+        Character.PrimaryPart.AssemblyLinearVelocity = thisImpulse;
+
+    return Promise.resolve(true);
+};
+
+export const ConstraintDash = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BasePart; }, direction = Character.PrimaryPart.CFrame.LookVector.mul(-1), dashPower = 28, conserveMomentum = true) =>
+{
+    const thisImpulse = direction.Unit;
+    const entityAttachment = Character.PrimaryPart.FindFirstChild("MainAttachment");
+    assert(entityAttachment, "mainattachment could not be found");
+
+    return Promise.resolve(true);
+}
+
+export const CFrameDash = (Character: Model & { Humanoid: Humanoid; PrimaryPart: BasePart; }, direction = Character.PrimaryPart.CFrame.LookVector.mul(-1), dashPower = 28, conserveMomentum = true) =>
+{
+    const thisImpulse = direction.Unit;
+    const entityAttachment = Character.PrimaryPart.FindFirstChild("MainAttachment");
+    assert(entityAttachment, "mainattachment could not be found");
+
+    return Promise.resolve(true);
+}
+
+/**
  * Remove the Y component of a Vector or CFrame.
  * Good for determining whether a character is facing another
  * only on a specific set of axes.
