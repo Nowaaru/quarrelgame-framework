@@ -11,6 +11,7 @@ import { Keyboard, OnKeyboardInput } from "./keyboard.controller";
 
 export type Frames = number;
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace MotionInput
 {
 
@@ -74,7 +75,7 @@ export namespace MotionInput
                 return res;
             }
 
-            return [ ...this.inputs ];
+            return this.inputs;
         }
 
         private inputs: Motion[] = [];
