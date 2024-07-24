@@ -114,6 +114,13 @@ export class Entity<
     protected readonly controller!: ControllerComponent;
 
     protected floorMaterial!: Enum.Material;
+    
+    public readonly mainConstraint: Omit<Attachment, "Destroy"> = (() => {
+        const attachment = new Instance("Attachment")
+        attachment.Name = "MainAttachment";
+        return attachment;
+    })();
+        
 
     constructor()
     {
