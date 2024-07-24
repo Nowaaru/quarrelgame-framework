@@ -4,6 +4,7 @@ import { Players, ReplicatedStorage, RunService } from "@rbxts/services";
 export * from "client/controllers/client.controller";
 export * from "client/controllers/match.controller";
 export * from "client/controllers/motioninput.controller";
+export * from "client/controllers/newmotioninput.controller";
 export * from "client/controllers/resourcecontroller.controller";
 
 export * from "client/module/character/humanoid";
