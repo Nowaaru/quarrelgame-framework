@@ -97,7 +97,7 @@ export class Keyboard implements OnStart, OnInit
         ContextActionService.BindAction("QGFInputProcessor", 
             (actionName: string, state: Enum.UserInputState, inputObject: InputObject) => 
             {
-                this.genericInputProcessor(...args);
+                this.genericInputProcessor(actionName, state, inputObject);
             },
             false,
             ...Enum.KeyCode.GetEnumItems());
