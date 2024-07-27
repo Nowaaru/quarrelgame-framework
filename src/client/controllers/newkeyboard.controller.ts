@@ -1,7 +1,7 @@
 import Signal from "@rbxts/signal";
 import { Controller, OnStart, OnInit } from "@flamework/core"
 import { ContextActionService, RunService } from "@rbxts/services"
-import { InputMode } from "shared/util/input";
+import { InputMode, InputResult } from "shared/util/input";
 
 type Callable<T extends defined, Signature extends Callback> = T & Signature;
 
@@ -70,7 +70,7 @@ class Keybind
         const currentMetatable = getmetatable(this) as LuaMetatable<Keybind>;
         currentMetatable.__call = (_, ...args: unknown[]) =>
         {
-            this.Action?.(...args);
+            this.Action?.(args[0] as InputObject);
         }
     }
 
@@ -80,9 +80,9 @@ class Keybind
 
     public readonly ActionState: InputMode;
 
-    private readonly Action: (...args: unknown[]) => void = () => undefined;
+    public readonly Action: (inputObject: InputObject) => InputResult | undefined = () => undefined;
 
-    public Priority: number = math.huge;
+    public readonly Priority: number = math.huge;
 }
 
 @Controller({
@@ -90,14 +90,27 @@ class Keybind
 })
 export class Keyboard implements OnStart, OnInit
 {
-    private readonly Keybinds = new Map<Enum.KeyCode, Array<Keybind>>();
+    private readonly Keybinds = new Map<Enum.KeyCode, Array<Callable<Keybind, Keybind["Action"]>>>();
 
     onStart(): void 
     {
         ContextActionService.BindAction("QGFInputProcessor", 
             (actionName: string, state: Enum.UserInputState, inputObject: InputObject) => 
             {
-                this.genericInputProcessor(actionName, state, inputObject);
+                const allKeybindActions = this.Keybinds.get(inputObject.KeyCode) ?? [];
+                const keybindActions = [...(allKeybindActions.filter((e) => e.Key === inputObject.KeyCode))];
+                
+                if (keybindActions.size() > 0)
+                {
+                    // keybindActions *should* be in order
+                    for (let i = keybindActions.size(); i > 0; i--)
+                    {
+                        const actionResult = keybindActions[i]?.(inputObject);
+                        if (actionResult === InputResult.Success)
+
+                            break;
+                    }
+                } else this.genericInputProcessor(actionName, state, inputObject);
             },
             false,
             ...Enum.KeyCode.GetEnumItems());
