@@ -67,12 +67,7 @@ export class NewMotionInputController<T extends CharacterController> implements 
 
         // if (this.currentMotion.size() <= 0)
         // {
-        //     if (inputMode !== input.InputMode.Release) 
-        //     {
-        //
-        //         return input.InputResult.Fail;
-        //     }
-        /* } else  */
+         // }
 
         /* TODO: support charge inputs */
 
@@ -82,8 +77,13 @@ export class NewMotionInputController<T extends CharacterController> implements 
             return input.InputResult.Fail;
 
 
-        if (hasCharacterController || this.currentMotion.size() === 0) // allow refilling input in-case motion was executed (e.g. DP into crouch)
+        if (hasCharacterController || (hasCombatController && this.currentMotion.size() === 0)) // allow refilling input in-case motion was executed (e.g. DP into crouch)
         {
+            // if (inputMode !== input.InputMode.Release && this.currentMotion.size() !== 0)
+            // {
+            //     return input.InputResult.Fail;
+            // }
+
             const motionNormal = this.GetMotionDirection(arena.config.Origin.Value);// this.characterController.GetKeybinds().get(buttonPressed);
             const outMotion = Motion[input.ConvertMoveDirectionToMotion(motionNormal)[0]];
             this.currentMotion.push(outMotion);
@@ -218,7 +218,7 @@ export class NewMotionInputController<T extends CharacterController> implements 
         else this.timeoutDeltaTime = 0;
     }
 
-    public GetMotionDirection(relativeTo: CFrame)
+    public GetMotionDirection(relativeTo: CFrame, fromKeys?: Enum.KeyCode[])
     {
         assert(this.characterController, "no character controller bound.");
         const keyboardDirectionMap = this.characterController.GetKeybinds();
@@ -228,7 +228,7 @@ export class NewMotionInputController<T extends CharacterController> implements 
 
         keyboardDirectionMap.forEach((normal, code) =>
         {
-            if (keyboard.isKeyDown(code))
+            if (keyboard.isKeyDown(code) || fromKeys?.includes(code))
             {
                 const { Top, Bottom, Back: Left, Front: Right } = Enum.NormalId;
                 const { character } = Dependency<Client>();
