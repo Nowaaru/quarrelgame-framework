@@ -7,6 +7,19 @@ import { InputMode, InputProcessed, InputResult } from "shared/util/input";
 // TODO:
 // use UserInputService
 
+/*
+ * TODO: New Implementation:
+ *
+ * Use ContextActionService and
+ * dump all of the keys. The Keyboard
+ * can expose an arbitrary onKeyPressed/onProcessedKeyPressed
+ * or the user can bind specific keys through a function
+ * that interfaces ContextActionService:BindAction.
+ *
+ * This allows for the developer to specify whether an action
+ * is to override a more insignificant option (esp. for
+ * transformative moves)
+ */
 export interface OnKeyboardInput
 {
     onKeyboardInput?(buttonPressed: Enum.KeyCode, inputMode: InputMode): InputResult | boolean | (() => boolean | InputResult);
@@ -53,11 +66,9 @@ export class Keyboard implements OnStart, OnInit
             this.keyboardListeners.forEach((keyboardInputObject) =>
             {
                 if (isProcessed)
-                {
+
                     task.spawn(() => keyboardInputObject.onProcessedKeyboardInput?.(pressedKey, InputMode.Press));
 
-                    return;
-                }
 
                 task.spawn(() => keyboardInputObject.onKeyboardInput?.(pressedKey, InputMode.Press));
             });
@@ -72,11 +83,9 @@ export class Keyboard implements OnStart, OnInit
             this.keyboardListeners.forEach((keyboardInputObject) =>
             {
                 if (isProcessed)
-                {
+
                     task.spawn(() => keyboardInputObject.onProcessedKeyboardInput?.(pressedKey, InputMode.Release));
 
-                    return;
-                }
 
                 task.spawn(() => keyboardInputObject.onKeyboardInput?.(pressedKey, InputMode.Release));
             });
