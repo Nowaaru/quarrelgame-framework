@@ -94,6 +94,11 @@ export abstract class CharacterController implements OnGamepadInput, OnMatchResp
             this.DisableRobloxMovement();
     }
 
+    public GetCharacter(): Model | undefined
+    {
+        return this.character;
+    }
+
     onMatchRespawn(character: Model): void
     {
         print("on respawnded!!");
