@@ -299,7 +299,7 @@ export namespace Entity
 
             if (this.IsNeutral())
             {
-                print(EntityState[this.GetState()], this.IsGrounded(), this.IsState(EntityState.Jumping));
+                // print(EntityState[this.GetState()], this.IsGrounded(), this.IsState(EntityState.Jumping));
                 if (this.IsGrounded())
                 {
                     if (this.IsMoving() && !this.IsState(EntityState.Jumping, EntityState.Walk))
