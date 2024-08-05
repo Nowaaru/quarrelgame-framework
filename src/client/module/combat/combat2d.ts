@@ -6,12 +6,12 @@ import { Animator } from "shared/components/animator.component";
 import { ClientFunctions } from "shared/network";
 import { Input, InputMode, InputResult, Motion } from "shared/util/input";
 
-import Object from "@rbxts/object-utils";
 import { CharacterSelectController } from "client/controllers/characterselect.controller";
 import { OnKeyboardInput } from "client/controllers/keyboard.controller";
 import { OnMatchRespawn } from "client/controllers/match.controller";
-import Character from "shared/util/character";
 import { CameraController2D } from "../camera/camera2d";
+
+import Character from "shared/util/character";
 
 export abstract class CombatController2D extends CombatController implements OnKeyboardInput, OnMatchRespawn
 {
@@ -73,22 +73,18 @@ export abstract class CombatController2D extends CombatController implements OnK
         return InputResult.Fail;
     }
 
-    public GetKeybinds()
-    {
-        return new ReadonlyMap(Object.entries(this.keybindMap));
-    }
-
     onKeyboardInput(buttonPressed: Enum.KeyCode, inputMode: InputMode): boolean | InputResult | (() => boolean | InputResult)
     {
         if (!this.IsEnabled())
             return false;
 
-        const inProgressInputSize = this.motionInputController.getMotionInputInProgress()?.size() ?? 0;
-        if (inProgressInputSize > 0 && inputMode !== InputMode.Release)
-            return false;
-        else if (inputMode !== InputMode.Press)
-            return false;
-
-        return this.handleOffensiveInput(buttonPressed);
+        // const inProgressInputSize = this.motionInputController.getMotionInputInProgress()?.size() ?? 0;
+        // if (inProgressInputSize > 0 && inputMode !== InputMode.Release)
+        //     return false;
+        // else if (inputMode !== InputMode.Press)
+        //     return false;
+        //
+        // return this.handleOffensiveInput(buttonPressed);
+        return InputResult.Fail;
     }
 }
