@@ -96,87 +96,79 @@ export class NewMotionInputController<T extends CharacterController> implements 
 
         if (hasCombatController)
         {
-            // consider the a character with the following combo route:
-            // 236 + A B C
-            // 236 + A B
-            //
-            // if this exists, only when the key is released
-            // will this run. otherwise, make inputs instant and responsive.
-            const Characters = Dependency<CharacterSelectController>().characters;
-            const characterId = this.characterController.GetCharacter()?.GetAttribute("CharacterId") as string;
-
-            const foundCharacter = Characters.get(characterId);
             const keyInput = this.combatController!.GetKeybinds();
-
-            const pushInput = () => this.currentMotion.push(keyInput.get(buttonPressed)!);
-
-
-            if (!(characterId && Characters) || !foundCharacter)
-            {
-                if (inputMode === input.InputMode.Press)
-
-                    pushInput()
-
-                return input.InputResult.Fail;
-            }
-
             if (inputMode === input.InputMode.Press)
-
-                pushInput()
-
-            const decompiledAttacks = [...foundCharacter.Attacks]
-            const matchingAttacks = decompiledAttacks.filter(([motionInput]) => 
             {
-                let motionSet: input.MotionInput;
-                if ( motionInput.includes(input.Motion.Neutral) ) 
-                {
-                    const set = [ ... this.currentMotion ];
-                    if (set[0] !== input.Motion.Neutral)
-
-                        set.unshift(input.Motion.Neutral); // make sure the motion starts with 5 if it doesn't already
-
-                    motionSet = set.filter((e, k, a) => !(a[k - 1] === input.Motion.Neutral && e === input.Motion.Neutral)); // remove duplicates
-                }
-                else
-
-                    motionSet = this.currentMotion.filter((e) => e !== input.Motion.Neutral); // filter all neutrals 
-
-                if (motionSet.size() > motionInput.size())
-
-                    return;
-                     
-                if (motionSet.size() === 0)
- 
-                    return;
-
-                for (let i = motionSet.size() - 1; i >= 0; i--)
-
-                    if (motionInput[i] !== motionSet[i])
-
-                    {
-                        print(`motion failed: ${motionInput[i]} !== ${motionSet[i]}`);
-                        return false;
-                    }
-
-                print(`motion passed: ${this.stringifyMotionInput(motionInput)} === ${this.stringifyMotionInput(motionSet)}`);
-                return true;
-            });
-                     
-            if (matchingAttacks.size() === 0)
-            {
-                warn(`No attacks found for ${this.stringifyMotionInput(this.currentMotion)}. Attacks list: ${decompiledAttacks.map(([motion, skill]) => `\n${this.stringifyMotionInput(motion)} => ${typeIs(skill, "function") ? skill().Name : skill.Name}`).reduce((e,a) => e + a, decompiledAttacks.size() === 0 ? "NONE" : "")}`)
-            } else {
-                warn(`Matching attacks for ${this.stringifyMotionInput(this.currentMotion)}: ${matchingAttacks.map(([motion, skill]) => `\n${this.stringifyMotionInput(motion)} => ${typeIs(skill, "function") ? skill().Name : skill.Name}`).reduce((e,a) => e + a)}`)
+                this.currentMotion.push(keyInput.get(buttonPressed)!);
+                this.SubmitMotionInput();
             }
         }
 
         return input.InputResult.Success;
     }
 
-    public SubmitMotionInput(): Promise<boolean>
+    public async SubmitMotionInput(): Promise<boolean>
     {
+        const Characters = Dependency<CharacterSelectController>().characters;
+        const characterId = this.characterController.GetCharacter()?.GetAttribute("CharacterId") as string;
+        const foundCharacter = Characters.get(characterId);
+
+        if (!foundCharacter)
+
+            return new Promise((_, rej) => rej(false));
+
         const currentMotion = [ ...this.currentMotion ];
-        return ClientFunctions.SubmitMotionInput([... currentMotion ]);
+        const decompiledAttacks = [...foundCharacter.Attacks]
+        const matchingAttacks = decompiledAttacks.filter(([motionInput]) => 
+        {
+            let motionSet: input.MotionInput;
+            if ( motionInput.includes(input.Motion.Neutral) ) 
+            {
+                const set = [ ... this.currentMotion ];
+                if (set[0] !== input.Motion.Neutral)
+
+                    set.unshift(input.Motion.Neutral); // make sure the motion starts with 5 if it doesn't already
+
+                motionSet = set.filter((e, k, a) => !(a[k - 1] === input.Motion.Neutral && e === input.Motion.Neutral)); // remove duplicates
+            }
+            else
+
+                motionSet = this.currentMotion.filter((e) => e !== input.Motion.Neutral); // filter all neutrals 
+
+            if (motionSet.size() > motionInput.size())
+
+                return;
+                 
+            if (motionSet.size() === 0)
+
+                return;
+
+            for (let i = motionSet.size() - 1; i >= 0; i--)
+
+                if (motionInput[i] !== motionSet[i])
+
+                {
+                    print(`motion failed: ${motionInput[i]} !== ${motionSet[i]}`);
+                    return false;
+                }
+
+            print(`motion passed: ${this.stringifyMotionInput(motionInput)} === ${this.stringifyMotionInput(motionSet)}`);
+            return true;
+        });
+                 
+        if (matchingAttacks.size() === 0)
+        {
+            warn(`No attacks found for ${this.stringifyMotionInput(this.currentMotion)}. Attacks list: ${decompiledAttacks.map(([motion, skill]) => `\n${this.stringifyMotionInput(motion)} => ${typeIs(skill, "function") ? skill().Name : skill.Name}`).reduce((e,a) => e + a, decompiledAttacks.size() === 0 ? "NONE" : "")}`)
+        } else {
+            if (matchingAttacks.size() === 1)
+
+                task.spawn(() => ClientFunctions.SubmitMotionInput([... currentMotion ]));
+
+            warn(`Matching attacks for ${this.stringifyMotionInput(this.currentMotion)}: ${matchingAttacks.map(([motion, skill]) => `\n${this.stringifyMotionInput(motion)} => ${typeIs(skill, "function") ? skill().Name : skill.Name}`).reduce((e,a) => e + a)}`)
+        }
+
+        this.currentMotion.clear();
+        return true;
     }
 
     onStart(): void 
