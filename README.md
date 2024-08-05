@@ -23,17 +23,18 @@ create a variety of hand-to-hand combat games similar to other games like
 * [x] Disjoint Hitboxes
 * [x] No Physics Bouncing
 * [x] Combo Choreography - Gatling / BEAT!
-* [x] **Motion Input Controller Overhaul**
-* [ ] **Motion Input Overhaul: Charge Inputs, Charge Inputs with min/max Timing**
+* [x] Motion Input Controller Overhaul
+* [ ] **Entity System Rewrite**
 * [ ] Combo Choreography - Air Combos
 * [ ] Combo Choreography - Blocking
 * [ ] Combo Choreography - Perfect Blocking
+* [ ] Motion Input Overhaul: Charge Inputs, Charge Inputs with min/max Timing**
 * [ ] Hurtbox Support
-* [ ] Animations - On-Demand Inverse Kinematics (grabbing, pinning, etc)
 * [ ] Double Jumping
 * [ ] "Matchmaking" System
 * [ ] Attack Cinematics
 * [ ] Defense Cinematics
+* [ ] Animations - On-Demand Inverse Kinematics (grabbing, pinning, etc)
 * [ ] Chickynoid Integration
 * [ ] Rollback Netcode (use Chickynoid)
 * [ ] **Component Garbage Collection**
