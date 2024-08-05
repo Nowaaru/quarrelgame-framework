@@ -82,7 +82,7 @@ export class NewMotionInputController<T extends CharacterController> implements 
             return input.InputResult.Fail;
 
 
-        if (hasCharacterController)
+        if (hasCharacterController || this.currentMotion.size() === 0) // allow refilling input in-case motion was executed (e.g. DP into crouch)
         {
             const motionNormal = this.GetMotionDirection(arena.config.Origin.Value);// this.characterController.GetKeybinds().get(buttonPressed);
             const outMotion = Motion[input.ConvertMoveDirectionToMotion(motionNormal)[0]];
@@ -135,24 +135,24 @@ export class NewMotionInputController<T extends CharacterController> implements 
 
                 motionSet = this.currentMotion.filter((e) => e !== input.Motion.Neutral); // filter all neutrals 
 
-            if (motionSet.size() > motionInput.size())
+            if (motionSet.size() < motionInput.size())
 
                 return;
+
                  
             if (motionSet.size() === 0)
 
                 return;
 
-            for (let i = motionSet.size() - 1; i >= 0; i--)
+            for (let i = motionInput.size() - 1; i >= 0; i--)
 
-                if (motionInput[i] !== motionSet[i])
+                if (motionInput[i] !== motionSet[motionSet.size() - (motionInput.size() - i)])
 
-                {
-                    print(`motion failed: ${motionInput[i]} !== ${motionSet[i]}`);
+                    // print(`motion failed: ${motionInput[i]} !== ${motionSet[i]}`);
                     return false;
-                }
 
-            print(`motion passed: ${this.stringifyMotionInput(motionInput)} === ${this.stringifyMotionInput(motionSet)}`);
+
+            // print(`motion passed: ${this.stringifyMotionInput(motionInput)} === ${this.stringifyMotionInput(motionSet)}`);
             return true;
         });
                  
