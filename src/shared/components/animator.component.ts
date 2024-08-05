@@ -37,6 +37,11 @@ export namespace Animator
             animation: Animation.AnimationData,
         ): Animation.Animation
         {
+            const alreadyLoadedAnimation = this.loadedAnimations.find((e) => e.AnimationId === animation.assetId);
+            if (alreadyLoadedAnimation)
+
+                return alreadyLoadedAnimation;
+
             const loadedAnimation = new Animation.Animation(this, animation);
             this.loadedAnimations.push(loadedAnimation);
 
