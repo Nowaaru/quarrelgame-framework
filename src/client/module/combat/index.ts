@@ -2,10 +2,11 @@ import { Players } from "@rbxts/services";
 import { OnMatchRespawn } from "client/controllers/match.controller";
 import { Character } from "shared/util/character";
 
-import { Components } from "@flamework/components";
 import { Dependency } from "@flamework/core";
 import { CharacterSelectController } from "client/controllers/characterselect.controller";
 import { Input, InputMode, InputResult } from "shared/util/input";
+
+import Object from "@rbxts/object-utils";
 
 export abstract class CombatController implements OnMatchRespawn
 {
@@ -60,6 +61,11 @@ export abstract class CombatController implements OnMatchRespawn
     public Toggle(enabled = this.enabled)
     {
         return this.enabled ? this.Disable() : this.Enable();
+    }
+
+    public GetKeybinds()
+    {
+        return new ReadonlyMap(Object.entries(this.keybindMap));
     }
 
     constructor()
