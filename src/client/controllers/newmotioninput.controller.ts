@@ -8,6 +8,10 @@ import { NullifyYComponent } from "shared/util/lib";
 import * as input from "shared/util/input";
 export import Input = input.Input;
 export import Motion = input.Motion;
+import { MatchController } from "./match.controller";
+import { UserInputService } from "@rbxts/services";
+import { CombatController } from "client/module/combat";
+import { CharacterSelectController } from "./characterselect.controller";
 
 export interface MotionInputHandling
 {
@@ -34,7 +38,7 @@ enum MotionInputPurgeMode
     TAIL
 }
 
-export class NewMotionInputController<T extends CharacterController> implements OnStart, OnRender, OnKeyboardInput
+export class NewMotionInputController<T extends CharacterController> implements OnStart, OnRender, OnKeyboardInput, MotionInputHandling
 {
     public static PurgeMode: MotionInputPurgeMode = MotionInputPurgeMode.TAIL;
 
@@ -42,35 +46,129 @@ export class NewMotionInputController<T extends CharacterController> implements 
 
     protected readonly normalMap: ReadonlyMap<Enum.KeyCode, Enum.NormalId>;
 
-    protected readonly motionInputEventHandlers: Set<MotionInputHandling> = new Set();
+    protected readonly motionInputEventHandlers: Set<MotionInputHandling> = new Set([this]);
 
-    constructor(protected characterController: T)
+    protected combatController?: CombatController;
+
+    constructor(protected characterController: T, private matchController: MatchController = Dependency<MatchController>())
     {
         this.normalMap = this.characterController.GetKeybinds();
     }
 
     onKeyboardInput(buttonPressed: Enum.KeyCode, inputMode: input.InputMode): boolean | input.InputResult | (() => boolean | input.InputResult) 
     {
-        print("motion guh 1", inputMode, input.InputMode.Release)
-        if (this.currentMotion.size() <= 0)
+        const hasCharacterController = this.characterController.GetKeybinds().has(buttonPressed);
+        const hasCombatController = this.combatController?.GetKeybinds().has(buttonPressed);
+        if (buttonPressed === Enum.KeyCode.Backspace || buttonPressed === Enum.KeyCode.K)
+        {
+            this.currentMotion.clear();
+            return input.InputResult.Success;
+        } 
 
-            if (inputMode !== input.InputMode.Release) 
+        // if (this.currentMotion.size() <= 0)
+        // {
+        //     if (inputMode !== input.InputMode.Release) 
+        //     {
+        //
+        //         return input.InputResult.Fail;
+        //     }
+        /* } else  */
+
+        /* TODO: support charge inputs */
+
+        const arena = this.matchController.GetCurrentArena();
+        if (!arena)
+
+            return input.InputResult.Fail;
+
+
+        if (hasCharacterController)
+        {
+            const motionNormal = this.GetMotionDirection(arena.config.Origin.Value);// this.characterController.GetKeybinds().get(buttonPressed);
+            const outMotion = Motion[input.ConvertMoveDirectionToMotion(motionNormal)[0]];
+            this.currentMotion.push(outMotion);
+
+            const currentMotion = [ ... this.currentMotion ];
+            for (const listener of this.motionInputEventHandlers)
+
+                task.spawn(() => listener.onMotionInputChanged?.(currentMotion));
+        }
+
+        if (hasCombatController)
+        {
+            // consider the a character with the following combo route:
+            // 236 + A B C
+            // 236 + A B
+            //
+            // if this exists, only when the key is released
+            // will this run. otherwise, make inputs instant and responsive.
+            const Characters = Dependency<CharacterSelectController>().characters;
+            const characterId = this.characterController.GetCharacter()?.GetAttribute("CharacterId") as string;
+
+            const foundCharacter = Characters.get(characterId);
+            const keyInput = this.combatController!.GetKeybinds();
+
+            const pushInput = () => this.currentMotion.push(keyInput.get(buttonPressed)!);
+
+
+            if (!(characterId && Characters) || !foundCharacter)
+            {
+                if (inputMode === input.InputMode.Press)
+
+                    pushInput()
 
                 return input.InputResult.Fail;
+            }
 
-        else if (inputMode === input.InputMode.Release)
+            if (inputMode === input.InputMode.Press)
 
-                return input.InputResult.Fail;
+                pushInput()
 
-        print("motion guh 2", inputMode, input.InputMode.Release)
-        const motionNormal = this.characterController.GetKeybinds().get(buttonPressed);
-        const normalVector = motionNormal ? Vector3.FromNormalId(motionNormal) : Vector3.zero;
-        this.currentMotion.push(Motion[input.ConvertMoveDirectionToMotion(normalVector)[0]]);
+            const decompiledAttacks = [...foundCharacter.Attacks]
+            const matchingAttacks = decompiledAttacks.filter(([motionInput]) => 
+            {
+                let motionSet: input.MotionInput;
+                if ( motionInput.includes(input.Motion.Neutral) ) 
+                {
+                    const set = [ ... this.currentMotion ];
+                    if (set[0] !== input.Motion.Neutral)
 
-        const currentMotion = [ ... this.currentMotion ];
-        for (const listener of this.motionInputEventHandlers)
-        
-            task.defer(() => listener.onMotionInputChanged?.(currentMotion));
+                        set.unshift(input.Motion.Neutral); // make sure the motion starts with 5 if it doesn't already
+
+                    motionSet = set.filter((e, k, a) => !(a[k - 1] === input.Motion.Neutral && e === input.Motion.Neutral)); // remove duplicates
+                }
+                else
+
+                    motionSet = this.currentMotion.filter((e) => e !== input.Motion.Neutral); // filter all neutrals 
+
+                if (motionSet.size() > motionInput.size())
+
+                    return;
+                     
+                if (motionSet.size() === 0)
+ 
+                    return;
+
+                for (let i = motionSet.size() - 1; i >= 0; i--)
+
+                    if (motionInput[i] !== motionSet[i])
+
+                    {
+                        print(`motion failed: ${motionInput[i]} !== ${motionSet[i]}`);
+                        return false;
+                    }
+
+                print(`motion passed: ${this.stringifyMotionInput(motionInput)} === ${this.stringifyMotionInput(motionSet)}`);
+                return true;
+            });
+                     
+            if (matchingAttacks.size() === 0)
+            {
+                warn(`No attacks found for ${this.stringifyMotionInput(this.currentMotion)}. Attacks list: ${decompiledAttacks.map(([motion, skill]) => `\n${this.stringifyMotionInput(motion)} => ${typeIs(skill, "function") ? skill().Name : skill.Name}`).reduce((e,a) => e + a, decompiledAttacks.size() === 0 ? "NONE" : "")}`)
+            } else {
+                warn(`Matching attacks for ${this.stringifyMotionInput(this.currentMotion)}: ${matchingAttacks.map(([motion, skill]) => `\n${this.stringifyMotionInput(motion)} => ${typeIs(skill, "function") ? skill().Name : skill.Name}`).reduce((e,a) => e + a)}`)
+            }
+        }
 
         return input.InputResult.Success;
     }
@@ -93,6 +191,13 @@ export class NewMotionInputController<T extends CharacterController> implements 
     {
         if (this.timeoutDeltaTime >= this.motionInputTimeoutMaximum)
         {
+            if (this.currentMotion.size() <= 2)
+            {
+                /* prevent command normals from being voided */
+                this.timeoutDeltaTime = 0;
+                return;
+            }
+
             const currentMotion = [ ... this.currentMotion ];
             for (const listener of this.motionInputEventHandlers)
             { 
@@ -138,8 +243,8 @@ export class NewMotionInputController<T extends CharacterController> implements 
                 if (character)
                 {
                     const { LookVector } = character.GetPivot();
-                    const facingUnit = NullifyYComponent(LookVector).Dot(NullifyYComponent(relativeTo.Position).Unit);
-                    const isFacingAway = facingUnit < 0;
+                    const facingUnit = NullifyYComponent(relativeTo.Position).Unit.Dot(NullifyYComponent(LookVector))
+                    const isFacingAway = facingUnit > 0;
 
                     if (isFacingAway && ([ Left, Right ] as Enum.NormalId[]).includes(normal))
                     {
@@ -169,20 +274,33 @@ export class NewMotionInputController<T extends CharacterController> implements 
                         }
                     }
                 }
+                
 
                 if (relativeTo)
                 {
-                    totalVector = totalVector.add(
-                        input.GenerateRelativeVectorFromNormalId(relativeTo, normal),
-                    );
+                    const vec = input.GenerateRelativeVectorFromNormalId(relativeTo, normal);
+                    const vecOut = new Vector3(vec.Z, vec.Y, vec.X);
+                    totalVector = totalVector.add(vecOut);
                 }
                 else
                 {
-                    totalVector = totalVector.add(Vector3.FromNormalId(normal));
+                    const norm = Vector3.FromNormalId(normal);
+                    const normOut = new Vector3(norm.Z, norm.Y, norm.X);
+                    totalVector = totalVector.add(normOut);
                 }
             }
         });
 
         return totalVector.Magnitude > 0 ? totalVector.Unit : totalVector;
+    }
+        
+    public stringifyMotionInput(motionInput: input.MotionInput = this.currentMotion)
+    {
+        return motionInput.size() > 0 ? motionInput.map(tostring).reduce((acc, v) => `${acc}, ${v}`) : ""
+    }
+
+    onMotionInputChanged(motionInput: input.MotionInput)
+    {
+        print(`motion input changed: [${this.stringifyMotionInput(motionInput)}]`)
     }
 }
