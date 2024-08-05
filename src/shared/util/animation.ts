@@ -239,10 +239,10 @@ export namespace Animation
         {
             return new Promise((res) =>
             {
-                print(`Animation ${this.Animation.GetFullName()} is now playing.`);
+                // print(`Animation ${this.Animation.GetFullName()} is now playing.`);
                 this.AnimationTrack.Stopped.Once(() =>
                 {
-                    print(`Animation ${this.Animation.GetFullName()} has stopped.`);
+                    // print(`Animation ${this.Animation.GetFullName()} has stopped.`);
                 });
 
                 if (playOptions?.Preload)
@@ -281,7 +281,7 @@ export namespace Animation
 
         public async Stop({ fadeTime, yieldFade }: { fadeTime?: number; yieldFade?: boolean; }): Promise<this>
         {
-            print(`Animation ${this.Animation.GetFullName()} is stopping with paramters: {${fadeTime}, ${yieldFade}}`);
+            // print(`Animation ${this.Animation.GetFullName()} is stopping with paramters: {${fadeTime}, ${yieldFade}}`);
             this.AnimationTrack.Stop(fadeTime);
             if (this.animator.attributes.ActiveAnimation === this.Id)
                 this.animator.attributes.ActiveAnimation = undefined;
