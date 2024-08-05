@@ -15,8 +15,8 @@ export enum InputType
  */
 export enum InputMode
 {
-    Release,
-    Press,
+    Release = Enum.UserInputState.End.Value,
+    Press = Enum.UserInputState.Begin.Value,
     Up = InputMode["Release"],
     Down = InputMode["Press"],
 }
@@ -27,8 +27,8 @@ export enum InputMode
  */
 export enum InputResult
 {
-    Success,
-    Fail,
+    Success = Enum.ContextActionResult.Sink.Value,
+    Fail = Enum.ContextActionResult.Pass.Value,
 }
 
 /**
