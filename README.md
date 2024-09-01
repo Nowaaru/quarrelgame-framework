@@ -1,7 +1,7 @@
 > [!CAUTION]
 > This repository is archived and the source has been moved to a new<br/>
 organization called _[Quarrel Game Framework](https://github.com/quarrelgame-framework/client)_ in order to consolidate all of<br/>
-the packages into one.
+the packages into one small hub.
 >
 > If you're interested in the current status of this project, then
 > check out [the organization](https://github.com/quarrelgame-framework).
